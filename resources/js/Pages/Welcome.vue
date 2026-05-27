@@ -27,15 +27,23 @@ const medicalServices = [
     'Oxygen Therapy',
 ];
 
-const dentalServices = [
-    'Dental X-Rays',
-    'Exams & Cleanings',
-    'Cosmetic Dentistry',
-    'Periodontal Disease',
-    'Root Canals',
-    'Extractions',
-    'Teeth Whitening',
-    'Braces & Implants',
+const careBundles = [
+    {
+        title: 'Wound Care Package',
+        points: ['Sterile wound cleaning and dressing', 'Healing progress monitoring', 'Guidance for faster recovery'],
+    },
+    {
+        title: 'Post-Hospital Recovery',
+        points: ['Medication and vital sign support', 'Mobility and comfort assistance', 'Follow-up care coordination'],
+    },
+    {
+        title: 'Bedridden Care Plan',
+        points: ['Daily hygiene and positioning', 'Bedsore prevention support', 'Compassionate routine care'],
+    },
+    {
+        title: 'Home ICU Support',
+        points: ['Advanced nursing observation', 'Oxygen and equipment assistance', 'Family support and reporting'],
+    },
 ];
 
 const stories = [
@@ -211,6 +219,36 @@ const testimonialSlides = computed(() => {
             </section>
 
             <section id="care-packages" class="section-padding">
+                <div class="container">
+                    <div class="section-heading text-center mx-auto mb-5">
+                        <div class="heading-with-lines">
+                            <span></span>
+                            <h2 class="section-title mb-0">Specialized Care Bundles</h2>
+                            <span></span>
+                        </div>
+                        <p class="section-kicker mt-3 mb-0">Tailored Care for Faster Recovery</p>
+                    </div>
+
+                    <div class="row g-4">
+                        <div v-for="bundle in careBundles" :key="bundle.title" class="col-md-6 col-xl-3">
+                            <article class="care-bundle-card">
+                                <div class="bundle-image">
+                                    <span>Image placeholder</span>
+                                </div>
+
+                                <div class="bundle-body">
+                                    <h3>{{ bundle.title }}</h3>
+                                    <ul>
+                                        <li v-for="point in bundle.points" :key="point">{{ point }}</li>
+                                    </ul>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section v-if="false" class="section-padding d-none">
                 <div class="container">
                     <div class="row align-items-center gy-4">
                         <div class="col-lg-4">
@@ -467,6 +505,10 @@ const testimonialSlides = computed(() => {
     line-height: 1.7;
 }
 
+.philosophy-section {
+    padding-bottom: 20px;
+}
+
 .sub-title {
     color: #4c515c;
     font-size: 1rem;
@@ -580,6 +622,70 @@ const testimonialSlides = computed(() => {
     color: #6b7280;
     font-size: 0.86rem;
     box-shadow: 0 8px 25px rgba(56, 75, 105, 0.04);
+}
+
+.section-heading {
+    max-width: 860px;
+}
+
+.heading-with-lines {
+    display: grid;
+    grid-template-columns: minmax(40px, 1fr) auto minmax(40px, 1fr);
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.heading-with-lines span {
+    height: 1px;
+    background: #dde5ee;
+}
+
+.care-bundle-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #e6ebf1;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(43, 63, 95, 0.08);
+}
+
+.bundle-image {
+    min-height: 132px;
+    margin: 1.1rem 1.1rem 0;
+    display: grid;
+    place-items: center;
+    color: #8c97a4;
+    border: 1px dashed #cbd5e1;
+    background: linear-gradient(135deg, #f7fafc, #e9eef4);
+    font-size: 0.82rem;
+}
+
+.bundle-body {
+    flex: 1;
+    padding: 1.35rem 1.35rem 1rem;
+}
+
+.bundle-body h3 {
+    color: #414752;
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.35;
+    margin-bottom: 1rem;
+}
+
+.bundle-body ul {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.bundle-body li {
+    color: #69707a;
+    font-size: 0.9rem;
+    line-height: 1.55;
 }
 
 .dental-grid {
