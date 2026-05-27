@@ -7,43 +7,74 @@ import MarketingNav from '@/Components/MarketingNav.vue';
 const benefits = [
     {
         title: 'Professional Care at Home',
+        icon: 'fa-solid fa-house-medical',
         text: 'Our experienced nurses provide personalized medical care in the comfort of your home, ensuring safety, dignity, and quality treatment without the need to travel.',
     },
     {
         title: 'Experienced Healthcare Professionals',
+        icon: 'fa-solid fa-user-nurse',
         text: 'Our team includes qualified nurses and healthcare providers trained to deliver reliable and professional home care services tailored to each patient’s needs.',
     },
     {
         title: 'Personalized Care Plan',
+        icon: 'fa-solid fa-clipboard-list',
         text: 'We tailor our healthcare services to meet each patient’s specific needs, ensuring the right level of medical attention, comfort, and support at every stage of care.',
     },
 ];
 
 const medicalServices = [
-    'Injection & IV Therapy',
-    'NGT & Catheter Care',
-    'Wound Dressing',
-    'Bedsore Treatment',
-    'Oxygen Therapy',
+    { title: 'Injection & IV Therapy', icon: 'fa-solid fa-syringe' },
+    { title: 'NGT & Catheter Care', icon: 'fa-solid fa-kit-medical' },
+    { title: 'Wound Dressing', icon: 'fa-solid fa-bandage' },
+    { title: 'Bedsore Treatment', icon: 'fa-solid fa-bed-pulse' },
+    { title: 'Oxygen Therapy', icon: 'fa-solid fa-lungs' },
+    { title: 'Monthly Doctor Visits', icon: 'fa-solid fa-user-doctor' },
+    { title: 'Cashless Visits', icon: 'fa-solid fa-credit-card' },
+    { title: 'Elderly Home Doctor Visits', icon: 'fa-solid fa-person-cane' },
+    { title: 'Teleconsultation', icon: 'fa-solid fa-video' },
+    { title: 'Blood Collection', icon: 'fa-solid fa-vial' },
 ];
 
 const careBundles = [
     {
         title: 'Wound Care Package',
+        image: '/images/Wound%20Care%20Package.png',
         points: ['Sterile wound cleaning and dressing', 'Healing progress monitoring', 'Guidance for faster recovery'],
     },
     {
         title: 'Post-Hospital Recovery',
+        image: '/images/Post-Hospital%20Recovery.jpg',
         points: ['Medication and vital sign support', 'Mobility and comfort assistance', 'Follow-up care coordination'],
     },
     {
         title: 'Bedridden Care Plan',
+        image: '/images/Bedridden%20Care%20Plan.jpg',
         points: ['Daily hygiene and positioning', 'Bedsore prevention support', 'Compassionate routine care'],
     },
     {
         title: 'Home ICU Support',
+        image: '/images/Home%20ICU%20Support.png',
         points: ['Advanced nursing observation', 'Oxygen and equipment assistance', 'Family support and reporting'],
     },
+];
+
+const philosophyItems = [
+    'Compassionate nursing care',
+    'Personalized home visits',
+    'Post-hospital recovery support',
+    'Wound dressing and care',
+    'Medication reminders',
+    'Vital signs monitoring',
+    'Bedridden patient support',
+    'Elderly companionship',
+    'Hygiene and comfort care',
+    'Mobility assistance',
+    'Family guidance',
+    'Oxygen therapy support',
+    'Bedsore prevention',
+    'Catheter and NGT care',
+    'Palliative care support',
+    'Regular health check-ins',
 ];
 
 const stories = [
@@ -100,21 +131,49 @@ const testimonialSlides = computed(() => {
 
     return slides;
 });
+
+const medicalServiceSlides = computed(() => {
+    const slides = [];
+
+    for (let index = 0; index < medicalServices.length; index += 5) {
+        slides.push(medicalServices.slice(index, index + 5));
+    }
+
+    return slides;
+});
 </script>
 
 <template>
-    <Head title="Home Care Services" />
+    <Head title="Mauricare Home Care Services in Mauritius">
+        <meta
+            name="description"
+            content="Mauricare provides professional home nursing, elderly care, wound care, post-hospital recovery, and personalized healthcare services at home in Mauritius."
+        />
+        <meta
+            name="keywords"
+            content="home care Mauritius, home nursing Mauritius, elderly care Mauritius, caregiver Mauritius, wound care at home, post hospital recovery care"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="Mauricare Home Care Services in Mauritius" />
+        <meta
+            property="og:description"
+            content="Professional and compassionate nursing care at home for patients, elderly people, and families across Mauritius."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://mauricare.mu/images/mauricare-home-care-nurse-elderly-home-visit.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+    </Head>
 
     <div class="mauricare-page">
         <header id="home" class="hero-section">
             <MarketingNav />
 
             <div class="container hero-content text-center text-white">
-                <h1 class="fw-bold mb-3">Professional Home<br />Nursing &amp; Care Services</h1>
-                <p class="mx-auto mb-4">
+                <h1 class="fw-bold mb-4">Professional Home<br />Nursing &amp; Care Services</h1>
+                <p class="mx-auto mb-5">
                     We provide compassionate, reliable and professional care in the comfort of your home.
                 </p>
-                <a href="#appointment" class="btn btn-primary btn-sm fw-semibold px-4">Book a Home Visit</a>
+                <a href="#appointment" class="btn btn-primary hero-button fw-semibold">Book a Home Visit</a>
             </div>
         </header>
 
@@ -132,7 +191,9 @@ const testimonialSlides = computed(() => {
 
                             <div class="benefit-list">
                                 <article v-for="benefit in benefits" :key="benefit.title" class="d-flex gap-3">
-                                    <span class="icon-circle flex-shrink-0">+</span>
+                                    <span class="icon-circle flex-shrink-0">
+                                        <i :class="benefit.icon" aria-hidden="true"></i>
+                                    </span>
                                     <div>
                                         <h3>{{ benefit.title }}</h3>
                                         <p>{{ benefit.text }}</p>
@@ -142,15 +203,17 @@ const testimonialSlides = computed(() => {
                         </div>
 
                         <div class="col-lg-6 text-center">
-                            <div class="blank-image nurse-portrait mx-auto">
-                                <span>Image placeholder</span>
-                            </div>
+                            <img
+                                src="/images/mauricare-home-care-nurse-professional-caregiver.png"
+                                alt="Mauricare professional caregiver"
+                                class="nurse-portrait mx-auto"
+                            />
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section class="request-band">
+            <section id="request-care" class="request-band">
                 <div class="container">
                     <div class="row align-items-center gy-4">
                         <div class="col-lg-5 text-white">
@@ -168,8 +231,14 @@ const testimonialSlides = computed(() => {
                         <div class="col-lg-5 offset-lg-1">
                             <form class="request-form">
                                 <input class="form-control" type="text" placeholder="Your Name *" aria-label="Your Name" />
-                                <input class="form-control" type="email" placeholder="Your Email *" aria-label="Your Email" />
+                                <input class="form-control" type="email" placeholder="Your Email" aria-label="Your Email" />
                                 <input class="form-control" type="tel" placeholder="Your Phone Number *" aria-label="Your Phone Number" />
+                                <textarea
+                                    class="form-control"
+                                    rows="4"
+                                    placeholder="Description"
+                                    aria-label="Description"
+                                ></textarea>
                                 <button class="btn btn-primary btn-sm fw-semibold" type="submit">Send Request</button>
                             </form>
                         </div>
@@ -178,42 +247,85 @@ const testimonialSlides = computed(() => {
             </section>
 
             <section class="section-padding philosophy-section">
-                <div class="container">
-                    <div class="row align-items-center gy-5">
-                        <div class="col-lg-5">
-                            <div class="care-card">
-                                <div class="blank-image care-image">
-                                    <span>Image placeholder</span>
+                <div class="container-fluid px-0">
+                    <div class="philosophy-panel">
+                        <div class="row align-items-center gy-5">
+                            <div class="col-lg-6">
+                                <h2>Our Philosophy</h2>
+                                <p>
+                                    At Mauricare Home Care Service, we believe that every individual deserves to be treated
+                                    with dignity, respect, and kindness. Our philosophy is centered on delivering
+                                    personalized, professional, and compassionate healthcare in the comfort of your home.
+                                </p>
+                                <a href="tel:+23058199009" class="btn philosophy-call fw-semibold">
+                                    Call Now - 5819 9009
+                                </a>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="philosophy-list">
+                                    <div
+                                        v-for="item in philosophyItems"
+                                        :key="item"
+                                        class="philosophy-list-item"
+                                    >
+                                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                        <span>{{ item }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-lg-5 offset-lg-1">
-                            <h2 class="section-title">Our Philosophy</h2>
-                            <h3 class="sub-title">Care with Compassion, Service with Heart</h3>
-                            <p>
-                                At Mauricare Home Care Service, we believe that every individual deserves to be treated
-                                with dignity, respect, and kindness. Our philosophy is centered on delivering
-                                personalized, professional, and compassionate healthcare in the comfort of your home.
-                            </p>
-                            <p>
-                                We are committed to supporting patients and their families by providing reliable medical
-                                care, emotional support, and a sense of security.
-                            </p>
-                            <p>Your well-being is our priority, and your trust is our greatest reward.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
             <section id="medical-services" class="medical-section section-padding">
-                <div class="container text-center">
-                    <h2 class="section-title">Medical Services &amp; Procedures</h2>
-                    <p class="section-kicker mb-5">Expert Nursing Care at Home</p>
+                <div class="container-fluid px-3 px-xl-4">
+                    <div class="text-center">
+                        <h2 class="section-title">Medical Services &amp; Procedures</h2>
+                        <p class="section-kicker mb-5">Expert Nursing Care at Home</p>
+                    </div>
 
-                    <div class="row g-3 justify-content-center">
-                        <div v-for="service in medicalServices" :key="service" class="col-6 col-md">
-                            <article class="service-tile">{{ service }}</article>
+                    <div class="medical-carousel-wrap">
+                        <button
+                            class="medical-carousel-control"
+                            type="button"
+                            data-bs-target="#medicalServicesCarousel"
+                            data-bs-slide="prev"
+                            aria-label="Previous medical services"
+                        >
+                            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                        </button>
+
+                        <div id="medicalServicesCarousel" class="carousel slide medical-carousel" data-bs-ride="false">
+                            <div class="carousel-inner">
+                                <div
+                                    v-for="(slide, slideIndex) in medicalServiceSlides"
+                                    :key="slideIndex"
+                                    class="carousel-item"
+                                    :class="{ active: slideIndex === 0 }"
+                                >
+                                    <div class="row g-4 justify-content-center">
+                                        <div v-for="service in slide" :key="service.title" class="col-sm-6 service-col">
+                                    <article class="service-tile">
+                                        <i :class="service.icon" aria-hidden="true"></i>
+                                        <h3>{{ service.title }}</h3>
+                                    </article>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        <button
+                            class="medical-carousel-control"
+                            type="button"
+                            data-bs-target="#medicalServicesCarousel"
+                            data-bs-slide="next"
+                            aria-label="Next medical services"
+                        >
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </div>
             </section>
@@ -221,20 +333,14 @@ const testimonialSlides = computed(() => {
             <section id="care-packages" class="section-padding">
                 <div class="container">
                     <div class="section-heading text-center mx-auto mb-5">
-                        <div class="heading-with-lines">
-                            <span></span>
-                            <h2 class="section-title mb-0">Specialized Care Bundles</h2>
-                            <span></span>
-                        </div>
+                        <h2 class="section-title mb-0">Specialized Care Bundles</h2>
                         <p class="section-kicker mt-3 mb-0">Tailored Care for Faster Recovery</p>
                     </div>
 
                     <div class="row g-4">
                         <div v-for="bundle in careBundles" :key="bundle.title" class="col-md-6 col-xl-3">
                             <article class="care-bundle-card">
-                                <div class="bundle-image">
-                                    <span>Image placeholder</span>
-                                </div>
+                                <img :src="bundle.image" :alt="`${bundle.title} home care service`" class="bundle-image" />
 
                                 <div class="bundle-body">
                                     <h3>{{ bundle.title }}</h3>
@@ -355,7 +461,7 @@ const testimonialSlides = computed(() => {
                 </div>
             </section>
 
-            <section class="stories-section section-padding d-none">
+            <section v-if="false" class="stories-section section-padding d-none">
                 <div class="container">
                     <div class="row gy-4">
                         <div class="col-lg-4">
@@ -422,7 +528,7 @@ const testimonialSlides = computed(() => {
 .hero-content {
     position: relative;
     z-index: 1;
-    padding-top: 90px;
+    padding-top: 160px;
 }
 
 .hero-content h1 {
@@ -435,10 +541,28 @@ const testimonialSlides = computed(() => {
     color: rgba(255, 255, 255, 0.86);
 }
 
+.hero-button {
+    min-width: 220px;
+    padding: 0.9rem 2.1rem;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
 :deep(.mauricare-nav) {
-    position: relative;
-    z-index: 2;
-    padding-top: 28px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background: transparent;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, padding 0.2s ease;
+}
+
+:deep(.mauricare-nav.is-scrolled) {
+    background: rgba(22, 24, 27, 0.92);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
 }
 
 :deep(.mauricare-nav .nav-link) {
@@ -454,15 +578,23 @@ const testimonialSlides = computed(() => {
 }
 
 :deep(.mauricare-nav .navbar-brand) {
-    max-width: 540px;
+    max-width: 290px;
 }
 
 :deep(.navbar-logo) {
     display: block;
     max-width: 100%;
     width: auto;
-    height: 138px;
+    height: 78px;
     object-fit: contain;
+    transform: scale(1.50);
+    transform-origin: left center;
+    transition: height 0.2s ease, transform 0.2s ease;
+}
+
+:deep(.mauricare-nav.is-scrolled .navbar-logo) {
+    height: 58px;
+    transform: scale(1.40);
 }
 
 :deep(.brand-mark),
@@ -505,10 +637,6 @@ const testimonialSlides = computed(() => {
     line-height: 1.7;
 }
 
-.philosophy-section {
-    padding-bottom: 20px;
-}
-
 .sub-title {
     color: #4c515c;
     font-size: 1rem;
@@ -542,6 +670,10 @@ const testimonialSlides = computed(() => {
     font-weight: 800;
 }
 
+.icon-circle i {
+    font-size: 0.95rem;
+}
+
 .blank-image {
     min-height: 260px;
     display: grid;
@@ -555,7 +687,8 @@ const testimonialSlides = computed(() => {
     width: min(100%, 430px);
     min-height: 600px;
     border: 0;
-    background: #f8fbff;
+    display: block;
+    object-fit: contain;
 }
 
 .request-band {
@@ -585,27 +718,72 @@ const testimonialSlides = computed(() => {
     --bs-btn-hover-border-color: #136fdc;
 }
 
-.care-card {
+.philosophy-panel {
     position: relative;
-    max-width: 420px;
-    padding: 0 0 72px 38px;
+    overflow: hidden;
+    padding: 5.5rem;
+    color: #fff;
+    border-top-left-radius: 120px;
+    border-bottom-right-radius: 120px;
+    background:
+        linear-gradient(90deg, rgba(14, 77, 77, 0.92), rgba(25, 47, 56, 0.78)),
+        url('/images/mauricare-home-care-blood-test-nurse.png') center / cover no-repeat;
 }
 
-.care-card::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 190px;
-    height: 255px;
-    border-radius: 0 0 95px 95px;
-    background: #fff;
-    box-shadow: 0 25px 55px rgba(41, 51, 72, 0.12);
-    z-index: -1;
+.philosophy-panel h2 {
+    max-width: 560px;
+    margin-bottom: 1.5rem;
+    color: #fff;
+    font-size: clamp(2rem, 3vw, 2.85rem);
+    font-weight: 800;
+    line-height: 1.14;
 }
 
-.care-image {
-    min-height: 470px;
+.philosophy-panel p {
+    max-width: 670px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.96rem;
+    font-weight: 500;
+    line-height: 1.7;
+}
+
+.philosophy-call {
+    margin-top: 1.8rem;
+    padding: 0.9rem 1.8rem;
+    color: #102b2b;
+    background: #dff6c0;
+    border: 0;
+    border-radius: 8px;
+}
+
+.philosophy-call:hover,
+.philosophy-call:focus {
+    color: #102b2b;
+    background: #cbec9f;
+}
+
+.philosophy-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.25rem;
+}
+
+.philosophy-list-item {
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.85rem 1rem;
+    color: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.philosophy-list-item i {
+    color: #dff6c0;
 }
 
 .medical-section,
@@ -614,30 +792,73 @@ const testimonialSlides = computed(() => {
 }
 
 .service-tile {
-    min-height: 150px;
+    min-height: 245px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.15rem;
+    padding: 2rem 1.35rem;
+    color: #fff;
+    background: #119bd3;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 12px 28px rgba(43, 63, 95, 0.08);
+}
+
+.service-tile i {
+    color: #dff6c0;
+    font-size: 2.8rem;
+}
+
+.service-tile h3 {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.medical-carousel-wrap {
     display: grid;
-    place-items: end center;
-    padding: 1.5rem 0.75rem;
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.medical-carousel-control {
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(17, 155, 211, 0.55);
+    border-radius: 50%;
+    color: #41454f;
     background: #fff;
-    color: #6b7280;
-    font-size: 0.86rem;
-    box-shadow: 0 8px 25px rgba(56, 75, 105, 0.04);
+    transition: 0.2s ease;
+}
+
+@media (min-width: 1200px) {
+    .service-col {
+        flex: 0 0 20%;
+        max-width: 20%;
+    }
+}
+
+.medical-carousel-control:hover,
+.medical-carousel-control:focus {
+    color: #fff;
+    background: #119bd3;
+    border-color: #119bd3;
 }
 
 .section-heading {
     max-width: 860px;
-}
-
-.heading-with-lines {
-    display: grid;
-    grid-template-columns: minmax(40px, 1fr) auto minmax(40px, 1fr);
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.heading-with-lines span {
-    height: 1px;
-    background: #dde5ee;
 }
 
 .care-bundle-card {
@@ -652,14 +873,13 @@ const testimonialSlides = computed(() => {
 }
 
 .bundle-image {
-    min-height: 132px;
+    width: calc(100% - 2.2rem);
+    height: 200px;
     margin: 1.1rem 1.1rem 0;
-    display: grid;
-    place-items: center;
-    color: #8c97a4;
-    border: 1px dashed #cbd5e1;
-    background: linear-gradient(135deg, #f7fafc, #e9eef4);
-    font-size: 0.82rem;
+    display: block;
+    object-fit: cover;
+    border: 0;
+    background: #f7fafc;
 }
 
 .bundle-body {
@@ -907,7 +1127,6 @@ const testimonialSlides = computed(() => {
 :deep(.site-footer) {
     background: #181818;
     color: #fff;
-    padding-top: 90px;
 }
 
 :deep(.footer-brand) {
@@ -935,8 +1154,22 @@ const testimonialSlides = computed(() => {
         min-height: 680px;
     }
 
+    :deep(.mauricare-nav .navbar-brand) {
+        max-width: 220px;
+    }
+
+    :deep(.navbar-logo) {
+        height: 62px;
+        transform: scale(1.18);
+    }
+
+    :deep(.mauricare-nav.is-scrolled .navbar-logo) {
+        height: 50px;
+        transform: scale(1.12);
+    }
+
     .hero-content {
-        padding-top: 80px;
+        padding-top: 150px;
     }
 
     .section-padding {
@@ -968,6 +1201,30 @@ const testimonialSlides = computed(() => {
     .story-card {
         min-height: 320px;
     }
+
+    .medical-carousel-wrap {
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
+        gap: 0.75rem;
+    }
+
+    .medical-carousel-control {
+        width: 44px;
+        height: 44px;
+    }
+
+    .service-tile {
+        min-height: 230px;
+    }
+
+    .philosophy-panel {
+        padding: 3rem;
+        border-top-left-radius: 72px;
+        border-bottom-right-radius: 72px;
+    }
+
+    .philosophy-list {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 575.98px) {
@@ -979,6 +1236,12 @@ const testimonialSlides = computed(() => {
 
     .nurse-portrait {
         min-height: 360px;
+    }
+
+    .philosophy-panel {
+        padding: 2rem 1.25rem;
+        border-top-left-radius: 42px;
+        border-bottom-right-radius: 42px;
     }
 
     .request-form,

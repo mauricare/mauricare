@@ -1,15 +1,32 @@
 <script setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+
 const navItems = [
     { label: 'Home', href: '#home' },
     { label: 'About', href: '#about' },
-    { label: 'Care Packages', href: '#care-packages' },
     { label: 'Medical Services', href: '#medical-services' },
-    { label: 'Contact Us', href: '#contact' },
+    { label: 'Care Packages', href: '#care-packages' },
+    { label: 'Contact Us', href: '#request-care' },
 ];
+
+const isScrolled = ref(false);
+
+function updateNavbarState() {
+    isScrolled.value = window.scrollY > 20;
+}
+
+onMounted(() => {
+    updateNavbarState();
+    window.addEventListener('scroll', updateNavbarState, { passive: true });
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('scroll', updateNavbarState);
+});
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark mauricare-nav">
+    <nav class="navbar navbar-expand-lg navbar-dark mauricare-nav" :class="{ 'is-scrolled': isScrolled }">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#home" aria-label="Mauricare home">
                 <img
@@ -38,9 +55,14 @@ const navItems = [
                     </li>
                 </ul>
 
-                <a class="btn btn-primary btn-sm fw-semibold px-3" href="tel:+23058199009">
-                    Call +230 5819 9009
-                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <a class="btn btn-primary btn-sm fw-semibold px-3" href="tel:+23058199009">
+                        Call +230 5819 9009
+                    </a>
+                    <a class="btn btn-outline-light btn-sm fw-semibold px-3" :href="route('login')">
+                        Login
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
