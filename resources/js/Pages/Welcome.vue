@@ -1,5 +1,6 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import MarketingFooter from '@/Components/MarketingFooter.vue';
 import MarketingNav from '@/Components/MarketingNav.vue';
 
@@ -37,7 +38,60 @@ const dentalServices = [
     'Braces & Implants',
 ];
 
-const stories = ['Dorothy Palmer', 'Randy Tran', 'Amy Turner', 'Evelyn Green', 'Joe Alan'];
+const stories = [
+    {
+        name: 'Dorothy Palmer',
+        role: 'Home Care Client',
+        initials: 'DP',
+        accent: 'blue',
+        text: 'Mauricare gave our family peace of mind. The nurse was gentle, punctual, and made my mother feel safe at home.',
+    },
+    {
+        name: 'Randy Tran',
+        role: 'Patient Family',
+        initials: 'RT',
+        accent: 'orange',
+        text: 'I was hesitant at first, but the home visit exceeded our expectations. The care plan was clear and professionally handled.',
+    },
+    {
+        name: 'Amy Turner',
+        role: 'Recovery Patient',
+        initials: 'AT',
+        accent: 'orange',
+        text: 'The team was kind, attentive, and reliable after my procedure. Having care at home made recovery much easier.',
+    },
+    {
+        name: 'Evelyn Green',
+        role: 'Patient Family',
+        initials: 'EG',
+        accent: 'blue',
+        text: 'Their support helped us care for our father with dignity. Communication was easy and the service felt genuinely personal.',
+    },
+    {
+        name: 'Joe Alan',
+        role: 'Long-term Client',
+        initials: 'JA',
+        accent: 'orange',
+        text: 'Every visit was handled with patience and professionalism. We always knew exactly what care was being provided.',
+    },
+    {
+        name: 'Nadia Bissessur',
+        role: 'Home Care Client',
+        initials: 'NB',
+        accent: 'orange',
+        text: 'A warm, dependable service. The nurse listened carefully and adjusted the care routine around our daily needs.',
+    },
+];
+
+const testimonialSlides = computed(() => {
+    const slides = [];
+
+    for (let index = 0; index < stories.length; index += 3) {
+        slides.push(stories.slice(index, index + 3));
+    }
+
+    return slides;
+});
 </script>
 
 <template>
@@ -181,24 +235,89 @@ const stories = ['Dorothy Palmer', 'Randy Tran', 'Amy Turner', 'Evelyn Green', '
                 </div>
             </section>
 
-            <section class="offer-band">
+            <section class="stories-section section-padding">
                 <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-lg-5 d-none d-lg-block">
-                            <div class="blank-image offer-image">
-                                <span>Image placeholder</span>
+                    <div class="d-flex align-items-center justify-content-between gap-3 mb-5">
+                        <h2 class="testimonials-title mb-0">Testimonials</h2>
+
+                        <div class="testimonial-controls d-flex gap-3">
+                            <button
+                                class="testimonial-control"
+                                type="button"
+                                data-bs-target="#testimonialCarousel"
+                                data-bs-slide="prev"
+                                aria-label="Previous testimonials"
+                            >
+                                <span aria-hidden="true">&larr;</span>
+                            </button>
+                            <button
+                                class="testimonial-control"
+                                type="button"
+                                data-bs-target="#testimonialCarousel"
+                                data-bs-slide="next"
+                                aria-label="Next testimonials"
+                            >
+                                <span aria-hidden="true">&rarr;</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="testimonialCarousel" class="carousel slide testimonial-carousel" data-bs-ride="false">
+                        <div class="carousel-inner">
+                            <div
+                                v-for="(slide, slideIndex) in testimonialSlides"
+                                :key="slideIndex"
+                                class="carousel-item"
+                                :class="{ active: slideIndex === 0 }"
+                            >
+                                <div class="row g-4">
+                                    <div v-for="story in slide" :key="story.name" class="col-lg-4">
+                                        <article class="story-card" :class="`story-card-${story.accent}`">
+                                            <div class="stars" aria-label="5 star rating">
+                                                <span v-for="star in 5" :key="star"></span>
+                                            </div>
+
+                                            <p>{{ story.text }}</p>
+
+                                            <div class="story-person d-flex align-items-center gap-3">
+                                                <span class="story-avatar">{{ story.initials }}</span>
+                                                <div>
+                                                    <strong>{{ story.name }}</strong>
+                                                    <small>{{ story.role }}</small>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-lg-6 offset-lg-1 text-white">
-                            <span class="section-kicker text-white">We Love To See You Smile</span>
-                            <h2 class="fw-bold mt-2 mb-3">$100 OFF on All Dental<br />Service*</h2>
-                            <a href="#appointment" class="btn btn-outline-light btn-sm fw-semibold px-4">Book An Appointment</a>
+                    </div>
+
+                    <div class="testimonial-mobile-list">
+                        <div class="row g-4">
+                            <div v-for="story in stories" :key="story.name" class="col-md-6">
+                                <article class="story-card" :class="`story-card-${story.accent}`">
+                                    <div class="stars" aria-label="5 star rating">
+                                        <span v-for="star in 5" :key="star"></span>
+                                    </div>
+
+                                    <p>{{ story.text }}</p>
+
+                                    <div class="story-person d-flex align-items-center gap-3">
+                                        <span class="story-avatar">{{ story.initials }}</span>
+                                        <div>
+                                            <strong>{{ story.name }}</strong>
+                                            <small>{{ story.role }}</small>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section class="stories-section section-padding">
+            <section class="stories-section section-padding d-none">
                 <div class="container">
                     <div class="row gy-4">
                         <div class="col-lg-4">
@@ -220,65 +339,6 @@ const stories = ['Dorothy Palmer', 'Randy Tran', 'Amy Turner', 'Evelyn Green', '
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="contact" class="contact-section">
-                <div class="container">
-                    <p class="text-center fw-bold mb-4">Fill up the Form and Ask Your Queries</p>
-
-                    <div id="appointment" class="contact-panel mx-auto">
-                        <div class="contact-strip row g-0 text-white">
-                            <div class="col-md-4 contact-method">
-                                <span class="contact-icon">w</span>
-                                <div>
-                                    <strong>Whatsapp</strong>
-                                    <a href="tel:+23058199009">+(230) 5819-9009</a>
-                                </div>
-                            </div>
-                            <div class="col-md-4 contact-method">
-                                <span class="contact-icon">p</span>
-                                <div>
-                                    <strong>Phone</strong>
-                                    <a href="tel:+23058199009">+(230) 5819-9009</a>
-                                </div>
-                            </div>
-                            <div class="col-md-4 contact-method">
-                                <span class="contact-icon">e</span>
-                                <div>
-                                    <strong>Email</strong>
-                                    <a href="mailto:info@mauricare.mu">info@mauricare.mu</a>
-                                    <a href="mailto:contact@mauricare.mu">contact@mauricare.mu</a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form class="appointment-form">
-                            <h2 class="h5 fw-bold mb-4">Book Your Appointment</h2>
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <label class="form-label" for="name">Your Name *</label>
-                                    <input id="name" class="form-control" type="text" />
-                                </div>
-                                <div class="col-lg-6"></div>
-                                <div class="col-lg-6">
-                                    <label class="form-label" for="email">Your Email *</label>
-                                    <input id="email" class="form-control" type="email" />
-                                </div>
-                                <div class="col-lg-6"></div>
-                                <div class="col-lg-6">
-                                    <label class="form-label" for="phone">Your Phone Number *</label>
-                                    <input id="phone" class="form-control" type="tel" />
-                                </div>
-                                <div class="col-lg-6"></div>
-                                <div class="col-lg-6">
-                                    <label class="form-label" for="message">Your Message</label>
-                                    <textarea id="message" class="form-control" rows="5"></textarea>
-                                </div>
-                            </div>
-                            <button class="btn btn-primary btn-sm fw-semibold mt-4" type="submit">Send Request</button>
-                        </form>
                     </div>
                 </div>
             </section>
@@ -589,34 +649,115 @@ const stories = ['Dorothy Palmer', 'Randy Tran', 'Amy Turner', 'Evelyn Green', '
 }
 
 .stories-section {
-    background: linear-gradient(180deg, #fff 0, #fff 82%, #f3f8ff 82%, #f3f8ff 100%);
-}
-
-.dot-pattern {
-    width: 230px;
-    height: 180px;
-    margin-top: 5rem;
-    background-image: radial-gradient(#3b82f6 1.5px, transparent 1.5px);
-    background-size: 24px 24px;
-    opacity: 0.45;
+    background: #f8fafc;
 }
 
 .story-card {
-    min-height: 260px;
-    padding: 2rem;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2.1rem;
     background: #fff;
-    box-shadow: 0 18px 44px rgba(43, 63, 95, 0.1);
+    border: 1px solid #d4dbe5;
+    border-radius: 18px;
+    box-shadow: none;
 }
 
-.quote-mark {
-    color: var(--primary-blue);
-    font-size: 1.8rem;
+.story-card-blue {
+    border-color: #4b46ff;
+}
+
+.testimonials-title {
+    color: #41454f;
+    font-size: clamp(2rem, 3vw, 2.85rem);
+    font-weight: 800;
+    line-height: 1.14;
+}
+
+.testimonial-control {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #4b46ff;
+    border-radius: 50%;
+    color: #4b46ff;
+    background: transparent;
+    font-size: 1.55rem;
+    line-height: 1;
+    transition: 0.2s ease;
+}
+
+.testimonial-control:hover,
+.testimonial-control:focus {
+    color: #fff;
+    background: #4b46ff;
+}
+
+.testimonial-mobile-list {
+    display: none;
+}
+
+.stars {
+    display: flex;
+    gap: 0.45rem;
+    margin-bottom: 2rem;
+}
+
+.stars span::before {
+    content: "\2605";
+    color: #f59a00;
+    font-size: 1.45rem;
     line-height: 1;
 }
 
-.story-card strong {
+.story-card-blue .stars span::before {
+    color: #4b46ff;
+}
+
+.story-card p {
+    color: #69707a;
+    font-size: 0.96rem;
+    line-height: 1.7;
+    margin-bottom: 2.25rem;
+}
+
+.story-person strong {
+    display: block;
     color: #414752;
+    font-size: 0.96rem;
+    font-weight: 800;
+}
+
+.story-person small {
+    display: block;
+    color: #69707a;
+    font-size: 0.86rem;
+    margin-top: 0.3rem;
+}
+
+.story-card-blue .story-person strong {
+    color: #4b46ff;
+}
+
+.story-avatar {
+    width: 54px;
+    height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: #fff;
     font-size: 0.9rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #119bd3, #ec1696);
+}
+
+.story-card-orange .story-avatar {
+    background: linear-gradient(135deg, #f6b33b, #f07f1a);
 }
 
 .contact-section {
@@ -707,6 +848,19 @@ const stories = ['Dorothy Palmer', 'Randy Tran', 'Amy Turner', 'Evelyn Green', '
     .dental-grid {
         grid-template-columns: repeat(2, 1fr);
         border-bottom-right-radius: 64px;
+    }
+
+    .testimonial-controls,
+    .testimonial-carousel {
+        display: none;
+    }
+
+    .testimonial-mobile-list {
+        display: block;
+    }
+
+    .story-card {
+        min-height: 320px;
     }
 }
 
