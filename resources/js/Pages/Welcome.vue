@@ -169,7 +169,7 @@ const medicalServiceSlides = computed(() => {
             <MarketingNav />
 
             <div class="container hero-content text-center text-white">
-                <h1 class="fw-bold mb-4">Professional Home<br />Nursing &amp; Care Services</h1>
+                <h1 class="fw-bold mb-4 main-title">Professional Home<br />Nursing &amp; Care Services</h1>
                 <p class="mx-auto mb-5">
                     We provide compassionate, reliable and professional care in the comfort of your home.
                 </p>
@@ -331,7 +331,7 @@ const medicalServiceSlides = computed(() => {
             </section>
 
             <section id="care-packages" class="section-padding">
-                <div class="container">
+                <div class="container-fluid section-wide-container">
                     <div class="section-heading text-center mx-auto mb-5">
                         <h2 class="section-title mb-0">Specialized Care Bundles</h2>
                         <p class="section-kicker mt-3 mb-0">Tailored Care for Faster Recovery</p>
@@ -349,6 +349,29 @@ const medicalServiceSlides = computed(() => {
                                     </ul>
                                 </div>
                             </article>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="caregiver-section section-padding">
+                <div class="container-fluid section-wide-container">
+                    <div class="caregiver-panel">
+                        <div class="row align-items-center gy-4">
+                            <div class="col-lg-8">
+                                <span class="caregiver-kicker">Caregiver Opportunities</span>
+                                <h2>Join Mauricare as a Caregiver</h2>
+                                <p>
+                                    We are looking for compassionate and reliable carers to join our team and help us
+                                    provide dignified home care support to families across Mauritius.
+                                </p>
+                            </div>
+
+                            <div class="col-lg-4 text-lg-end">
+                                <a href="/login" class="btn caregiver-button fw-semibold">
+                                    Click here to join our team of carers
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -380,7 +403,7 @@ const medicalServiceSlides = computed(() => {
             </section>
 
             <section class="stories-section section-padding">
-                <div class="container">
+                <div class="container-fluid section-wide-container">
                     <div class="d-flex align-items-center justify-content-between gap-3 mb-5">
                         <h2 class="testimonials-title mb-0">Testimonials</h2>
 
@@ -503,6 +526,15 @@ const medicalServiceSlides = computed(() => {
     background: #fff;
 }
 
+
+.main-title {
+    margin-top: 100px;
+}
+
+.caregiver-section {
+    padding-top : 0px!important;
+}
+
 .hero-section {
     position: relative;
     min-height: 800px;
@@ -613,6 +645,12 @@ const medicalServiceSlides = computed(() => {
 
 .section-padding {
     padding: 100px 0;
+}
+
+.section-wide-container {
+    max-width: 1560px;
+    padding-right: clamp(1rem, 3vw, 2.5rem);
+    padding-left: clamp(1rem, 3vw, 2.5rem);
 }
 
 .about-section {
@@ -908,6 +946,61 @@ const medicalServiceSlides = computed(() => {
     line-height: 1.55;
 }
 
+.caregiver-section {
+    background: #fff;
+}
+
+.caregiver-panel {
+    padding: 3rem;
+    border-radius: 8px;
+    color: #fff;
+    background:
+        linear-gradient(90deg, rgba(17, 155, 211, 0.95), rgba(236, 22, 150, 0.82)),
+        url('/images/mauricare-home-care-nurse-professional-caregiver.png') center / cover no-repeat;
+}
+
+.caregiver-kicker {
+    display: block;
+    margin-bottom: 0.7rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.caregiver-panel h2 {
+    margin-bottom: 1rem;
+    color: #fff;
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.14;
+}
+
+.caregiver-panel p {
+    max-width: 760px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.98rem;
+    line-height: 1.7;
+}
+
+.caregiver-button {
+    max-width: 100%;
+    padding: 0.9rem 1.4rem;
+    color: #17404a;
+    white-space: normal;
+    background: #dff6c0;
+    border: 0;
+    border-radius: 8px;
+}
+
+.caregiver-button:hover,
+.caregiver-button:focus {
+    color: #17404a;
+    background: #cbec9f;
+}
+
 .dental-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1142,7 +1235,7 @@ const medicalServiceSlides = computed(() => {
 }
 
 :deep(.footer-bottom) {
-    margin-top: 90px;
+    margin-top: 0px;
     padding: 26px 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.72);

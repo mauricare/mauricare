@@ -32,14 +32,30 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
+            'role' => 'required|string|in:patient,caregiver',
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'phone' => 'required|string|max:40',
+            'address' => 'nullable|string|max:255',
+            'care_for' => 'required_if:role,patient|nullable|string|max:255',
+            'care_needs' => 'required_if:role,patient|nullable|string|max:1000',
+            'experience_years' => 'required_if:role,caregiver|nullable|integer|min:0|max:60',
+            'qualification' => 'required_if:role,caregiver|nullable|string|max:255',
+            'availability' => 'required_if:role,caregiver|nullable|string|max:255',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'role' => $request->role,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'care_for' => $request->role === 'patient' ? $request->care_for : null,
+            'care_needs' => $request->role === 'patient' ? $request->care_needs : null,
+            'experience_years' => $request->role === 'caregiver' ? $request->experience_years : null,
+            'qualification' => $request->role === 'caregiver' ? $request->qualification : null,
+            'availability' => $request->role === 'caregiver' ? $request->availability : null,
             'password' => Hash::make($request->password),
         ]);
 

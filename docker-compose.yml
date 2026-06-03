@@ -1,0 +1,76 @@
+services:
+  app:
+    build:
+      context: .
+      target: app
+    env_file:
+      - .env.docker
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - .:/var/www/html
+      - app-vendor:/var/www/html/vendor
+      - app-bootstrap-cache:/var/www/html/bootstrap/cache
+      - app-storage-cache:/var/www/html/storage/framework/cache
+      - app-storage-sessions:/var/www/html/storage/framework/sessions
+      - app-storage-testing:/var/www/html/storage/framework/testing
+      - app-storage-views:/var/www/html/storage/framework/views
+      - app-storage-logs:/var/www/html/storage/logs
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web
+    depends_on:
+      - app
+    ports:
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      - ./public:/var/www/html/public:ro
+    restart: unless-stopped
+
+  vite:
+    build:
+      context: .
+      target: assets
+    working_dir: /app
+    env_file:
+      - .env.docker
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    volumes:
+      - .:/app
+      - app-vendor:/app/vendor
+      - vite-node-modules:/app/node_modules
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-stackapps}
+      MYSQL_DATABASE: ${DB_DATABASE:-mauricare}
+    ports:
+      - "${MYSQL_HOST_PORT:-3309}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  app-vendor:
+  app-bootstrap-cache:
+  app-storage-cache:
+  app-storage-sessions:
+  app-storage-testing:
+  app-storage-views:
+  app-storage-logs:
+  vite-node-modules:

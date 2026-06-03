@@ -2,10 +2,8 @@
 import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 defineProps({
     canResetPassword: {
@@ -15,6 +13,8 @@ defineProps({
         type: String,
     },
 });
+
+const accountType = ref('caregiver');
 
 const form = useForm({
     email: '',
@@ -33,68 +33,224 @@ const submit = () => {
     <GuestLayout>
         <Head title="Log in" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
+        <div class="auth-card-heading">
+            <span>Welcome back</span>
+            <h1>Log in to Mauricare</h1>
+        </div>
+
+        <div class="role-switch" aria-label="Account type">
+            <button
+                type="button"
+                :class="{ active: accountType === 'caregiver' }"
+                @click="accountType = 'caregiver'"
+            >
+                Caregiver
+            </button>
+            <button
+                type="button"
+                :class="{ active: accountType === 'patient' }"
+                @click="accountType = 'patient'"
+            >
+                Patient
+            </button>
+        </div>
+
+        <p class="auth-note">
+            The login form is the same for caregivers and patients.
+        </p>
+
+        <div v-if="status" class="status-message">
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
+        <form class="auth-form" @submit.prevent="submit">
+            <div class="form-field">
+                <label for="email">Email</label>
+                <input
                     id="email"
-                    type="email"
-                    class="mt-1 block w-full"
                     v-model="form.email"
+                    type="email"
                     required
                     autofocus
                     autocomplete="username"
                 />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputError :message="form.errors.email" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
-
-                <TextInput
+            <div class="form-field">
+                <label for="password">Password</label>
+                <input
                     id="password"
-                    type="password"
-                    class="mt-1 block w-full"
                     v-model="form.password"
+                    type="password"
                     required
                     autocomplete="current-password"
                 />
-
-                <InputError class="mt-2" :message="form.errors.password" />
+                <InputError :message="form.errors.password" />
             </div>
 
-            <div class="mt-4 block">
-                <label class="flex items-center">
+            <div class="auth-row">
+                <label class="remember-field">
                     <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Remember me</span
-                    >
+                    <span>Remember me</span>
                 </label>
-            </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Forgot your password?
+                <Link v-if="canResetPassword" :href="route('password.request')" class="auth-link">
+                    Forgot password?
                 </Link>
-
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Log in
-                </PrimaryButton>
             </div>
+
+            <button class="auth-button" :class="{ disabled: form.processing }" :disabled="form.processing">
+                Log in
+            </button>
+
+            <p class="auth-footer-text">
+                New to Mauricare?
+                <Link :href="route('register')" class="auth-link">Create an account</Link>
+            </p>
         </form>
     </GuestLayout>
 </template>
+
+<style scoped>
+.auth-card-heading {
+    margin-bottom: 1.4rem;
+}
+
+.auth-card-heading span {
+    color: #119bd3;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.auth-card-heading h1 {
+    margin: 0.35rem 0 0;
+    color: #41454f;
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.role-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.35rem;
+    border-radius: 8px;
+    background: #eef6ff;
+}
+
+.role-switch button {
+    min-height: 42px;
+    border: 0;
+    border-radius: 6px;
+    color: #59606b;
+    background: transparent;
+    font-weight: 800;
+}
+
+.role-switch button.active {
+    color: #fff;
+    background: #119bd3;
+}
+
+.auth-note,
+.auth-footer-text {
+    margin: 1rem 0 0;
+    color: #69707a;
+    font-size: 0.9rem;
+}
+
+.status-message {
+    margin-top: 1rem;
+    color: #137a3d;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.auth-form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.4rem;
+}
+
+.form-field {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.form-field label {
+    color: #41454f;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+.form-field input {
+    min-height: 46px;
+    width: 100%;
+    border: 1px solid #dfe5ec;
+    border-radius: 6px;
+    padding: 0.65rem 0.85rem;
+    color: #41454f;
+}
+
+.form-field input:focus {
+    border-color: #119bd3;
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(17, 155, 211, 0.16);
+}
+
+.auth-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.remember-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #69707a;
+    font-size: 0.9rem;
+}
+
+.auth-link {
+    color: #119bd3;
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.auth-link:hover,
+.auth-link:focus {
+    color: #0e7faf;
+    text-decoration: underline;
+}
+
+.auth-button {
+    min-height: 48px;
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    background: #2586ff;
+    font-weight: 800;
+}
+
+.auth-button:hover,
+.auth-button:focus {
+    background: #136fdc;
+}
+
+.auth-button.disabled {
+    opacity: 0.55;
+}
+
+@media (max-width: 480px) {
+    .auth-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+</style>
