@@ -4,11 +4,11 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     server: {
-        host: '0.0.0.0',
+        host: process.env.VITE_HOST || 'localhost',
         port: Number(process.env.VITE_PORT || 5173),
         strictPort: true,
         hmr: {
-            host: 'localhost',
+            host: process.env.VITE_HOST || 'localhost',
         },
     },
     plugins: [

@@ -5,7 +5,7 @@ RUN apt-get update \
         git \
         libzip-dev \
         unzip \
-    && docker-php-ext-install bcmath pdo_mysql zip \
+    && docker-php-ext-install bcmath opcache pdo_mysql zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,6 +20,7 @@ RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
+    --classmap-authoritative \
     --optimize-autoloader
 
 FROM node:22-bookworm AS assets
@@ -46,6 +47,15 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
     && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/testing storage/framework/views bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
+RUN printf '%s\n' \
+    'opcache.enable=1' \
+    'opcache.enable_cli=1' \
+    'opcache.memory_consumption=128' \
+    'opcache.interned_strings_buffer=16' \
+    'opcache.max_accelerated_files=20000' \
+    'opcache.validate_timestamps=0' \
+    > /usr/local/etc/php/conf.d/opcache-production.ini
+
 EXPOSE 9000
 
 ENTRYPOINT ["entrypoint.sh"]
@@ -55,3 +65,7 @@ FROM nginx:1.27-alpine AS web
 
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=app /var/www/html/public /var/www/html/public
+
+RUN mkdir -p /var/www/html/storage/app/public \
+    && rm -rf /var/www/html/public/storage \
+    && ln -s /var/www/html/storage/app/public /var/www/html/public/storage

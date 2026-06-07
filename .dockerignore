@@ -16,6 +16,7 @@ storage/framework/testing/*
 storage/framework/views/*
 vendor
 .env
+.env.docker
 .env.backup
 .env.production
 docker-compose.override.yml
