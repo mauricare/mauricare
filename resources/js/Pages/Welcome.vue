@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import MarketingFooter from '@/Components/MarketingFooter.vue';
 import MarketingNav from '@/Components/MarketingNav.vue';
 
-const benefits = [
+/* const benefits = [
     {
         title: 'Professional Care at Home',
         icon: 'fa-solid fa-house-medical',
@@ -19,6 +19,80 @@ const benefits = [
         title: 'Personalized Care Plan',
         icon: 'fa-solid fa-clipboard-list',
         text: 'We tailor our healthcare services to meet each patient’s specific needs, ensuring the right level of medical attention, comfort, and support at every stage of care.',
+    },
+];
+
+*/
+
+const partnerGroups = [
+    {
+        title: 'For Families',
+        icon: 'fa-solid fa-user-group',
+        accent: 'teal',
+        items: [
+            {
+                title: 'Find Trusted Care, Easily',
+                icon: 'fa-solid fa-magnifying-glass',
+                text: "Effortlessly discover qualified healthcare providers and agencies tailored to your family's needs.",
+            },
+            {
+                title: 'Peace of Mind',
+                icon: 'fa-solid fa-shield-heart',
+                text: 'Secure, confidential, and reliable care services, ensuring your loved ones are in safe hands.',
+            },
+            {
+                title: 'Seamless Experience',
+                icon: 'fa-solid fa-calendar-days',
+                text: 'Enjoy easy booking, streamlined communication, and islandwide access to quality care.',
+            },
+            {
+                title: 'Personalized Support',
+                icon: 'fa-solid fa-heart-pulse',
+                text: 'Compassionate care that respects individuality, dignity, and well-being at home or in residential settings.',
+            },
+        ],
+    },
+    {
+        title: 'For Healthcare Providers & Agencies',
+        icon: 'fa-solid fa-user-doctor',
+        accent: 'blue',
+        items: [
+            {
+                title: 'Expand Your Reach',
+                icon: 'fa-solid fa-globe',
+                text: 'Connect with a wider network of families and clients across Mauritius.',
+            },
+            {
+                title: 'Professional Showcase',
+                icon: 'fa-solid fa-id-card',
+                text: 'Build your online presence and highlight your expertise and compassionate services.',
+            },
+            {
+                title: 'Efficient Practice Management',
+                icon: 'fa-solid fa-gear',
+                text: 'Utilize tools for streamlined appointments and communication.',
+            },
+            {
+                title: 'Community Collaboration',
+                icon: 'fa-solid fa-handshake',
+                text: 'Become part of a trusted network committed to advancing healthcare standards in Mauritius.',
+            },
+        ],
+    },
+];
+
+const partnerPrinciples = [
+    {
+        title: 'Our Mission',
+        icon: 'fa-solid fa-bullseye',
+        accent: 'teal',
+        text: 'To build a healthier Mauritius by seamlessly connecting families with accessible, high-quality home and residential care, and by empowering healthcare professionals and agencies with the tools and reach to serve their communities effectively.',
+    },
+    {
+        title: 'Our Vision',
+        icon: 'fa-solid fa-eye',
+        accent: 'blue',
+        text: 'To be the cornerstone of accessible, compassionate healthcare and well-being in Mauritius, creating a future where every Mauritian family thrives with optimal health and dignity.',
     },
 ];
 
@@ -160,7 +234,7 @@ const medicalServiceSlides = computed(() => {
             content="Professional and compassionate nursing care at home for patients, elderly people, and families across Mauritius."
         />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://mauricare.mu/images/mauricare-home-care-nurse-elderly-home-visit.png" />
+        <meta property="og:image" content="https://mauricare.mu/images/mauricare-family.png" />
         <meta name="twitter:card" content="summary_large_image" />
     </Head>
 
@@ -168,80 +242,93 @@ const medicalServiceSlides = computed(() => {
         <header id="home" class="hero-section">
             <MarketingNav />
 
-            <div class="container hero-content text-center text-white">
-                <h1 class="fw-bold mb-4 main-title">Professional Home<br />Nursing &amp; Care Services</h1>
-                <p class="mx-auto mb-5">
-                    We provide compassionate, reliable and professional care in the comfort of your home.
+            <div class="container hero-content text-white">
+                <h1 class="fw-bold mb-4 main-title">Empowering<br />Healthier Lives,<br />Together.</h1>
+                <p class="mb-4 hero-copy">
+                    MauriCare: Connecting Mauritian Families with Compassionate, Exceptional Home and Residential Care.
                 </p>
-                <a href="#appointment" class="btn btn-primary hero-button fw-semibold">Book a Home Visit</a>
+
+                <div class="hero-actions">
+                    <a href="/login" class="btn hero-button hero-button-primary fw-semibold">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <span>Find Care</span>
+                    </a>
+                    <a href="/login" class="btn hero-button hero-button-secondary fw-semibold">
+                        <i class="fa-solid fa-user" aria-hidden="true"></i>
+                        <span>Join as Provider</span>
+                    </a>
+                </div>
+
+                <div class="hero-trust-strip" aria-label="Mauricare service highlights">
+                    <div class="hero-trust-item">
+                        <i class="fa-solid fa-award" aria-hidden="true"></i>
+                        <span>Trusted<br />Professionals</span>
+                    </div>
+                    <div class="hero-trust-item">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        <span>Secure &amp;<br />Confidential</span>
+                    </div>
+                    <div class="hero-trust-item">
+                        <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>
+                        <span>Easy<br />Booking</span>
+                    </div>
+                    <div class="hero-trust-item">
+                        <i class="fa-solid fa-headset" aria-hidden="true"></i>
+                        <span>Islandwide<br />Access</span>
+                    </div>
+                </div>
             </div>
         </header>
 
         <main>
             <section id="about" class="section-padding about-section">
                 <div class="container">
-                    <div class="row align-items-center gy-5">
-                        <div class="col-lg-6">
-                            <h2 class="section-title">Why Choose Mauricare<br />Home Care Services</h2>
-                            <p class="section-copy">
-                                We provide professional and compassionate healthcare services directly at your home.
-                                Our qualified nurses and healthcare professionals ensure high-quality medical care,
-                                comfort, and peace of mind for patients and families.
-                            </p>
-
-                            <div class="benefit-list">
-                                <article v-for="benefit in benefits" :key="benefit.title" class="d-flex gap-3">
-                                    <span class="icon-circle flex-shrink-0">
-                                        <i :class="benefit.icon" aria-hidden="true"></i>
-                                    </span>
-                                    <div>
-                                        <h3>{{ benefit.title }}</h3>
-                                        <p>{{ benefit.text }}</p>
-                                    </div>
-                                </article>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6 text-center">
-                            <img
-                                src="/images/mauricare-home-care-nurse-professional-caregiver.png"
-                                alt="Mauricare professional caregiver"
-                                class="nurse-portrait mx-auto"
-                            />
-                        </div>
+                    <div class="section-heading text-center mx-auto">
+                        <h2 class="section-title">Why Partner with MauriCare?</h2>
+                        <p class="section-copy">
+                            MauriCare is more than just a platform; it's a community dedicated to fostering a healthier
+                            Mauritius. We empower families by providing seamless access to a comprehensive network of
+                            trusted healthcare providers and agencies, while offering professionals a dedicated space to
+                            grow their practice and reach those in need.
+                        </p>
                     </div>
-                </div>
-            </section>
 
-            <section id="request-care" class="request-band">
-                <div class="container">
-                    <div class="row align-items-center gy-4">
-                        <div class="col-lg-5 text-white">
-                            <h2 class="fw-bold mb-3">Request Home Care<br />Services</h2>
-                            <p class="mb-4">
-                                Fill in your details and our team will contact you shortly to discuss your needs and
-                                arrange professional home healthcare services.
-                            </p>
-                            <span class="small text-uppercase fw-bold">Need assistance?</span>
-                            <a class="d-block text-white fw-bold text-decoration-none mt-1" href="tel:+23058199009">
-                                +(230) 5819-9009
-                            </a>
-                        </div>
+                    <div class="partner-grid">
+                        <article
+                            v-for="group in partnerGroups"
+                            :key="group.title"
+                            class="partner-card"
+                            :class="`partner-card-${group.accent}`"
+                        >
+                            <header class="partner-card-header">
+                                <h3>{{ group.title }}</h3>
+                            </header>
 
-                        <div class="col-lg-5 offset-lg-1">
-                            <form class="request-form">
-                                <input class="form-control" type="text" placeholder="Your Name *" aria-label="Your Name" />
-                                <input class="form-control" type="email" placeholder="Your Email" aria-label="Your Email" />
-                                <input class="form-control" type="tel" placeholder="Your Phone Number *" aria-label="Your Phone Number" />
-                                <textarea
-                                    class="form-control"
-                                    rows="4"
-                                    placeholder="Description"
-                                    aria-label="Description"
-                                ></textarea>
-                                <button class="btn btn-primary btn-sm fw-semibold" type="submit">Send Request</button>
-                            </form>
-                        </div>
+                            <div class="partner-feature-list">
+                                <div v-for="item in group.items" :key="item.title" class="partner-feature">
+                                    <i :class="item.icon" aria-hidden="true"></i>
+                                    <div>
+                                        <h4>{{ item.title }}</h4>
+                                        <p>{{ item.text }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="principle-grid">
+                        <article
+                            v-for="principle in partnerPrinciples"
+                            :key="principle.title"
+                            class="principle-card"
+                            :class="`principle-card-${principle.accent}`"
+                        >
+                            <i :class="principle.icon" aria-hidden="true"></i>
+                            <div>
+                                <h3>{{ principle.title }}</h3>
+                                <p>{{ principle.text }}</p>
+                            </div>
+                        </article>
                     </div>
                 </div>
             </section>
@@ -326,30 +413,6 @@ const medicalServiceSlides = computed(() => {
                         >
                             <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                         </button>
-                    </div>
-                </div>
-            </section>
-
-            <section id="care-packages" class="section-padding">
-                <div class="container-fluid section-wide-container">
-                    <div class="section-heading text-center mx-auto mb-5">
-                        <h2 class="section-title mb-0">Specialized Care Bundles</h2>
-                        <p class="section-kicker mt-3 mb-0">Tailored Care for Faster Recovery</p>
-                    </div>
-
-                    <div class="row g-4">
-                        <div v-for="bundle in careBundles" :key="bundle.title" class="col-md-6 col-xl-3">
-                            <article class="care-bundle-card">
-                                <img :src="bundle.image" :alt="`${bundle.title} home care service`" class="bundle-image" />
-
-                                <div class="bundle-body">
-                                    <h3>{{ bundle.title }}</h3>
-                                    <ul>
-                                        <li v-for="point in bundle.points" :key="point">{{ point }}</li>
-                                    </ul>
-                                </div>
-                            </article>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -528,7 +591,7 @@ const medicalServiceSlides = computed(() => {
 
 
 .main-title {
-    margin-top: 100px;
+    margin-top: 55px;
 }
 
 .caregiver-section {
@@ -540,8 +603,8 @@ const medicalServiceSlides = computed(() => {
     min-height: 800px;
     overflow: hidden;
     background:
-        linear-gradient(rgba(22, 24, 27, 0.66), rgba(22, 24, 27, 0.66)),
-        url('/images/mauricare-home-care-nurse-elderly-home-visit.png') center / cover no-repeat;
+        linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 38%, rgba(255, 255, 255, 0.12) 72%),
+        url('/images/mauricare-family.png') center / cover no-repeat;
 }
 
 .hero-section::after {
@@ -560,24 +623,102 @@ const medicalServiceSlides = computed(() => {
 .hero-content {
     position: relative;
     z-index: 1;
-    padding-top: 160px;
+    padding-top: 105px;
+    text-align: left;
 }
 
 .hero-content h1 {
-    font-size: clamp(2.4rem, 5vw, 4.2rem);
-    line-height: 1.12;
+    max-width: 560px;
+    color: #071f48;
+    font-size: clamp(2.7rem, 5.4vw, 5rem);
+    line-height: 1.05;
 }
 
 .hero-content p {
-    max-width: 620px;
-    color: rgba(255, 255, 255, 0.86);
+    max-width: 520px;
+    color: #071f48;
+}
+
+.hero-copy {
+    font-size: clamp(1.05rem, 1.6vw, 1.55rem);
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.4rem;
+    margin-bottom: 3.1rem;
 }
 
 .hero-button {
-    min-width: 220px;
+    min-width: 188px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
     padding: 0.9rem 2.1rem;
-    border-radius: 6px;
+    border: 0;
+    border-radius: 999px;
     font-size: 1rem;
+    color: #fff;
+    box-shadow: 0 14px 28px rgba(18, 34, 60, 0.16);
+}
+
+.hero-button-primary {
+    background: #df1d7a;
+}
+
+.hero-button-primary:hover,
+.hero-button-primary:focus {
+    color: #fff;
+    background: #c91369;
+}
+
+.hero-button-secondary {
+    background: #0aa6bd;
+}
+
+.hero-button-secondary:hover,
+.hero-button-secondary:focus {
+    color: #fff;
+    background: #078da1;
+}
+
+.hero-trust-strip {
+    width: fit-content;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(132px, 1fr));
+    gap: 0;
+    margin-bottom: 3rem;
+    overflow: hidden;
+    color: #071f48;
+    border: 1px solid rgba(10, 95, 121, 0.14);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 18px 42px rgba(17, 51, 78, 0.12);
+}
+
+.hero-trust-item {
+    min-height: 82px;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.hero-trust-item + .hero-trust-item {
+    border-left: 1px solid rgba(10, 95, 121, 0.12);
+}
+
+.hero-trust-item i {
+    color: #0aa6bd;
+    font-size: 1.8rem;
 }
 
 :deep(.mauricare-nav) {
@@ -589,6 +730,7 @@ const medicalServiceSlides = computed(() => {
     padding-top: 10px;
     padding-bottom: 10px;
     background: transparent;
+    box-shadow: none;
     transition: background-color 0.2s ease, box-shadow 0.2s ease, padding 0.2s ease;
 }
 
@@ -598,11 +740,25 @@ const medicalServiceSlides = computed(() => {
 }
 
 :deep(.mauricare-nav .nav-link) {
-    color: rgba(255, 255, 255, 0.86);
+    color: #071f48;
     font-size: 0.9rem;
     font-weight: 600;
     padding-right: 1rem;
     padding-left: 1rem;
+}
+
+:deep(.mauricare-nav.is-scrolled .nav-link) {
+    color: rgba(255, 255, 255, 0.86);
+}
+
+:deep(.mauricare-nav .btn-outline-light) {
+    color: #071f48;
+    border-color: rgba(7, 31, 72, 0.5);
+}
+
+:deep(.mauricare-nav.is-scrolled .btn-outline-light) {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.8);
 }
 
 :deep(.mauricare-nav .navbar-collapse) {
@@ -655,6 +811,162 @@ const medicalServiceSlides = computed(() => {
 
 .about-section {
     padding-top: 48px;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef8fb 100%);
+}
+
+.about-section .section-heading {
+    max-width: 900px;
+    margin-bottom: 2.4rem;
+}
+
+.about-section .section-title {
+    color: #071f48;
+}
+
+.about-section .section-copy {
+    max-width: 860px;
+    margin-right: auto;
+    margin-left: auto;
+    color: #1d3154;
+    font-weight: 700;
+}
+
+.partner-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+}
+
+.partner-card {
+    padding: 1.8rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 18px 42px rgba(34, 80, 118, 0.1);
+}
+
+.partner-card-header {
+    width: fit-content;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-right: auto;
+    margin-bottom: 1.2rem;
+    margin-left: auto;
+}
+
+.partner-card-header i {
+    font-size: 2.1rem;
+}
+
+.partner-card-header h3 {
+    max-width: 520px;
+    margin: 0;
+    font-size: clamp(1.35rem, 2vw, 1.8rem);
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.partner-feature-list {
+    display: grid;
+    gap: 2rem;
+    padding: 1.8rem;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.partner-feature {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 1.3rem;
+    align-items: start;
+}
+
+.partner-feature > i {
+    font-size: 3.4rem;
+    line-height: 1;
+    text-align: center;
+}
+
+.partner-feature h4 {
+    margin-bottom: 0.45rem;
+    font-size: 1.02rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.partner-feature p {
+    margin: 0;
+    color: #1d3154;
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1.55;
+}
+
+.partner-card-teal,
+.principle-card-teal {
+    --partner-accent: #0999a8;
+}
+
+.partner-card-blue,
+.principle-card-blue {
+    --partner-accent: #1168c8;
+}
+
+.partner-card-header,
+.partner-feature > i,
+.partner-feature h4,
+.principle-card > i,
+.principle-card h3 {
+    color: var(--partner-accent);
+}
+
+.principle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 2rem;
+    overflow: hidden;
+    border-radius: 0 0 8px 8px;
+    background: #eaf6f9;
+}
+
+.principle-card {
+    min-height: 230px;
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 1.4rem;
+    align-items: start;
+    padding: 2rem 3rem;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.18)),
+        linear-gradient(135deg, rgba(9, 153, 168, 0.12), rgba(17, 104, 200, 0.1));
+}
+
+.principle-card + .principle-card {
+    border-left: 1px solid rgba(17, 104, 200, 0.12);
+}
+
+.principle-card > i {
+    font-size: 4rem;
+    line-height: 1;
+    text-align: center;
+}
+
+.principle-card h3 {
+    margin-bottom: 0.55rem;
+    font-size: 1.45rem;
+    font-weight: 800;
+}
+
+.principle-card p {
+    max-width: 470px;
+    margin: 0;
+    color: #1d3154;
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1.6;
 }
 
 .section-title {
@@ -1262,7 +1574,19 @@ const medicalServiceSlides = computed(() => {
     }
 
     .hero-content {
-        padding-top: 150px;
+        padding-top: 115px;
+    }
+
+    .hero-trust-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hero-trust-item:nth-child(3) {
+        border-left: 0;
+    }
+
+    .hero-trust-item:nth-child(n + 3) {
+        border-top: 1px solid rgba(10, 95, 121, 0.12);
     }
 
     .section-padding {
@@ -1271,6 +1595,16 @@ const medicalServiceSlides = computed(() => {
 
     .about-section {
         padding-top: 40px;
+    }
+
+    .partner-grid,
+    .principle-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .principle-card + .principle-card {
+        border-top: 1px solid rgba(17, 104, 200, 0.12);
+        border-left: 0;
     }
 
     .request-band {
@@ -1321,6 +1655,35 @@ const medicalServiceSlides = computed(() => {
 }
 
 @media (max-width: 575.98px) {
+    .hero-content h1 {
+        max-width: 100%;
+    }
+
+    .hero-actions {
+        gap: 0.8rem;
+        margin-bottom: 2rem;
+    }
+
+    .hero-button {
+        width: 100%;
+    }
+
+    .hero-trust-strip {
+        width: 100%;
+        grid-template-columns: 1fr;
+    }
+
+    .hero-trust-item {
+        min-height: 70px;
+        padding: 0.85rem 1rem;
+    }
+
+    .hero-trust-item + .hero-trust-item,
+    .hero-trust-item:nth-child(3) {
+        border-left: 0;
+        border-top: 1px solid rgba(10, 95, 121, 0.12);
+    }
+
     .hero-section::after {
         bottom: -178px;
         width: 150vw;
@@ -1340,6 +1703,34 @@ const medicalServiceSlides = computed(() => {
     .request-form,
     .appointment-form {
         padding: 1.5rem;
+    }
+
+    .partner-card {
+        padding: 1rem;
+    }
+
+    .partner-feature-list {
+        gap: 1.45rem;
+        padding: 1.25rem;
+    }
+
+    .partner-feature {
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 1rem;
+    }
+
+    .partner-feature > i {
+        font-size: 2.55rem;
+    }
+
+    .principle-card {
+        grid-template-columns: 54px minmax(0, 1fr);
+        gap: 1rem;
+        padding: 1.5rem 1.25rem;
+    }
+
+    .principle-card > i {
+        font-size: 3rem;
     }
 
     .dental-grid {
