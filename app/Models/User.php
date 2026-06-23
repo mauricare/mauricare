@@ -9,25 +9,33 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
     'name',
     'email',
     'password',
-    'role',
+    'first_name',
+    'last_name',
+    'age',
     'phone',
     'address',
+    'city',
+    'care_giver_type',
+    'cv_path',
     'care_for',
     'care_needs',
-    'experience_years',
-    'qualification',
-    'availability',
+    'preferred_contact_method',
+    'emergency_contact_name',
+    'emergency_contact_phone',
+    'mobility_level',
+    'medical_notes',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -39,6 +47,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'age' => 'integer',
         ];
     }
 }

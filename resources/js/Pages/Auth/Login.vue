@@ -14,7 +14,7 @@ defineProps({
     },
 });
 
-const accountType = ref('caregiver');
+const accountType = ref('care_giver');
 
 const form = useForm({
     email: '',
@@ -41,22 +41,22 @@ const submit = () => {
         <div class="role-switch" aria-label="Account type">
             <button
                 type="button"
-                :class="{ active: accountType === 'caregiver' }"
-                @click="accountType = 'caregiver'"
+                :class="{ active: accountType === 'care_giver' }"
+                @click="accountType = 'care_giver'"
             >
-                Caregiver
+                Care Giver
             </button>
             <button
                 type="button"
-                :class="{ active: accountType === 'patient' }"
-                @click="accountType = 'patient'"
+                :class="{ active: accountType === 'care_seeker' }"
+                @click="accountType = 'care_seeker'"
             >
-                Patient
+                Care Seeker
             </button>
         </div>
 
         <p class="auth-note">
-            The login form is the same for caregivers and patients.
+            The login form is the same for care givers and care seekers.
         </p>
 
         <div v-if="status" class="status-message">

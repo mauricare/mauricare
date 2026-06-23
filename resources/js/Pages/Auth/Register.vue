@@ -4,16 +4,23 @@ import InputError from '@/Components/InputError.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
-    role: 'caregiver',
-    name: '',
+    role: 'care_giver',
+    first_name: '',
+    last_name: '',
     email: '',
+    age: '',
     phone: '',
     address: '',
+    city: '',
+    care_giver_type: '',
+    cv: null,
     care_for: '',
     care_needs: '',
-    experience_years: '',
-    qualification: '',
-    availability: '',
+    preferred_contact_method: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    mobility_level: '',
+    medical_notes: '',
     password: '',
     password_confirmation: '',
 });
@@ -25,6 +32,7 @@ const setRole = (role) => {
 
 const submit = () => {
     form.post(route('register'), {
+        forceFormData: true,
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
 };
@@ -42,17 +50,17 @@ const submit = () => {
         <div class="role-switch" aria-label="Account type">
             <button
                 type="button"
-                :class="{ active: form.role === 'caregiver' }"
-                @click="setRole('caregiver')"
+                :class="{ active: form.role === 'care_giver' }"
+                @click="setRole('care_giver')"
             >
-                Caregiver
+                Care Giver
             </button>
             <button
                 type="button"
-                :class="{ active: form.role === 'patient' }"
-                @click="setRole('patient')"
+                :class="{ active: form.role === 'care_seeker' }"
+                @click="setRole('care_seeker')"
             >
-                Patient
+                Care Seeker
             </button>
         </div>
         <InputError class="mt-2" :message="form.errors.role" />
@@ -60,15 +68,27 @@ const submit = () => {
         <form class="auth-form" @submit.prevent="submit">
             <div class="form-grid">
                 <div class="form-field">
-                    <label for="name">Full name</label>
-                    <input id="name" v-model="form.name" type="text" required autofocus autocomplete="name" />
-                    <InputError :message="form.errors.name" />
+                    <label for="first_name">First name</label>
+                    <input id="first_name" v-model="form.first_name" type="text" required autofocus autocomplete="given-name" />
+                    <InputError :message="form.errors.first_name" />
+                </div>
+
+                <div class="form-field">
+                    <label for="last_name">Last name</label>
+                    <input id="last_name" v-model="form.last_name" type="text" required autocomplete="family-name" />
+                    <InputError :message="form.errors.last_name" />
                 </div>
 
                 <div class="form-field">
                     <label for="email">Email</label>
                     <input id="email" v-model="form.email" type="email" required autocomplete="username" />
                     <InputError :message="form.errors.email" />
+                </div>
+
+                <div class="form-field">
+                    <label for="age">Age</label>
+                    <input id="age" v-model="form.age" type="number" min="0" max="120" required autocomplete="bday" />
+                    <InputError :message="form.errors.age" />
                 </div>
 
                 <div class="form-field">
@@ -82,60 +102,78 @@ const submit = () => {
                     <input id="address" v-model="form.address" type="text" autocomplete="street-address" />
                     <InputError :message="form.errors.address" />
                 </div>
-            </div>
-
-            <div v-if="form.role === 'caregiver'" class="role-fields">
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="experience_years">Years of experience</label>
-                        <input
-                            id="experience_years"
-                            v-model="form.experience_years"
-                            type="number"
-                            min="0"
-                            max="60"
-                            required
-                        />
-                        <InputError :message="form.errors.experience_years" />
-                    </div>
-
-                    <div class="form-field">
-                        <label for="qualification">Qualification</label>
-                        <input
-                            id="qualification"
-                            v-model="form.qualification"
-                            type="text"
-                            required
-                            placeholder="Nursing, caregiving, first aid..."
-                        />
-                        <InputError :message="form.errors.qualification" />
-                    </div>
-                </div>
 
                 <div class="form-field">
-                    <label for="availability">Availability</label>
-                    <input
-                        id="availability"
-                        v-model="form.availability"
-                        type="text"
-                        required
-                        placeholder="Weekdays, weekends, full-time, part-time..."
-                    />
-                    <InputError :message="form.errors.availability" />
+                    <label for="city">City</label>
+                    <input id="city" v-model="form.city" type="text" required autocomplete="address-level2" />
+                    <InputError :message="form.errors.city" />
+                </div>
+            </div>
+
+            <div v-if="form.role === 'care_giver'" class="role-fields">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="care_giver_type">Type</label>
+                        <select id="care_giver_type" v-model="form.care_giver_type" required>
+                            <option value="" disabled>Select a type</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="nurse">Nurse</option>
+                            <option value="carers">Carers</option>
+                            <option value="physiotherapist">Physiotherapist</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <InputError :message="form.errors.care_giver_type" />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cv">CV</label>
+                        <input
+                            id="cv"
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            required
+                            @input="form.cv = $event.target.files[0]"
+                        />
+                        <InputError :message="form.errors.cv" />
+                    </div>
                 </div>
             </div>
 
             <div v-else class="role-fields">
-                <div class="form-field">
-                    <label for="care_for">Who needs care?</label>
-                    <input
-                        id="care_for"
-                        v-model="form.care_for"
-                        type="text"
-                        required
-                        placeholder="Myself, parent, spouse, child..."
-                    />
-                    <InputError :message="form.errors.care_for" />
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="care_for">Who needs care?</label>
+                        <input
+                            id="care_for"
+                            v-model="form.care_for"
+                            type="text"
+                            required
+                            placeholder="Myself, parent, spouse, child..."
+                        />
+                        <InputError :message="form.errors.care_for" />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="preferred_contact_method">Preferred contact</label>
+                        <select id="preferred_contact_method" v-model="form.preferred_contact_method">
+                            <option value="">Any</option>
+                            <option value="phone">Phone</option>
+                            <option value="email">Email</option>
+                        </select>
+                        <InputError :message="form.errors.preferred_contact_method" />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="emergency_contact_name">Emergency contact name</label>
+                        <input id="emergency_contact_name" v-model="form.emergency_contact_name" type="text" />
+                        <InputError :message="form.errors.emergency_contact_name" />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="emergency_contact_phone">Emergency contact phone</label>
+                        <input id="emergency_contact_phone" v-model="form.emergency_contact_phone" type="tel" />
+                        <InputError :message="form.errors.emergency_contact_phone" />
+                    </div>
                 </div>
 
                 <div class="form-field">
@@ -148,6 +186,30 @@ const submit = () => {
                         placeholder="Tell us about the support needed at home."
                     ></textarea>
                     <InputError :message="form.errors.care_needs" />
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="mobility_level">Mobility level</label>
+                        <input
+                            id="mobility_level"
+                            v-model="form.mobility_level"
+                            type="text"
+                            placeholder="Independent, assisted, bedridden..."
+                        />
+                        <InputError :message="form.errors.mobility_level" />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="medical_notes">Medical notes</label>
+                        <textarea
+                            id="medical_notes"
+                            v-model="form.medical_notes"
+                            rows="3"
+                            placeholder="Allergies, conditions, medication notes..."
+                        ></textarea>
+                        <InputError :message="form.errors.medical_notes" />
+                    </div>
                 </div>
             </div>
 
@@ -259,6 +321,7 @@ const submit = () => {
 }
 
 .form-field input,
+.form-field select,
 .form-field textarea {
     min-height: 46px;
     width: 100%;
@@ -270,6 +333,7 @@ const submit = () => {
 }
 
 .form-field input:focus,
+.form-field select:focus,
 .form-field textarea:focus {
     border-color: #119bd3;
     outline: 0;
