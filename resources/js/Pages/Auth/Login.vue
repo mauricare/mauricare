@@ -14,7 +14,8 @@ defineProps({
     },
 });
 
-const accountType = ref('care_giver');
+const selectedRole = new URLSearchParams(window.location.search).get('role');
+const accountType = ref(['care_giver', 'care_seeker'].includes(selectedRole) ? selectedRole : 'care_giver');
 
 const form = useForm({
     email: '',

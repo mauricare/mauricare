@@ -53,9 +53,7 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $cvPath = $request->role === 'care_giver' && $request->hasFile('cv')
-            ? $request->file('cv')->store('care-giver-cvs', 'public')
-            : null;
+        $cv = $request->file('cv');
 
         $firstName = $request->string('first_name')->trim()->toString();
         $lastName = $request->string('last_name')->trim()->toString();
@@ -64,23 +62,46 @@ class RegisteredUserController extends Controller
         $user = User::create([
             'name' => $name,
             'email' => $request->email,
-            'first_name' => $firstName ?: null,
-            'last_name' => $lastName ?: null,
+            'password' => Hash::make($request->password),
+        ]);
+
+        $user->profile()->create([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'age' => $request->age,
             'phone' => $request->phone,
             'address' => $request->address,
             'city' => $request->city,
-            'care_giver_type' => $request->role === 'care_giver' ? $request->care_giver_type : null,
-            'cv_path' => $cvPath,
-            'care_for' => $request->role === 'care_seeker' ? $request->care_for : null,
-            'care_needs' => $request->role === 'care_seeker' ? $request->care_needs : null,
-            'preferred_contact_method' => $request->role === 'care_seeker' ? $request->preferred_contact_method : null,
-            'emergency_contact_name' => $request->role === 'care_seeker' ? $request->emergency_contact_name : null,
-            'emergency_contact_phone' => $request->role === 'care_seeker' ? $request->emergency_contact_phone : null,
-            'mobility_level' => $request->role === 'care_seeker' ? $request->mobility_level : null,
-            'medical_notes' => $request->role === 'care_seeker' ? $request->medical_notes : null,
-            'password' => Hash::make($request->password),
         ]);
+
+        if ($request->role === 'care_giver') {
+            $user->careGiverProfile()->create([
+                'type' => $request->care_giver_type,
+            ]);
+
+            if ($cv) {
+                $user->documents()->create([
+                    'type' => 'cv',
+                    'disk' => 'public',
+                    'path' => $cv->store('care-giver-cvs', 'public'),
+                    'original_name' => $cv->getClientOriginalName(),
+                    'mime_type' => $cv->getClientMimeType(),
+                    'size' => $cv->getSize(),
+                ]);
+            }
+        }
+
+        if ($request->role === 'care_seeker') {
+            $user->careSeekerProfile()->create([
+                'care_for' => $request->care_for,
+                'care_needs' => $request->care_needs,
+                'preferred_contact_method' => $request->preferred_contact_method,
+                'emergency_contact_name' => $request->emergency_contact_name,
+                'emergency_contact_phone' => $request->emergency_contact_phone,
+                'mobility_level' => $request->mobility_level,
+                'medical_notes' => $request->medical_notes,
+            ]);
+        }
 
         $user->assignRole(Role::findOrCreate($request->role, 'web'));
 
@@ -88,6 +109,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('account.verification', absolute: false));
     }
 }

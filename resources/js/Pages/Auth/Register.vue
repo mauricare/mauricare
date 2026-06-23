@@ -2,9 +2,15 @@
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import axios from 'axios';
+import { ref } from 'vue';
+
+const processing = ref(false);
+const successMessage = ref('');
+const selectedRole = new URLSearchParams(window.location.search).get('role');
 
 const form = useForm({
-    role: 'care_giver',
+    role: ['care_giver', 'care_seeker'].includes(selectedRole) ? selectedRole : 'care_giver',
     first_name: '',
     last_name: '',
     email: '',
@@ -28,13 +34,70 @@ const form = useForm({
 const setRole = (role) => {
     form.role = role;
     form.clearErrors();
+    successMessage.value = '';
 };
 
-const submit = () => {
-    form.post(route('register'), {
-        forceFormData: true,
-        onFinish: () => form.reset('password', 'password_confirmation'),
-    });
+const appendAttribute = (payload, key, value) => {
+    if (value !== null && value !== undefined && value !== '') {
+        payload.append(`mutate[0][attributes][${key}]`, value);
+    }
+};
+
+const mapApiErrors = (errors) => Object.entries(errors).reduce((mappedErrors, [key, messages]) => {
+    const field = key.replace(/^mutate\.0\.attributes\./, '');
+
+    mappedErrors[field] = Array.isArray(messages) ? messages[0] : messages;
+
+    return mappedErrors;
+}, {});
+
+const submit = async () => {
+    processing.value = true;
+    successMessage.value = '';
+    form.clearErrors();
+
+    const payload = new FormData();
+
+    payload.append('mutate[0][operation]', 'create');
+    appendAttribute(payload, 'role', form.role);
+    appendAttribute(payload, 'first_name', form.first_name);
+    appendAttribute(payload, 'last_name', form.last_name);
+    appendAttribute(payload, 'email', form.email);
+    appendAttribute(payload, 'age', form.age);
+    appendAttribute(payload, 'phone', form.phone);
+    appendAttribute(payload, 'address', form.address);
+    appendAttribute(payload, 'city', form.city);
+    appendAttribute(payload, 'password', form.password);
+    appendAttribute(payload, 'password_confirmation', form.password_confirmation);
+
+    if (form.role === 'care_giver') {
+        appendAttribute(payload, 'care_giver_type', form.care_giver_type);
+        appendAttribute(payload, 'cv', form.cv);
+    }
+
+    if (form.role === 'care_seeker') {
+        appendAttribute(payload, 'care_for', form.care_for);
+        appendAttribute(payload, 'care_needs', form.care_needs);
+        appendAttribute(payload, 'preferred_contact_method', form.preferred_contact_method);
+        appendAttribute(payload, 'emergency_contact_name', form.emergency_contact_name);
+        appendAttribute(payload, 'emergency_contact_phone', form.emergency_contact_phone);
+        appendAttribute(payload, 'mobility_level', form.mobility_level);
+        appendAttribute(payload, 'medical_notes', form.medical_notes);
+    }
+
+    try {
+        await axios.post('/api/users/mutate', payload);
+
+        successMessage.value = 'Account created successfully. You can now log in.';
+        form.reset();
+    } catch (error) {
+        if (error.response?.status === 422) {
+            form.setError(mapApiErrors(error.response.data.errors ?? {}));
+        }
+    } finally {
+        processing.value = false;
+        form.reset('password', 'password_confirmation');
+    }
 };
 </script>
 
@@ -66,6 +129,10 @@ const submit = () => {
         <InputError class="mt-2" :message="form.errors.role" />
 
         <form class="auth-form" @submit.prevent="submit">
+            <div v-if="successMessage" class="status-message">
+                {{ successMessage }}
+            </div>
+
             <div class="form-grid">
                 <div class="form-field">
                     <label for="first_name">First name</label>
@@ -233,7 +300,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <button class="auth-button" :class="{ disabled: form.processing }" :disabled="form.processing">
+            <button class="auth-button" :class="{ disabled: processing }" :disabled="processing">
                 Register
             </button>
 
@@ -292,6 +359,15 @@ const submit = () => {
     display: grid;
     gap: 1rem;
     margin-top: 1.4rem;
+}
+
+.status-message {
+    border-radius: 6px;
+    padding: 0.75rem 0.9rem;
+    color: #12643a;
+    background: #e9f8ef;
+    font-size: 0.9rem;
+    font-weight: 700;
 }
 
 .form-grid {

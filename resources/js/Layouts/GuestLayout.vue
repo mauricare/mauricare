@@ -6,19 +6,19 @@ import { Link } from '@inertiajs/vue3';
     <div
         class="auth-shell flex min-h-screen flex-col items-center pt-6 sm:justify-center sm:pt-0"
     >
-        <div>
-            <Link href="/">
-                <img
-                    class="auth-logo"
-                    src="/images/mauricare-home-care-services-logo.png"
-                    alt="Mauricare Home Care Services"
-                />
-            </Link>
-        </div>
-
         <div
-            class="auth-card mt-6 w-full overflow-hidden bg-white px-6 py-5 shadow-md sm:max-w-3xl sm:rounded-lg"
+            class="auth-card w-full overflow-hidden bg-white px-6 py-5 shadow-md sm:max-w-3xl sm:rounded-lg"
         >
+            <div class="auth-brand">
+                <Link href="/">
+                    <img
+                        class="auth-logo"
+                        src="/images/mauricare-home-care-services-logo.png"
+                        alt="Mauricare Home Care Services"
+                    />
+                </Link>
+            </div>
+
             <slot />
         </div>
     </div>
@@ -49,11 +49,17 @@ import { Link } from '@inertiajs/vue3';
     z-index: 1;
 }
 
+.auth-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.35rem;
+}
+
 .auth-logo {
-    width: 132px;
+    width: 124px;
     height: auto;
     display: block;
-    filter: drop-shadow(0 10px 22px rgba(21, 44, 64, 0.24));
 }
 
 .auth-card {

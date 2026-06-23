@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,21 +17,6 @@ use Spatie\Permission\Traits\HasRoles;
     'name',
     'email',
     'password',
-    'first_name',
-    'last_name',
-    'age',
-    'phone',
-    'address',
-    'city',
-    'care_giver_type',
-    'cv_path',
-    'care_for',
-    'care_needs',
-    'preferred_contact_method',
-    'emergency_contact_name',
-    'emergency_contact_phone',
-    'mobility_level',
-    'medical_notes',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -47,7 +34,26 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'age' => 'integer',
         ];
+    }
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    public function careGiverProfile(): HasOne
+    {
+        return $this->hasOne(CareGiverProfile::class);
+    }
+
+    public function careSeekerProfile(): HasOne
+    {
+        return $this->hasOne(CareSeekerProfile::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
     }
 }

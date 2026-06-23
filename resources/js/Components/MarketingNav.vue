@@ -56,8 +56,8 @@ onBeforeUnmount(() => {
                 </ul>
 
                 <div class="d-flex align-items-center gap-2">
-                    <a class="btn btn-primary btn-sm fw-semibold px-3" href="tel:+23058199009">
-                        Call +230 5819 9009
+                    <a class="btn btn-primary btn-sm fw-semibold px-3" href="tel:+23059199909">
+                        Call +230 5919 9909
                     </a>
                     <a class="btn btn-outline-light btn-sm fw-semibold px-3" :href="route('login')">
                         Login

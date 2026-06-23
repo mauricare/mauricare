@@ -11,26 +11,50 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('first_name')->nullable()->after('password');
-            $table->string('last_name')->nullable()->after('first_name');
-            $table->unsignedTinyInteger('age')->nullable()->after('last_name');
-            $table->string('phone')->nullable()->after('age');
-            $table->string('address')->nullable()->after('phone');
-            $table->string('city')->nullable()->after('address');
+        Schema::create('user_profiles', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->string('first_name');
+            $table->string('last_name');
+            $table->unsignedTinyInteger('age')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('address')->nullable();
+            $table->string('city')->nullable();
+            $table->timestamps();
+        });
 
-            $table->enum('care_giver_type', ['doctor', 'nurse', 'carers', 'physiotherapist', 'other'])
-                ->nullable()
-                ->after('city');
-            $table->string('cv_path')->nullable()->after('care_giver_type');
+        Schema::create('care_giver_profiles', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->enum('type', ['doctor', 'nurse', 'carers', 'physiotherapist', 'other']);
+            $table->timestamps();
+        });
 
-            $table->string('care_for')->nullable()->after('cv_path');
-            $table->text('care_needs')->nullable()->after('care_for');
-            $table->string('preferred_contact_method')->nullable()->after('care_needs');
-            $table->string('emergency_contact_name')->nullable()->after('preferred_contact_method');
-            $table->string('emergency_contact_phone')->nullable()->after('emergency_contact_name');
-            $table->string('mobility_level')->nullable()->after('emergency_contact_phone');
-            $table->text('medical_notes')->nullable()->after('mobility_level');
+        Schema::create('care_seeker_profiles', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->string('care_for')->nullable();
+            $table->text('care_needs')->nullable();
+            $table->string('preferred_contact_method')->nullable();
+            $table->string('emergency_contact_name')->nullable();
+            $table->string('emergency_contact_phone')->nullable();
+            $table->string('mobility_level')->nullable();
+            $table->text('medical_notes')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('documents', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('type');
+            $table->string('disk')->default('public');
+            $table->string('path');
+            $table->string('original_name')->nullable();
+            $table->string('mime_type')->nullable();
+            $table->unsignedBigInteger('size')->nullable();
+            $table->timestamps();
+
+            $table->index(['user_id', 'type']);
         });
     }
 
@@ -39,24 +63,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn([
-                'first_name',
-                'last_name',
-                'age',
-                'phone',
-                'address',
-                'city',
-                'care_giver_type',
-                'cv_path',
-                'care_for',
-                'care_needs',
-                'preferred_contact_method',
-                'emergency_contact_name',
-                'emergency_contact_phone',
-                'mobility_level',
-                'medical_notes',
-            ]);
-        });
+        Schema::dropIfExists('documents');
+        Schema::dropIfExists('care_seeker_profiles');
+        Schema::dropIfExists('care_giver_profiles');
+        Schema::dropIfExists('user_profiles');
     }
 };

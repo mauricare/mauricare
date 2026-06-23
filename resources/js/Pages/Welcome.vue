@@ -96,17 +96,32 @@ const partnerPrinciples = [
     },
 ];
 
-const medicalServices = [
-    { title: 'Injection & IV Therapy', icon: 'fa-solid fa-syringe' },
-    { title: 'NGT & Catheter Care', icon: 'fa-solid fa-kit-medical' },
-    { title: 'Wound Dressing', icon: 'fa-solid fa-bandage' },
-    { title: 'Bedsore Treatment', icon: 'fa-solid fa-bed-pulse' },
-    { title: 'Oxygen Therapy', icon: 'fa-solid fa-lungs' },
-    { title: 'Monthly Doctor Visits', icon: 'fa-solid fa-user-doctor' },
-    { title: 'Cashless Visits', icon: 'fa-solid fa-credit-card' },
-    { title: 'Elderly Home Doctor Visits', icon: 'fa-solid fa-person-cane' },
-    { title: 'Teleconsultation', icon: 'fa-solid fa-video' },
-    { title: 'Blood Collection', icon: 'fa-solid fa-vial' },
+const comprehensiveCareServices = [
+    {
+        title: 'Home Care Nursing',
+        icon: 'fa-solid fa-house-medical',
+        text: 'Wound care, injections, IV therapy, catheter care and more, delivered with compassion.',
+    },
+    {
+        title: 'Elderly & Residential Care',
+        icon: 'fa-solid fa-hand-holding-heart',
+        text: 'A warm, safe, and dignified environment for seniors.',
+    },
+    {
+        title: 'Specialized Therapies',
+        icon: 'fa-solid fa-person-walking',
+        text: 'Physiotherapy and other rehabilitative services at home.',
+    },
+    {
+        title: 'Medical Equipment Rental',
+        icon: 'fa-solid fa-wheelchair',
+        text: 'Convenient access to essential equipment when you need it.',
+    },
+    {
+        title: 'Telehealth Consultations',
+        icon: 'fa-solid fa-display',
+        text: 'Remote access to healthcare professionals from the comfort of your home.',
+    },
 ];
 
 const careBundles = [
@@ -206,15 +221,6 @@ const testimonialSlides = computed(() => {
     return slides;
 });
 
-const medicalServiceSlides = computed(() => {
-    const slides = [];
-
-    for (let index = 0; index < medicalServices.length; index += 5) {
-        slides.push(medicalServices.slice(index, index + 5));
-    }
-
-    return slides;
-});
 </script>
 
 <template>
@@ -249,11 +255,11 @@ const medicalServiceSlides = computed(() => {
                 </p>
 
                 <div class="hero-actions">
-                    <a href="/login" class="btn hero-button hero-button-primary fw-semibold">
+                    <a href="/login?role=care_seeker" class="btn hero-button hero-button-primary fw-semibold">
                         <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                         <span>Find Care</span>
                     </a>
-                    <a href="/login" class="btn hero-button hero-button-secondary fw-semibold">
+                    <a href="/register?role=care_giver" class="btn hero-button hero-button-secondary fw-semibold">
                         <i class="fa-solid fa-user" aria-hidden="true"></i>
                         <span>Join as Provider</span>
                     </a>
@@ -344,8 +350,8 @@ const medicalServiceSlides = computed(() => {
                                     with dignity, respect, and kindness. Our philosophy is centered on delivering
                                     personalized, professional, and compassionate healthcare in the comfort of your home.
                                 </p>
-                                <a href="tel:+23058199009" class="btn philosophy-call fw-semibold">
-                                    Call Now - 5819 9009
+                                <a href="tel:+23059199909" class="btn philosophy-call fw-semibold">
+                                    Call Now - 5919 9909
                                 </a>
                             </div>
 
@@ -369,50 +375,20 @@ const medicalServiceSlides = computed(() => {
             <section id="medical-services" class="medical-section section-padding">
                 <div class="container-fluid px-3 px-xl-4">
                     <div class="text-center">
-                        <h2 class="section-title">Medical Services &amp; Procedures</h2>
-                        <p class="section-kicker mb-5">Expert Nursing Care at Home</p>
+                        <h2 class="section-title">Comprehensive Care Services</h2>
+                        <p class="section-kicker mb-5">Expert Care at Home and in Residential Settings</p>
                     </div>
 
-                    <div class="medical-carousel-wrap">
-                        <button
-                            class="medical-carousel-control"
-                            type="button"
-                            data-bs-target="#medicalServicesCarousel"
-                            data-bs-slide="prev"
-                            aria-label="Previous medical services"
+                    <div class="care-services-grid">
+                        <article
+                            v-for="service in comprehensiveCareServices"
+                            :key="service.title"
+                            class="care-service-card"
                         >
-                            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                        </button>
-
-                        <div id="medicalServicesCarousel" class="carousel slide medical-carousel" data-bs-ride="false">
-                            <div class="carousel-inner">
-                                <div
-                                    v-for="(slide, slideIndex) in medicalServiceSlides"
-                                    :key="slideIndex"
-                                    class="carousel-item"
-                                    :class="{ active: slideIndex === 0 }"
-                                >
-                                    <div class="row g-4 justify-content-center">
-                                        <div v-for="service in slide" :key="service.title" class="col-sm-6 service-col">
-                                    <article class="service-tile">
-                                        <i :class="service.icon" aria-hidden="true"></i>
-                                        <h3>{{ service.title }}</h3>
-                                    </article>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            class="medical-carousel-control"
-                            type="button"
-                            data-bs-target="#medicalServicesCarousel"
-                            data-bs-slide="next"
-                            aria-label="Next medical services"
-                        >
-                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                        </button>
+                            <i :class="service.icon" aria-hidden="true"></i>
+                            <h3>{{ service.title }}</h3>
+                            <p>{{ service.text }}</p>
+                        </article>
                     </div>
                 </div>
             </section>
@@ -431,7 +407,7 @@ const medicalServiceSlides = computed(() => {
                             </div>
 
                             <div class="col-lg-4 text-lg-end">
-                                <a href="/login" class="btn caregiver-button fw-semibold">
+                                <a href="/register?role=care_giver" class="btn caregiver-button fw-semibold">
                                     Click here to join our team of carers
                                 </a>
                             </div>
@@ -592,10 +568,6 @@ const medicalServiceSlides = computed(() => {
 
 .main-title {
     margin-top: 55px;
-}
-
-.caregiver-section {
-    padding-top : 0px!important;
 }
 
 .hero-section {
@@ -1141,70 +1113,55 @@ const medicalServiceSlides = computed(() => {
     background: #f3f8ff;
 }
 
-.service-tile {
-    min-height: 245px;
+.care-services-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.55rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.care-service-card {
+    min-height: 285px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 1.15rem;
-    padding: 2rem 1.35rem;
+    justify-content: flex-start;
+    padding: 1.9rem 1.15rem 1.55rem;
+    border-radius: 8px;
     color: #fff;
     background: #119bd3;
-    border-radius: 14px;
     text-align: center;
-    box-shadow: 0 12px 28px rgba(43, 63, 95, 0.08);
+    box-shadow: 0 16px 34px rgba(17, 75, 112, 0.16);
 }
 
-.service-tile i {
+.care-service-card i {
+    min-height: 74px;
+    display: grid;
+    place-items: center;
     color: #dff6c0;
-    font-size: 2.8rem;
+    font-size: 3.75rem;
+    line-height: 1;
 }
 
-.service-tile h3 {
+.care-service-card h3 {
     min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0;
+    margin: 1.05rem 0 0.75rem;
     color: #fff;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 800;
-    line-height: 1.15;
+    line-height: 1.2;
 }
 
-.medical-carousel-wrap {
-    display: grid;
-    grid-template-columns: 48px minmax(0, 1fr) 48px;
-    align-items: center;
-    gap: 0.9rem;
-}
-
-.medical-carousel-control {
-    width: 48px;
-    height: 48px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(17, 155, 211, 0.55);
-    border-radius: 50%;
-    color: #41454f;
-    background: #fff;
-    transition: 0.2s ease;
-}
-
-@media (min-width: 1200px) {
-    .service-col {
-        flex: 0 0 20%;
-        max-width: 20%;
-    }
-}
-
-.medical-carousel-control:hover,
-.medical-carousel-control:focus {
-    color: #fff;
-    background: #119bd3;
-    border-color: #119bd3;
+.care-service-card p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.55;
 }
 
 .section-heading {
@@ -1268,7 +1225,7 @@ const medicalServiceSlides = computed(() => {
     color: #fff;
     background:
         linear-gradient(90deg, rgba(17, 155, 211, 0.95), rgba(236, 22, 150, 0.82)),
-        url('/images/mauricare-home-care-nurse-professional-caregiver.png') center / cover no-repeat;
+        url('/images/mauricare-home-care-nurse-professional-caregiver.png') center 20% / cover no-repeat;
 }
 
 .caregiver-kicker {
@@ -1629,18 +1586,12 @@ const medicalServiceSlides = computed(() => {
         min-height: 320px;
     }
 
-    .medical-carousel-wrap {
-        grid-template-columns: 44px minmax(0, 1fr) 44px;
-        gap: 0.75rem;
+    .care-services-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .medical-carousel-control {
-        width: 44px;
-        height: 44px;
-    }
-
-    .service-tile {
-        min-height: 230px;
+    .care-service-card {
+        min-height: 250px;
     }
 
     .philosophy-panel {
@@ -1740,6 +1691,10 @@ const medicalServiceSlides = computed(() => {
 
     .insurance-card {
         grid-column: span 1;
+    }
+
+    .care-services-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>
