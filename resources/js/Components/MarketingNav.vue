@@ -5,7 +5,6 @@ const navItems = [
     { label: 'Home', href: '#home' },
     { label: 'About', href: '#about' },
     { label: 'Medical Services', href: '#medical-services' },
-    { label: 'Care Packages', href: '#care-packages' },
     { label: 'Contact Us', href: '#request-care' },
 ];
 

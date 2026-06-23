@@ -1,8 +1,29 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import MarketingFooter from '@/Components/MarketingFooter.vue';
 import MarketingNav from '@/Components/MarketingNav.vue';
+
+const contactSuccess = ref('');
+
+const contactForm = useForm({
+    name: '',
+    phone: '',
+    email: '',
+    message: '',
+});
+
+const submitContact = () => {
+    contactSuccess.value = '';
+
+    contactForm.post(route('contact.submit'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            contactSuccess.value = 'Thank you. Your message has been sent.';
+            contactForm.reset();
+        },
+    });
+};
 
 /* const benefits = [
     {
@@ -351,7 +372,7 @@ const testimonialSlides = computed(() => {
                                     personalized, professional, and compassionate healthcare in the comfort of your home.
                                 </p>
                                 <a href="tel:+23059199909" class="btn philosophy-call fw-semibold">
-                                    Call Now - 5919 9909
+                                    Call Now - +230 5919 9909
                                 </a>
                             </div>
 
@@ -399,16 +420,16 @@ const testimonialSlides = computed(() => {
                         <div class="row align-items-center gy-4">
                             <div class="col-lg-8">
                                 <span class="caregiver-kicker">Caregiver Opportunities</span>
-                                <h2>Join Mauricare as a Caregiver</h2>
+                                <h2>Join Mauricare as a Healthcare Provider</h2>
                                 <p>
-                                    We are looking for compassionate and reliable carers to join our team and help us
+                                    We are looking for compassionate and reliable healthcare providers to join our team and help us
                                     provide dignified home care support to families across Mauritius.
                                 </p>
                             </div>
 
                             <div class="col-lg-4 text-lg-end">
                                 <a href="/register?role=care_giver" class="btn caregiver-button fw-semibold">
-                                    Click here to join our team of carers
+                                    Click here to join our team
                                 </a>
                             </div>
                         </div>
@@ -543,6 +564,96 @@ const testimonialSlides = computed(() => {
                                         <strong>{{ person }}</strong>
                                     </article>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="request-care" class="contact-section section-padding">
+                <div class="container">
+                    <div class="contact-panel mx-auto overflow-hidden rounded-3">
+                        <div class="row g-0">
+                            <div class="col-lg-5 contact-strip">
+                                <div class="contact-intro">
+                                    <span class="contact-kicker">Contact Us</span>
+                                    <h2>Speak with Mauricare</h2>
+                                    <p>
+                                        Tell us what kind of care you need and our team will get back to you shortly.
+                                    </p>
+                                </div>
+
+                                <div class="contact-method-list">
+                                    <a class="contact-method" href="tel:+23059199909">
+                                        <span class="contact-icon">
+                                            <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                                        </span>
+                                        <span>
+                                            <strong>Call us</strong>
+                                            +230 5919 9909
+                                        </span>
+                                    </a>
+
+                                    <a class="contact-method" href="mailto:info@mauricare.mu">
+                                        <span class="contact-icon">
+                                            <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                                        </span>
+                                        <span>
+                                            <strong>Email us</strong>
+                                            info@mauricare.mu
+                                        </span>
+                                    </a>
+
+                                    <div class="contact-method">
+                                        <span class="contact-icon">
+                                            <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                        </span>
+                                        <span>
+                                            <strong>Service area</strong>
+                                            Islandwide care across Mauritius
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-7">
+                                <form class="appointment-form" @submit.prevent="submitContact">
+                                    <div v-if="contactSuccess" class="contact-success">
+                                        {{ contactSuccess }}
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="contact-name">Name</label>
+                                            <input id="contact-name" v-model="contactForm.name" class="form-control" type="text" required />
+                                            <small v-if="contactForm.errors.name" class="contact-error">{{ contactForm.errors.name }}</small>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="contact-phone">Phone</label>
+                                            <input id="contact-phone" v-model="contactForm.phone" class="form-control" type="tel" required />
+                                            <small v-if="contactForm.errors.phone" class="contact-error">{{ contactForm.errors.phone }}</small>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label class="form-label" for="contact-email">Email</label>
+                                            <input id="contact-email" v-model="contactForm.email" class="form-control" type="email" />
+                                            <small v-if="contactForm.errors.email" class="contact-error">{{ contactForm.errors.email }}</small>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label class="form-label" for="contact-message">Message</label>
+                                            <textarea id="contact-message" v-model="contactForm.message" class="form-control" rows="5" required></textarea>
+                                            <small v-if="contactForm.errors.message" class="contact-error">{{ contactForm.errors.message }}</small>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <button class="btn btn-primary fw-semibold px-4" type="submit" :disabled="contactForm.processing">
+                                                {{ contactForm.processing ? 'Sending...' : 'Send Message' }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -1449,31 +1560,76 @@ const testimonialSlides = computed(() => {
 }
 
 .contact-section {
-    padding: 0 0 88px;
+    padding: 100px 0;
 }
 
 .contact-panel {
-    max-width: 990px;
+    max-width: 1120px;
     background: #fff;
     box-shadow: 0 22px 54px rgba(42, 66, 98, 0.12);
 }
 
 .contact-strip {
-    background: var(--primary-blue);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 3rem 2rem;
+    color: #fff;
+    background:
+        linear-gradient(145deg, rgba(17, 155, 211, 0.98), rgba(37, 134, 255, 0.94)),
+        url('/images/mauricare-home-care-blood-test-nurse.png') center / cover no-repeat;
+}
+
+.contact-intro h2 {
+    margin: 0.55rem 0 1rem;
+    color: #fff;
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    font-weight: 800;
+    line-height: 1.08;
+}
+
+.contact-intro p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.98rem;
+    line-height: 1.7;
+}
+
+.contact-kicker {
+    color: #dff6c0;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.contact-method-list {
+    display: grid;
+    gap: 0.75rem;
 }
 
 .contact-method {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1.6rem 2rem;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.86);
+    background: rgba(255, 255, 255, 0.08);
+    text-decoration: none;
 }
 
-.contact-method a {
+.contact-method strong {
     display: block;
-    color: rgba(255, 255, 255, 0.84);
-    font-size: 0.78rem;
-    text-decoration: none;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.contact-strip .contact-icon {
+    flex: 0 0 auto;
+    color: #119bd3;
+    background: #dff6c0;
 }
 
 .appointment-form {
@@ -1483,6 +1639,24 @@ const testimonialSlides = computed(() => {
 .appointment-form .form-label {
     color: #59606b;
     font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.contact-success {
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    color: #12643a;
+    background: #e9f8ef;
+    font-size: 0.92rem;
+    font-weight: 800;
+}
+
+.contact-error {
+    display: block;
+    margin-top: 0.35rem;
+    color: #c52828;
+    font-size: 0.8rem;
     font-weight: 700;
 }
 

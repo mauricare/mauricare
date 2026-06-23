@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ContactController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,6 +22,8 @@ Route::get('/dashboard', function () {
 Route::get('/account-verification', function () {
     return Inertia::render('AccountVerification');
 })->middleware('auth')->name('account.verification');
+
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.submit');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
