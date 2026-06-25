@@ -52,6 +52,11 @@ class User extends Authenticatable
         return $this->hasOne(CareSeekerProfile::class);
     }
 
+    public function agencyProfile(): HasOne
+    {
+        return $this->hasOne(AgencyProfile::class);
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);

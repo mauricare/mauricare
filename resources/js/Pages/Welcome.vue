@@ -168,23 +168,37 @@ const careBundles = [
     },
 ];
 
-const philosophyItems = [
-    'Compassionate nursing care',
-    'Personalized home visits',
-    'Post-hospital recovery support',
-    'Wound dressing and care',
-    'Medication reminders',
-    'Vital signs monitoring',
-    'Bedridden patient support',
-    'Elderly companionship',
-    'Hygiene and comfort care',
-    'Mobility assistance',
-    'Family guidance',
-    'Oxygen therapy support',
-    'Bedsore prevention',
-    'Catheter and NGT care',
-    'Palliative care support',
-    'Regular health check-ins',
+const goalItems = [
+    {
+        title: 'Provider Network Expansion',
+        icon: 'fa-solid fa-people-arrows',
+        accent: 'teal',
+        text: 'To onboard a diverse and comprehensive network of healthcare providers and agencies, covering all major specializations and regions in Mauritius within two years.',
+    },
+    {
+        title: 'Family Empowerment',
+        icon: 'fa-solid fa-people-group',
+        accent: 'green',
+        text: 'To become the go-to platform for 70% of Mauritian families seeking home and residential care information and services within five years.',
+    },
+    {
+        title: 'Quality Assurance',
+        icon: 'fa-solid fa-shield-halved',
+        accent: 'blue',
+        text: 'To establish and maintain rigorous standards for all listed providers and agencies, ensuring consistent quality and client satisfaction.',
+    },
+    {
+        title: 'Community Health Initiatives',
+        icon: 'fa-solid fa-heart-pulse',
+        accent: 'pink',
+        text: 'To actively promote and facilitate community-based health and wellness programs, increasing preventative care adoption.',
+    },
+    {
+        title: 'Technological Innovation',
+        icon: 'fa-solid fa-lightbulb',
+        accent: 'orange',
+        text: 'To continuously enhance the platform with user-friendly technology that simplifies care navigation and improves outcomes for all.',
+    },
 ];
 
 const stories = [
@@ -360,35 +374,25 @@ const testimonialSlides = computed(() => {
                 </div>
             </section>
 
-            <section class="section-padding philosophy-section">
-                <div class="container-fluid px-0">
-                    <div class="philosophy-panel">
-                        <div class="row align-items-center gy-5">
-                            <div class="col-lg-6">
-                                <h2>Our Philosophy</h2>
-                                <p>
-                                    At Mauricare Home Care Service, we believe that every individual deserves to be treated
-                                    with dignity, respect, and kindness. Our philosophy is centered on delivering
-                                    personalized, professional, and compassionate healthcare in the comfort of your home.
-                                </p>
-                                <a href="tel:+23059199909" class="btn philosophy-call fw-semibold">
-                                    Call Now - +230 5919 9909
-                                </a>
-                            </div>
+            <section class="section-padding goals-section">
+                <div class="container-fluid px-3 px-xl-4">
+                    <div class="goals-heading">
+                        <h2>Our Goals</h2>
+                    </div>
 
-                            <div class="col-lg-6">
-                                <div class="philosophy-list">
-                                    <div
-                                        v-for="item in philosophyItems"
-                                        :key="item"
-                                        class="philosophy-list-item"
-                                    >
-                                        <i class="fa-solid fa-check" aria-hidden="true"></i>
-                                        <span>{{ item }}</span>
-                                    </div>
-                                </div>
+                    <div class="goals-grid">
+                        <article
+                            v-for="goal in goalItems"
+                            :key="goal.title"
+                            class="goal-item"
+                            :class="`goal-item-${goal.accent}`"
+                        >
+                            <div class="goal-icon">
+                                <i :class="goal.icon" aria-hidden="true"></i>
                             </div>
-                        </div>
+                            <h3>{{ goal.title }}</h3>
+                            <p>{{ goal.text }}</p>
+                        </article>
                     </div>
                 </div>
             </section>
@@ -462,88 +466,6 @@ const testimonialSlides = computed(() => {
                 </div>
             </section>
 
-            <section class="stories-section section-padding">
-                <div class="container-fluid section-wide-container">
-                    <div class="d-flex align-items-center justify-content-between gap-3 mb-5">
-                        <h2 class="testimonials-title mb-0">Testimonials</h2>
-
-                        <div class="testimonial-controls d-flex gap-3">
-                            <button
-                                class="testimonial-control"
-                                type="button"
-                                data-bs-target="#testimonialCarousel"
-                                data-bs-slide="prev"
-                                aria-label="Previous testimonials"
-                            >
-                                <span aria-hidden="true">&larr;</span>
-                            </button>
-                            <button
-                                class="testimonial-control"
-                                type="button"
-                                data-bs-target="#testimonialCarousel"
-                                data-bs-slide="next"
-                                aria-label="Next testimonials"
-                            >
-                                <span aria-hidden="true">&rarr;</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="testimonialCarousel" class="carousel slide testimonial-carousel" data-bs-ride="false">
-                        <div class="carousel-inner">
-                            <div
-                                v-for="(slide, slideIndex) in testimonialSlides"
-                                :key="slideIndex"
-                                class="carousel-item"
-                                :class="{ active: slideIndex === 0 }"
-                            >
-                                <div class="row g-4">
-                                    <div v-for="story in slide" :key="story.name" class="col-lg-4">
-                                        <article class="story-card" :class="`story-card-${story.accent}`">
-                                            <div class="stars" aria-label="5 star rating">
-                                                <span v-for="star in 5" :key="star"></span>
-                                            </div>
-
-                                            <p>{{ story.text }}</p>
-
-                                            <div class="story-person d-flex align-items-center gap-3">
-                                                <span class="story-avatar">{{ story.initials }}</span>
-                                                <div>
-                                                    <strong>{{ story.name }}</strong>
-                                                    <small>{{ story.role }}</small>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="testimonial-mobile-list">
-                        <div class="row g-4">
-                            <div v-for="story in stories" :key="story.name" class="col-md-6">
-                                <article class="story-card" :class="`story-card-${story.accent}`">
-                                    <div class="stars" aria-label="5 star rating">
-                                        <span v-for="star in 5" :key="star"></span>
-                                    </div>
-
-                                    <p>{{ story.text }}</p>
-
-                                    <div class="story-person d-flex align-items-center gap-3">
-                                        <span class="story-avatar">{{ story.initials }}</span>
-                                        <div>
-                                            <strong>{{ story.name }}</strong>
-                                            <small>{{ story.role }}</small>
-                                        </div>
-                                    </div>
-                                </article>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <section v-if="false" class="stories-section section-padding d-none">
                 <div class="container">
                     <div class="row gy-4">
@@ -571,7 +493,7 @@ const testimonialSlides = computed(() => {
             </section>
 
             <section id="request-care" class="contact-section section-padding">
-                <div class="container">
+                <div class="container-fluid contact-section-container">
                     <div class="contact-panel mx-auto overflow-hidden rounded-3">
                         <div class="row g-0">
                             <div class="col-lg-5 contact-strip">
@@ -654,6 +576,88 @@ const testimonialSlides = computed(() => {
                                         </div>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="stories-section section-padding">
+                <div class="container-fluid section-wide-container">
+                    <div class="d-flex align-items-center justify-content-between gap-3 mb-5">
+                        <h2 class="testimonials-title mb-0">Testimonials</h2>
+
+                        <div class="testimonial-controls d-flex gap-3">
+                            <button
+                                class="testimonial-control"
+                                type="button"
+                                data-bs-target="#testimonialCarousel"
+                                data-bs-slide="prev"
+                                aria-label="Previous testimonials"
+                            >
+                                <span aria-hidden="true">&larr;</span>
+                            </button>
+                            <button
+                                class="testimonial-control"
+                                type="button"
+                                data-bs-target="#testimonialCarousel"
+                                data-bs-slide="next"
+                                aria-label="Next testimonials"
+                            >
+                                <span aria-hidden="true">&rarr;</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="testimonialCarousel" class="carousel slide testimonial-carousel" data-bs-ride="false">
+                        <div class="carousel-inner">
+                            <div
+                                v-for="(slide, slideIndex) in testimonialSlides"
+                                :key="slideIndex"
+                                class="carousel-item"
+                                :class="{ active: slideIndex === 0 }"
+                            >
+                                <div class="row g-4">
+                                    <div v-for="story in slide" :key="story.name" class="col-lg-4">
+                                        <article class="story-card" :class="`story-card-${story.accent}`">
+                                            <div class="stars" aria-label="5 star rating">
+                                                <span v-for="star in 5" :key="star"></span>
+                                            </div>
+
+                                            <p>{{ story.text }}</p>
+
+                                            <div class="story-person d-flex align-items-center gap-3">
+                                                <span class="story-avatar">{{ story.initials }}</span>
+                                                <div>
+                                                    <strong>{{ story.name }}</strong>
+                                                    <small>{{ story.role }}</small>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="testimonial-mobile-list">
+                        <div class="row g-4">
+                            <div v-for="story in stories" :key="story.name" class="col-md-6">
+                                <article class="story-card" :class="`story-card-${story.accent}`">
+                                    <div class="stars" aria-label="5 star rating">
+                                        <span v-for="star in 5" :key="star"></span>
+                                    </div>
+
+                                    <p>{{ story.text }}</p>
+
+                                    <div class="story-person d-flex align-items-center gap-3">
+                                        <span class="story-avatar">{{ story.initials }}</span>
+                                        <div>
+                                            <strong>{{ story.name }}</strong>
+                                            <small>{{ story.role }}</small>
+                                        </div>
+                                    </div>
+                                </article>
                             </div>
                         </div>
                     </div>
@@ -1063,7 +1067,6 @@ const testimonialSlides = computed(() => {
 .section-copy,
 .section-kicker,
 .benefit-list p,
-.philosophy-section p,
 .story-card p {
     color: #69707a;
     font-size: 0.96rem;
@@ -1151,72 +1154,109 @@ const testimonialSlides = computed(() => {
     --bs-btn-hover-border-color: #136fdc;
 }
 
-.philosophy-panel {
-    position: relative;
-    overflow: hidden;
-    padding: 5.5rem;
-    color: #fff;
-    border-top-left-radius: 120px;
-    border-bottom-right-radius: 120px;
-    background:
-        linear-gradient(90deg, rgba(14, 77, 77, 0.92), rgba(25, 47, 56, 0.78)),
-        url('/images/mauricare-home-care-blood-test-nurse.png') center / cover no-repeat;
+.goals-section {
+    padding-bottom: 7.5rem;
+    background: #fff;
 }
 
-.philosophy-panel h2 {
-    max-width: 560px;
-    margin-bottom: 1.5rem;
-    color: #fff;
+.goals-heading {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.goals-heading h2 {
+    display: inline-block;
+    position: relative;
+    margin: 0;
+    color: #41454f;
     font-size: clamp(2rem, 3vw, 2.85rem);
     font-weight: 800;
     line-height: 1.14;
 }
 
-.philosophy-panel p {
-    max-width: 670px;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.96rem;
-    font-weight: 500;
-    line-height: 1.7;
+.goals-heading h2::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -0.5rem;
+    width: 72px;
+    height: 3px;
+    border-radius: 999px;
+    background: #119bd3;
+    transform: translateX(-50%);
 }
 
-.philosophy-call {
-    margin-top: 1.8rem;
-    padding: 0.9rem 1.8rem;
-    color: #102b2b;
-    background: #dff6c0;
-    border: 0;
-    border-radius: 8px;
-}
-
-.philosophy-call:hover,
-.philosophy-call:focus {
-    color: #102b2b;
-    background: #cbec9f;
-}
-
-.philosophy-list {
+.goals-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem 1.25rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.55rem;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-.philosophy-list-item {
-    min-height: 54px;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 0.85rem 1rem;
-    color: rgba(255, 255, 255, 0.94);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+.goal-item {
+    min-height: 285px;
+    display: grid;
+    align-content: start;
+    justify-items: center;
+    gap: 1.15rem;
+    padding: 1.9rem 1.15rem 1.55rem;
+    text-align: center;
+    border: 1px solid #e5edf5;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    font-size: 0.92rem;
-    font-weight: 700;
+    background: #fff;
+    box-shadow: 0 16px 34px rgba(17, 75, 112, 0.08);
 }
 
-.philosophy-list-item i {
-    color: #dff6c0;
+.goal-icon {
+    min-height: 84px;
+    display: grid;
+    place-items: center;
+    color: var(--goal-color);
+    font-size: 3.4rem;
+    line-height: 1;
+    text-align: center;
+}
+
+.goal-item h3 {
+    min-height: 52px;
+    display: grid;
+    place-items: center;
+    max-width: 190px;
+    margin: 0 0 0.25rem;
+    color: var(--goal-color);
+    font-size: 1.02rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.goal-item p {
+    max-width: 210px;
+    margin: 0;
+    color: #1d3154;
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1.55;
+}
+
+.goal-item-teal {
+    --goal-color: #17a9bd;
+}
+
+.goal-item-green {
+    --goal-color: #239642;
+}
+
+.goal-item-blue {
+    --goal-color: #2468c9;
+}
+
+.goal-item-pink {
+    --goal-color: #e22c79;
+}
+
+.goal-item-orange {
+    --goal-color: #f39a21;
 }
 
 .medical-section,
@@ -1328,6 +1368,12 @@ const testimonialSlides = computed(() => {
 
 .caregiver-section {
     background: #fff;
+}
+
+.caregiver-section .section-wide-container {
+    max-width: 1400px;
+    padding-right: 0;
+    padding-left: 0;
 }
 
 .caregiver-panel {
@@ -1563,8 +1609,14 @@ const testimonialSlides = computed(() => {
     padding: 100px 0;
 }
 
+.contact-section-container {
+    max-width: 1400px;
+    padding-right: 0;
+    padding-left: 0;
+}
+
 .contact-panel {
-    max-width: 1120px;
+    max-width: 1400px;
     background: #fff;
     box-shadow: 0 22px 54px rgba(42, 66, 98, 0.12);
 }
@@ -1768,14 +1820,9 @@ const testimonialSlides = computed(() => {
         min-height: 250px;
     }
 
-    .philosophy-panel {
-        padding: 3rem;
-        border-top-left-radius: 72px;
-        border-bottom-right-radius: 72px;
-    }
-
-    .philosophy-list {
-        grid-template-columns: 1fr;
+    .goals-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
     }
 }
 
@@ -1819,10 +1866,19 @@ const testimonialSlides = computed(() => {
         min-height: 360px;
     }
 
-    .philosophy-panel {
-        padding: 2rem 1.25rem;
-        border-top-left-radius: 42px;
-        border-bottom-right-radius: 42px;
+    .goals-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .goal-item,
+    .goal-item:last-child {
+        min-height: auto;
+        padding: 1.25rem;
+    }
+
+    .goal-icon {
+        min-height: 64px;
+        font-size: 2.65rem;
     }
 
     .request-form,
@@ -1832,6 +1888,16 @@ const testimonialSlides = computed(() => {
 
     .partner-card {
         padding: 1rem;
+    }
+
+    .caregiver-section .section-wide-container {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .contact-section-container {
+        padding-right: 1rem;
+        padding-left: 1rem;
     }
 
     .partner-feature-list {

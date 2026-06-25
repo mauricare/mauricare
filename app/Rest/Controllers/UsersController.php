@@ -33,14 +33,14 @@ class UsersController extends Controller
             'mutate' => ['required', 'array', 'size:1'],
             'mutate.0.operation' => ['required', 'string', Rule::in(['create'])],
             'mutate.0.attributes' => ['required', 'array'],
-            'mutate.0.attributes.role' => ['required', 'string', Rule::in(['care_seeker', 'care_giver'])],
-            'mutate.0.attributes.first_name' => ['required', 'string', 'max:255'],
-            'mutate.0.attributes.last_name' => ['required', 'string', 'max:255'],
+            'mutate.0.attributes.role' => ['required', 'string', Rule::in(['care_seeker', 'care_giver', 'agency'])],
+            'mutate.0.attributes.first_name' => [Rule::requiredIf($role !== 'agency'), 'nullable', 'string', 'max:255'],
+            'mutate.0.attributes.last_name' => [Rule::requiredIf($role !== 'agency'), 'nullable', 'string', 'max:255'],
             'mutate.0.attributes.email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')],
-            'mutate.0.attributes.age' => ['required', 'integer', 'min:0', 'max:120'],
+            'mutate.0.attributes.age' => [Rule::requiredIf($role !== 'agency'), 'nullable', 'integer', 'min:0', 'max:120'],
             'mutate.0.attributes.phone' => ['required', 'string', 'max:40'],
             'mutate.0.attributes.address' => ['nullable', 'string', 'max:255'],
-            'mutate.0.attributes.city' => ['required', 'string', 'max:255'],
+            'mutate.0.attributes.city' => [Rule::requiredIf($role !== 'agency'), 'nullable', 'string', 'max:255'],
             'mutate.0.attributes.care_giver_type' => [
                 Rule::requiredIf($role === 'care_giver'),
                 'nullable',
@@ -61,6 +61,17 @@ class UsersController extends Controller
             'mutate.0.attributes.emergency_contact_phone' => ['nullable', 'string', 'max:40'],
             'mutate.0.attributes.mobility_level' => ['nullable', 'string', 'max:255'],
             'mutate.0.attributes.medical_notes' => ['nullable', 'string', 'max:1000'],
+            'mutate.0.attributes.agency_name' => [Rule::requiredIf($role === 'agency'), 'nullable', 'string', 'max:255'],
+            'mutate.0.attributes.contact_person' => [Rule::requiredIf($role === 'agency'), 'nullable', 'string', 'max:255'],
+            'mutate.0.attributes.agency_address' => [Rule::requiredIf($role === 'agency'), 'nullable', 'string', 'max:255'],
+            'mutate.0.attributes.services_offered' => [Rule::requiredIf($role === 'agency'), 'nullable', 'string', 'max:1000'],
+            'mutate.0.attributes.agency_license' => [
+                Rule::requiredIf($role === 'agency'),
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png,doc,docx',
+                'max:5120',
+            ],
             'mutate.0.attributes.password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -68,12 +79,16 @@ class UsersController extends Controller
 
         $user = DB::transaction(function () use ($attributes, $request, $role): User {
             $cv = $request->file('mutate.0.attributes.cv');
+            $agencyLicense = $request->file('mutate.0.attributes.agency_license');
 
-            $firstName = trim($attributes['first_name']);
-            $lastName = trim($attributes['last_name']);
+            $firstName = trim($attributes['first_name'] ?? $attributes['contact_person'] ?? '');
+            $lastName = trim($attributes['last_name'] ?? '');
+            $name = $role === 'agency'
+                ? trim($attributes['agency_name'])
+                : trim($firstName.' '.$lastName);
 
             $user = User::create([
-                'name' => trim($firstName.' '.$lastName),
+                'name' => $name,
                 'email' => $attributes['email'],
                 'password' => Hash::make($attributes['password']),
             ]);
@@ -81,10 +96,10 @@ class UsersController extends Controller
             $user->profile()->create([
                 'first_name' => $firstName,
                 'last_name' => $lastName,
-                'age' => $attributes['age'],
+                'age' => $attributes['age'] ?? null,
                 'phone' => $attributes['phone'],
-                'address' => $attributes['address'] ?? null,
-                'city' => $attributes['city'],
+                'address' => $attributes['agency_address'] ?? $attributes['address'] ?? null,
+                'city' => $attributes['city'] ?? null,
             ]);
 
             if ($role === 'care_giver') {
@@ -114,6 +129,26 @@ class UsersController extends Controller
                     'mobility_level' => $attributes['mobility_level'] ?? null,
                     'medical_notes' => $attributes['medical_notes'] ?? null,
                 ]);
+            }
+
+            if ($role === 'agency') {
+                $user->agencyProfile()->create([
+                    'agency_name' => $attributes['agency_name'],
+                    'contact_person' => $attributes['contact_person'],
+                    'agency_address' => $attributes['agency_address'],
+                    'services_offered' => $attributes['services_offered'],
+                ]);
+
+                if ($agencyLicense) {
+                    $user->documents()->create([
+                        'type' => 'agency_license',
+                        'disk' => 'public',
+                        'path' => $agencyLicense->store('agency-licenses', 'public'),
+                        'original_name' => $agencyLicense->getClientOriginalName(),
+                        'mime_type' => $agencyLicense->getClientMimeType(),
+                        'size' => $agencyLicense->getSize(),
+                    ]);
+                }
             }
 
             $user->assignRole(Role::findOrCreate($role, 'web'));

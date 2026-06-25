@@ -10,7 +10,7 @@ const successMessage = ref('');
 const selectedRole = new URLSearchParams(window.location.search).get('role');
 
 const form = useForm({
-    role: ['care_giver', 'care_seeker'].includes(selectedRole) ? selectedRole : 'care_giver',
+    role: ['care_giver', 'care_seeker', 'agency'].includes(selectedRole) ? selectedRole : 'care_giver',
     first_name: '',
     last_name: '',
     email: '',
@@ -27,6 +27,11 @@ const form = useForm({
     emergency_contact_phone: '',
     mobility_level: '',
     medical_notes: '',
+    agency_name: '',
+    contact_person: '',
+    agency_address: '',
+    services_offered: '',
+    agency_license: null,
     password: '',
     password_confirmation: '',
 });
@@ -85,6 +90,14 @@ const submit = async () => {
         appendAttribute(payload, 'medical_notes', form.medical_notes);
     }
 
+    if (form.role === 'agency') {
+        appendAttribute(payload, 'agency_name', form.agency_name);
+        appendAttribute(payload, 'contact_person', form.contact_person);
+        appendAttribute(payload, 'agency_address', form.agency_address);
+        appendAttribute(payload, 'services_offered', form.services_offered);
+        appendAttribute(payload, 'agency_license', form.agency_license);
+    }
+
     try {
         await axios.post('/api/users/mutate', payload);
 
@@ -125,6 +138,13 @@ const submit = async () => {
             >
                 Care Seeker
             </button>
+            <button
+                type="button"
+                :class="{ active: form.role === 'agency' }"
+                @click="setRole('agency')"
+            >
+                Agency
+            </button>
         </div>
         <InputError class="mt-2" :message="form.errors.role" />
 
@@ -133,7 +153,7 @@ const submit = async () => {
                 {{ successMessage }}
             </div>
 
-            <div class="form-grid">
+            <div v-if="form.role !== 'agency'" class="form-grid">
                 <div class="form-field">
                     <label for="first_name">First name</label>
                     <input id="first_name" v-model="form.first_name" type="text" required autofocus autocomplete="given-name" />
@@ -206,7 +226,7 @@ const submit = async () => {
                 </div>
             </div>
 
-            <div v-else class="role-fields">
+            <div v-else-if="form.role === 'care_seeker'" class="role-fields">
                 <div class="form-grid">
                     <div class="form-field">
                         <label for="care_for">Who needs care?</label>
@@ -280,6 +300,76 @@ const submit = async () => {
                 </div>
             </div>
 
+            <div v-else class="role-fields">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="agency_name">Agency Name</label>
+                        <input
+                            id="agency_name"
+                            v-model="form.agency_name"
+                            type="text"
+                            required
+                            autofocus
+                            autocomplete="organization"
+                        />
+                        <InputError :message="form.errors.agency_name" />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="contact_person">Contact Person</label>
+                        <input id="contact_person" v-model="form.contact_person" type="text" required autocomplete="name" />
+                        <InputError :message="form.errors.contact_person" />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="agency_email">Email</label>
+                        <input id="agency_email" v-model="form.email" type="email" required autocomplete="username" />
+                        <InputError :message="form.errors.email" />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="agency_phone">Phone</label>
+                        <input id="agency_phone" v-model="form.phone" type="tel" required autocomplete="tel" />
+                        <InputError :message="form.errors.phone" />
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label for="agency_address">Agency Address</label>
+                    <input
+                        id="agency_address"
+                        v-model="form.agency_address"
+                        type="text"
+                        required
+                        autocomplete="street-address"
+                    />
+                    <InputError :message="form.errors.agency_address" />
+                </div>
+
+                <div class="form-field">
+                    <label for="services_offered">Services Offered</label>
+                    <textarea
+                        id="services_offered"
+                        v-model="form.services_offered"
+                        rows="4"
+                        required
+                    ></textarea>
+                    <InputError :message="form.errors.services_offered" />
+                </div>
+
+                <div class="form-field">
+                    <label for="agency_license">Upload Agency License</label>
+                    <input
+                        id="agency_license"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        required
+                        @input="form.agency_license = $event.target.files[0]"
+                    />
+                    <InputError :message="form.errors.agency_license" />
+                </div>
+            </div>
+
             <div class="form-grid">
                 <div class="form-field">
                     <label for="password">Password</label>
@@ -334,7 +424,7 @@ const submit = async () => {
 
 .role-switch {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.35rem;
     padding: 0.35rem;
     border-radius: 8px;
