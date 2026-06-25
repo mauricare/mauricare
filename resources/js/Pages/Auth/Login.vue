@@ -3,7 +3,6 @@ import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
 
 defineProps({
     canResetPassword: {
@@ -13,9 +12,6 @@ defineProps({
         type: String,
     },
 });
-
-const selectedRole = new URLSearchParams(window.location.search).get('role');
-const accountType = ref(['care_giver', 'care_seeker'].includes(selectedRole) ? selectedRole : 'care_giver');
 
 const form = useForm({
     email: '',
@@ -38,27 +34,6 @@ const submit = () => {
             <span>Welcome back</span>
             <h1>Log in to Mauricare</h1>
         </div>
-
-        <div class="role-switch" aria-label="Account type">
-            <button
-                type="button"
-                :class="{ active: accountType === 'care_giver' }"
-                @click="accountType = 'care_giver'"
-            >
-                Care Giver
-            </button>
-            <button
-                type="button"
-                :class="{ active: accountType === 'care_seeker' }"
-                @click="accountType = 'care_seeker'"
-            >
-                Care Seeker
-            </button>
-        </div>
-
-        <p class="auth-note">
-            The login form is the same for care givers and care seekers.
-        </p>
 
         <div v-if="status" class="status-message">
             {{ status }}
@@ -133,30 +108,6 @@ const submit = () => {
     line-height: 1.2;
 }
 
-.role-switch {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.35rem;
-    padding: 0.35rem;
-    border-radius: 8px;
-    background: #eef6ff;
-}
-
-.role-switch button {
-    min-height: 42px;
-    border: 0;
-    border-radius: 6px;
-    color: #59606b;
-    background: transparent;
-    font-weight: 800;
-}
-
-.role-switch button.active {
-    color: #fff;
-    background: #119bd3;
-}
-
-.auth-note,
 .auth-footer-text {
     margin: 1rem 0 0;
     color: #69707a;
