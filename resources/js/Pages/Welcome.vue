@@ -506,13 +506,13 @@ const testimonialSlides = computed(() => {
                                 </div>
 
                                 <div class="contact-method-list">
-                                    <a class="contact-method" href="tel:+23059199909">
+                                    <a class="contact-method" href="tel:+23058199909">
                                         <span class="contact-icon">
                                             <i class="fa-solid fa-phone" aria-hidden="true"></i>
                                         </span>
                                         <span>
                                             <strong>Call us</strong>
-                                            +230 5919 9909
+                                            +230 5819 9909
                                         </span>
                                     </a>
 
