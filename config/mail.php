@@ -111,10 +111,10 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'address' => env('MAIL_FROM_ADDRESS', 'contact@mauricare.mu'),
+        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Mauricare')),
     ],
 
-    'contact_to' => env('CONTACT_MAIL_TO', 'info@mauricare.com'),
+    'contact_to' => env('CONTACT_MAIL_TO', 'info@mauricare.mu'),
 
 ];
