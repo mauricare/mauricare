@@ -714,6 +714,13 @@ const testimonialSlides = computed(() => {
     text-align: left;
 }
 
+@media (min-width: 1400px) {
+    .hero-content.container {
+        margin-left: calc((100vw - 1320px) / 4);
+        margin-right: auto;
+    }
+}
+
 .hero-content h1 {
     max-width: 560px;
     color: #071f48;
