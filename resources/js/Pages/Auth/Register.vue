@@ -213,12 +213,12 @@ const submit = async () => {
                     </div>
 
                     <div class="form-field">
-                        <label for="cv">CV</label>
+                        <label for="cv">CV (optional)</label>
                         <input
                             id="cv"
+                            class="file-input"
                             type="file"
                             accept=".pdf,.doc,.docx"
-                            required
                             @input="form.cv = $event.target.files[0]"
                         />
                         <InputError :message="form.errors.cv" />
@@ -358,12 +358,12 @@ const submit = async () => {
                 </div>
 
                 <div class="form-field">
-                    <label for="agency_license">Upload Agency License</label>
+                    <label for="agency_license">Upload Agency License (optional)</label>
                     <input
                         id="agency_license"
+                        class="file-input"
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                        required
                         @input="form.agency_license = $event.target.files[0]"
                     />
                     <InputError :message="form.errors.agency_license" />
@@ -504,6 +504,32 @@ const submit = async () => {
     border-color: #119bd3;
     outline: 0;
     box-shadow: 0 0 0 3px rgba(17, 155, 211, 0.16);
+}
+
+.form-field input.file-input {
+    display: flex;
+    align-items: center;
+    padding: 0.35rem 0.5rem;
+    color: #69707a;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.form-field input.file-input::file-selector-button {
+    margin-right: 0.85rem;
+    padding: 0.55rem 1.1rem;
+    border: 0;
+    border-radius: 6px;
+    background: #119bd3;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.form-field input.file-input::file-selector-button:hover {
+    background: #0e7faf;
 }
 
 .auth-button {

@@ -42,7 +42,7 @@ class RegisteredUserController extends Controller
             'address' => 'nullable|string|max:255',
             'city' => 'required_unless:role,agency|nullable|string|max:255',
             'care_giver_type' => 'required_if:role,care_giver|nullable|string|in:doctor,nurse,carers,physiotherapist,other',
-            'cv' => 'required_if:role,care_giver|nullable|file|mimes:pdf,doc,docx|max:5120',
+            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'care_for' => 'required_if:role,care_seeker|nullable|string|max:255',
             'care_needs' => 'required_if:role,care_seeker|nullable|string|max:1000',
             'preferred_contact_method' => 'nullable|string|in:phone,email',
@@ -54,7 +54,7 @@ class RegisteredUserController extends Controller
             'contact_person' => 'required_if:role,agency|nullable|string|max:255',
             'agency_address' => 'required_if:role,agency|nullable|string|max:255',
             'services_offered' => 'required_if:role,agency|nullable|string|max:1000',
-            'agency_license' => 'required_if:role,agency|nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
+            'agency_license' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
