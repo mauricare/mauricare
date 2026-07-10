@@ -425,16 +425,70 @@ const testimonialSlides = computed(() => {
                             <div class="col-lg-8">
                                 <span class="caregiver-kicker">Caregiver Opportunities</span>
                                 <h2>Join Mauricare as a Healthcare Provider</h2>
-                                <p>
-                                    We are looking for compassionate and reliable healthcare providers to join our team and help us
-                                    provide dignified home care support to families across Mauritius.
+                                <p class="caregiver-lead">
+                                    Mauricare connects independent healthcare providers with individuals and families looking for
+                                    trusted home care services across Mauritius — you stay independent, we simply bring the patients
+                                    to you.
                                 </p>
+
+                                <div class="caregiver-steps">
+                                    <div class="caregiver-step">
+                                        <span class="caregiver-step-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
+                                        <div>
+                                            <h3>Register &amp; receive requests</h3>
+                                            <p>Sign up and start receiving care requests from people who need your expertise, all from your dashboard.</p>
+                                        </div>
+                                    </div>
+                                    <div class="caregiver-step">
+                                        <span class="caregiver-step-icon"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></span>
+                                        <div>
+                                            <h3>Accept matching bookings</h3>
+                                            <p>View the request details and accept the bookings that match your services and availability.</p>
+                                        </div>
+                                    </div>
+                                    <div class="caregiver-step">
+                                        <span class="caregiver-step-icon"><i class="fa-solid fa-house-medical" aria-hidden="true"></i></span>
+                                        <div>
+                                            <h3>Provide care at home</h3>
+                                            <p>Visit the patient’s home, deliver the required care, and record the treatment fee through the platform.</p>
+                                        </div>
+                                    </div>
+                                    <div class="caregiver-step">
+                                        <span class="caregiver-step-icon"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i></span>
+                                        <div>
+                                            <h3>Get paid securely</h3>
+                                            <p>Once the patient confirms, the booking is completed and settled securely.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="caregiver-highlights">
+                                    <span class="caregiver-highlight">
+                                        <i class="fa-solid fa-calendar-day" aria-hidden="true"></i>
+                                        Manage your own schedule &amp; services
+                                    </span>
+                                    <span class="caregiver-highlight">
+                                        <i class="fa-solid fa-percent" aria-hidden="true"></i>
+                                        Commission only on completed bookings
+                                    </span>
+                                    <span class="caregiver-highlight">
+                                        <i class="fa-solid fa-user-doctor" aria-hidden="true"></i>
+                                        Stay an independent provider
+                                    </span>
+                                </div>
                             </div>
 
-                            <div class="col-lg-4 text-lg-end">
-                                <a href="/register?role=care_giver" class="btn caregiver-button fw-semibold">
-                                    Click here to join our team
-                                </a>
+                            <div class="col-lg-4">
+                                <div class="caregiver-cta">
+                                    <span class="caregiver-cta-icon"><i class="fa-solid fa-hand-holding-medical" aria-hidden="true"></i></span>
+                                    <h3>Ready to grow your practice?</h3>
+                                    <p>Start offering your healthcare services to more families across Mauritius with Mauricare.</p>
+                                    <a href="/register?role=care_giver" class="btn caregiver-button fw-semibold">
+                                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                                        <span>Become a Provider</span>
+                                    </a>
+                                    <span class="caregiver-cta-note">Free to join · No fixed monthly costs</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1389,7 +1443,7 @@ const testimonialSlides = computed(() => {
     color: #fff;
     background:
         linear-gradient(90deg, rgba(17, 155, 211, 0.95), rgba(236, 22, 150, 0.82)),
-        url('/images/mauricare-home-care-nurse-professional-caregiver.png') center 20% / cover no-repeat;
+        url('/images/join-mauricare.png') center 20% / cover no-repeat;
 }
 
 .caregiver-kicker {
@@ -1418,20 +1472,147 @@ const testimonialSlides = computed(() => {
     line-height: 1.7;
 }
 
+.caregiver-lead {
+    margin-bottom: 1.9rem !important;
+    font-size: 1.06rem;
+}
+
+.caregiver-steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+    max-width: 820px;
+    margin-bottom: 1.6rem;
+}
+
+.caregiver-step {
+    display: flex;
+    gap: 0.85rem;
+    padding: 1.05rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(4px);
+}
+
+.caregiver-step-icon {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    background: #fff;
+    color: #119bd3;
+    font-size: 1.1rem;
+}
+
+.caregiver-step h3 {
+    margin: 0 0 0.25rem;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.caregiver-step p {
+    max-width: none;
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.caregiver-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.caregiver-highlight {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.caregiver-highlight i {
+    color: #dff6c0;
+}
+
+.caregiver-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 1.9rem 1.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(6px);
+    text-align: center;
+}
+
+.caregiver-cta-icon {
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: #dff6c0;
+    color: #119bd3;
+    font-size: 1.6rem;
+}
+
+.caregiver-cta h3 {
+    margin: 0.2rem 0 0;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.caregiver-cta p {
+    max-width: none;
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
 .caregiver-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    width: 100%;
     max-width: 100%;
+    margin-top: 0.35rem;
     padding: 0.9rem 1.4rem;
     color: #17404a;
     white-space: normal;
     background: #dff6c0;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
+    font-size: 1.02rem;
 }
 
 .caregiver-button:hover,
 .caregiver-button:focus {
     color: #17404a;
     background: #cbec9f;
+    transform: translateY(-1px);
+}
+
+.caregiver-cta-note {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .caregiver-steps {
+        grid-template-columns: 1fr;
+    }
 }
 
 .dental-grid {
