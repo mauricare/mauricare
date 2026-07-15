@@ -61,4 +61,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Document::class);
     }
+
+    public function careBookings(): HasMany
+    {
+        return $this->hasMany(CareBooking::class);
+    }
 }

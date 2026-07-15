@@ -27,6 +27,20 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
+        $response->assertRedirect(route('account.verification', absolute: false));
+    }
+
+    public function test_care_seekers_are_redirected_to_dashboard_after_login(): void
+    {
+        $user = User::factory()->create();
+        $user->careSeekerProfile()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 

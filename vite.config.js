@@ -7,6 +7,9 @@ export default defineConfig({
         host: process.env.VITE_HOST || 'localhost',
         port: Number(process.env.VITE_PORT || 5173),
         strictPort: true,
+        watch: {
+            ignored: ['**/public/storage', '**/public/storage/**'],
+        },
         hmr: {
             host: process.env.VITE_HOST || 'localhost',
         },
