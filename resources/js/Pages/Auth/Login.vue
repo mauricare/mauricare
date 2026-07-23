@@ -13,8 +13,10 @@ defineProps({
     },
 });
 
+const prefilledEmail = new URLSearchParams(window.location.search).get('email') || '';
+
 const form = useForm({
-    email: '',
+    email: prefilledEmail,
     password: '',
     remember: false,
 });
@@ -47,7 +49,7 @@ const submit = () => {
                     v-model="form.email"
                     type="email"
                     required
-                    autofocus
+                    :autofocus="!prefilledEmail"
                     autocomplete="username"
                 />
                 <InputError :message="form.errors.email" />
@@ -60,6 +62,7 @@ const submit = () => {
                     v-model="form.password"
                     type="password"
                     required
+                    :autofocus="Boolean(prefilledEmail)"
                     autocomplete="current-password"
                 />
                 <InputError :message="form.errors.password" />

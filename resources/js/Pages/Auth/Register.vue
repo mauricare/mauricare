@@ -1,12 +1,18 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
+import Modal from '@/Components/Modal.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const processing = ref(false);
-const successMessage = ref('');
+const showSuccessModal = ref(false);
+const registeredEmail = ref('');
+
+const loginUrl = computed(
+    () => `${route('login')}?email=${encodeURIComponent(registeredEmail.value)}`,
+);
 const selectedRole = new URLSearchParams(window.location.search).get('role');
 
 const form = useForm({
@@ -39,7 +45,6 @@ const form = useForm({
 const setRole = (role) => {
     form.role = role;
     form.clearErrors();
-    successMessage.value = '';
 };
 
 const appendAttribute = (payload, key, value) => {
@@ -58,7 +63,6 @@ const mapApiErrors = (errors) => Object.entries(errors).reduce((mappedErrors, [k
 
 const submit = async () => {
     processing.value = true;
-    successMessage.value = '';
     form.clearErrors();
 
     const payload = new FormData();
@@ -101,8 +105,9 @@ const submit = async () => {
     try {
         await axios.post('/api/users/mutate', payload);
 
-        successMessage.value = 'Account created successfully. You can now log in.';
+        registeredEmail.value = form.email;
         form.reset();
+        showSuccessModal.value = true;
     } catch (error) {
         if (error.response?.status === 422) {
             form.setError(mapApiErrors(error.response.data.errors ?? {}));
@@ -149,10 +154,6 @@ const submit = async () => {
         <InputError class="mt-2" :message="form.errors.role" />
 
         <form class="auth-form" @submit.prevent="submit">
-            <div v-if="successMessage" class="status-message">
-                {{ successMessage }}
-            </div>
-
             <div v-if="form.role !== 'agency'" class="form-grid">
                 <div class="form-field">
                     <label for="first_name">First name</label>
@@ -399,6 +400,26 @@ const submit = async () => {
                 <Link :href="route('login')" class="auth-link">Log in</Link>
             </p>
         </form>
+
+        <Modal :show="showSuccessModal" max-width="md" @close="showSuccessModal = false">
+            <div class="p-8 text-center">
+                <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-3xl text-emerald-600">
+                    <i class="fa-solid fa-circle-check"></i>
+                </span>
+                <h3 class="mt-5 text-xl font-bold text-slate-950">Account created successfully!</h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600">
+                    Welcome to Mauricare. You can now log in with
+                    <span class="font-semibold text-slate-900">{{ registeredEmail }}</span>.
+                </p>
+                <Link
+                    :href="loginUrl"
+                    class="mt-6 inline-flex w-full items-center justify-center rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
+                >
+                    Continue to Login
+                    <i class="fa-solid fa-arrow-right ml-3"></i>
+                </Link>
+            </div>
+        </Modal>
     </GuestLayout>
 </template>
 

@@ -115,6 +115,6 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Mauricare')),
     ],
 
-    'contact_to' => env('CONTACT_MAIL_TO', 'info@mauricare.mu'),
+    'contact_to' => env('CONTACT_MAIL_TO', 'contact@mauricare.mu'),
 
 ];

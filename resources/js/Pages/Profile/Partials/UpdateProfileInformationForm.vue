@@ -3,95 +3,136 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 
-defineProps({
-    mustVerifyEmail: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
+const props = defineProps({
+    profile: {
+        type: Object,
+        default: null,
     },
 });
 
 const user = usePage().props.auth.user;
 
 const form = useForm({
-    name: user.name,
+    first_name: props.profile?.first_name || user.name?.split(' ')[0] || '',
+    last_name: props.profile?.last_name || user.name?.split(' ').slice(1).join(' ') || '',
     email: user.email,
+    age: props.profile?.age === null || props.profile?.age === undefined ? '' : String(props.profile.age),
+    phone: props.profile?.phone || '',
+    address: props.profile?.address || '',
+    city: props.profile?.city || '',
 });
+
+const submit = () => {
+    form.patch(route('profile.update'), {
+        preserveScroll: true,
+    });
+};
 </script>
 
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Profile Information
-            </h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                Update your account's profile information and email address.
+            <h2 class="text-xl font-bold text-slate-950">Personal Information</h2>
+            <p class="mt-1 text-sm text-slate-600">
+                Keep your contact details up to date so care providers can reach you.
             </p>
         </header>
 
-        <form
-            @submit.prevent="form.patch(route('profile.update'))"
-            class="mt-6 space-y-6"
-        >
-            <div>
-                <InputLabel for="name" value="Name" />
+        <form class="mt-6 space-y-5" @submit.prevent="submit">
+            <div class="grid gap-5 sm:grid-cols-2">
+                <div>
+                    <InputLabel for="first_name" value="First name" />
+                    <TextInput
+                        id="first_name"
+                        v-model="form.first_name"
+                        type="text"
+                        class="mt-1 block w-full"
+                        required
+                        autocomplete="given-name"
+                    />
+                    <InputError class="mt-2" :message="form.errors.first_name" />
+                </div>
 
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
+                <div>
+                    <InputLabel for="last_name" value="Last name" />
+                    <TextInput
+                        id="last_name"
+                        v-model="form.last_name"
+                        type="text"
+                        class="mt-1 block w-full"
+                        autocomplete="family-name"
+                    />
+                    <InputError class="mt-2" :message="form.errors.last_name" />
+                </div>
 
-                <InputError class="mt-2" :message="form.errors.name" />
-            </div>
+                <div>
+                    <InputLabel for="email" value="Email" />
+                    <TextInput
+                        id="email"
+                        v-model="form.email"
+                        type="email"
+                        class="mt-1 block w-full"
+                        required
+                        autocomplete="username"
+                    />
+                    <InputError class="mt-2" :message="form.errors.email" />
+                </div>
 
-            <div>
-                <InputLabel for="email" value="Email" />
+                <div>
+                    <InputLabel for="phone" value="Phone" />
+                    <TextInput
+                        id="phone"
+                        v-model="form.phone"
+                        type="tel"
+                        class="mt-1 block w-full"
+                        required
+                        autocomplete="tel"
+                    />
+                    <InputError class="mt-2" :message="form.errors.phone" />
+                </div>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                />
+                <div>
+                    <InputLabel for="age" value="Age" />
+                    <TextInput
+                        id="age"
+                        v-model="form.age"
+                        type="number"
+                        min="0"
+                        max="120"
+                        class="mt-1 block w-full"
+                    />
+                    <InputError class="mt-2" :message="form.errors.age" />
+                </div>
 
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
+                <div>
+                    <InputLabel for="city" value="City" />
+                    <TextInput
+                        id="city"
+                        v-model="form.city"
+                        type="text"
+                        class="mt-1 block w-full"
+                        autocomplete="address-level2"
+                    />
+                    <InputError class="mt-2" :message="form.errors.city" />
+                </div>
 
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="mt-2 text-sm text-gray-800">
-                    Your email address is unverified.
-                    <Link
-                        :href="route('verification.send')"
-                        method="post"
-                        as="button"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Click here to re-send the verification email.
-                    </Link>
-                </p>
-
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600"
-                >
-                    A new verification link has been sent to your email address.
+                <div class="sm:col-span-2">
+                    <InputLabel for="address" value="Address" />
+                    <TextInput
+                        id="address"
+                        v-model="form.address"
+                        type="text"
+                        class="mt-1 block w-full"
+                        autocomplete="street-address"
+                    />
+                    <InputError class="mt-2" :message="form.errors.address" />
                 </div>
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <PrimaryButton :disabled="form.processing">Save changes</PrimaryButton>
 
                 <Transition
                     enter-active-class="transition ease-in-out"
@@ -99,10 +140,7 @@ const form = useForm({
                     leave-active-class="transition ease-in-out"
                     leave-to-class="opacity-0"
                 >
-                    <p
-                        v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
-                    >
+                    <p v-if="form.recentlySuccessful" class="text-sm font-medium text-emerald-600">
                         Saved.
                     </p>
                 </Transition>

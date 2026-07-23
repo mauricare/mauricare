@@ -28,8 +28,13 @@ class ProfileTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
+                'first_name' => 'Test',
+                'last_name' => 'User',
                 'email' => 'test@example.com',
+                'phone' => '57000000',
+                'age' => 42,
+                'address' => '12 Royal Road',
+                'city' => 'Curepipe',
             ]);
 
         $response
@@ -41,6 +46,15 @@ class ProfileTest extends TestCase
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
+
+        $this->assertDatabaseHas('user_profiles', [
+            'user_id' => $user->id,
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'phone' => '57000000',
+            'age' => 42,
+            'city' => 'Curepipe',
+        ]);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
@@ -50,8 +64,10 @@ class ProfileTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
+                'first_name' => 'Test',
+                'last_name' => 'User',
                 'email' => $user->email,
+                'phone' => '57000000',
             ]);
 
         $response

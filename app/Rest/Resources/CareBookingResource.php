@@ -2,6 +2,7 @@
 
 namespace App\Rest\Resources;
 
+use App\Models\CareBooking;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
@@ -13,9 +14,9 @@ class CareBookingResource extends Resource
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\Illuminate\Database\Eloquent\Model>
+     * @var class-string<Model>
      */
-    public static $model = \App\Models\CareBooking::class;
+    public static $model = CareBooking::class;
 
     public function fields(RestRequest $request): array
     {
@@ -78,10 +79,7 @@ class CareBookingResource extends Resource
                 'other',
             ])],
             'status' => ['sometimes', 'string', Rule::in([
-                'pending',
-                'confirmed',
                 'cancelled',
-                'completed',
             ])],
         ];
     }
