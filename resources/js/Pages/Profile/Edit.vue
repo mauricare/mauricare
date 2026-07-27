@@ -31,7 +31,7 @@ const layoutComponent = computed(() => (isCareGiver.value ? CareGiverLayout : Ca
 
     <component :is="layoutComponent" active="profile">
         <template #header>
-            <h1 class="text-3xl font-bold leading-tight text-slate-950">Profile Settings</h1>
+            <h1 class="text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">Profile Settings</h1>
             <p class="mt-2 text-base text-slate-600">
                 Manage your personal information, password and account.
             </p>

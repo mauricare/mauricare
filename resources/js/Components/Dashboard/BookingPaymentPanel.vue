@@ -64,7 +64,7 @@ const confirmPayment = async () => {
 
 <template>
     <section class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <h4 class="text-base font-semibold text-slate-950">Payment</h4>
             <p v-if="booking.amount_due" class="text-base font-bold text-slate-950">
                 Amount due: {{ formatAmount(booking.amount_due) }}
@@ -131,7 +131,7 @@ const confirmPayment = async () => {
 
             <PrimaryButton
                 type="button"
-                class="mt-4"
+                class="mt-4 w-full justify-center sm:w-auto"
                 :disabled="isSubmitting"
                 :class="{ 'opacity-75': isSubmitting }"
                 @click="confirmPayment"

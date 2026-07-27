@@ -88,7 +88,7 @@ const confirmPaymentReceived = () => postAction('close');
 
 <template>
     <Modal :show="show" max-width="2xl" @close="$emit('close')">
-        <div v-if="booking" class="p-6">
+        <div v-if="booking" class="p-5 sm:p-6">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3">
@@ -148,7 +148,7 @@ const confirmPaymentReceived = () => postAction('close');
                 v-else-if="['awaiting_payment', 'paid', 'closed'].includes(status)"
                 class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5"
             >
-                <div class="flex items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                     <h4 class="text-base font-semibold text-slate-950">Payment</h4>
                     <p class="text-base font-bold text-slate-950">Amount due: {{ formatAmount(booking.amount_due) }}</p>
                 </div>
@@ -188,13 +188,14 @@ const confirmPaymentReceived = () => postAction('close');
                 {{ submitError }}
             </p>
 
-            <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
-                <SecondaryButton type="button" @click="$emit('close')">
+            <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                <SecondaryButton type="button" class="w-full justify-center sm:w-auto" @click="$emit('close')">
                     Close
                 </SecondaryButton>
                 <PrimaryButton
                     v-if="status === 'open'"
                     type="button"
+                    class="w-full justify-center sm:w-auto"
                     :disabled="isSubmitting"
                     :class="{ 'opacity-75': isSubmitting }"
                     @click="acceptBooking"
@@ -204,6 +205,7 @@ const confirmPaymentReceived = () => postAction('close');
                 <PrimaryButton
                     v-else-if="status === 'assigned'"
                     type="button"
+                    class="w-full justify-center sm:w-auto"
                     :disabled="isSubmitting"
                     :class="{ 'opacity-75': isSubmitting }"
                     @click="completeVisit"
@@ -213,6 +215,7 @@ const confirmPaymentReceived = () => postAction('close');
                 <PrimaryButton
                     v-else-if="status === 'paid'"
                     type="button"
+                    class="w-full justify-center sm:w-auto"
                     :disabled="isSubmitting"
                     :class="{ 'opacity-75': isSubmitting }"
                     @click="confirmPaymentReceived"

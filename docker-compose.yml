@@ -5,6 +5,9 @@ services:
       target: app
     env_file:
       - .env.docker
+    networks:
+      - default
+      - traefik
     depends_on:
       mysql:
         condition: service_healthy
@@ -63,6 +66,10 @@ services:
       retries: 10
       start_period: 30s
     restart: unless-stopped
+
+networks:
+  traefik:
+    external: true
 
 volumes:
   mysql-data:

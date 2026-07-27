@@ -80,11 +80,11 @@ const personName = (booking) => (props.showSeeker ? seekerName(booking) : provid
             v-else
             :key="booking.id"
             type="button"
-            class="grid w-full grid-cols-[72px_minmax(0,1fr)_auto_24px] items-center gap-4 border-b border-slate-100 px-4 py-4 text-left last:border-b-0 transition hover:bg-slate-50"
+            class="grid w-full grid-cols-[56px_minmax(0,1fr)_16px] items-center gap-3 border-b border-slate-100 px-3 py-4 text-left last:border-b-0 transition hover:bg-slate-50 sm:grid-cols-[72px_minmax(0,1fr)_auto_24px] sm:gap-4 sm:px-4"
             @click="$emit('select', booking)"
         >
-            <span class="flex h-16 w-16 flex-col items-center justify-center rounded-lg bg-slate-50">
-                <span class="text-2xl font-bold leading-none text-slate-950">{{ formatDateParts(booking.scheduled_date).day }}</span>
+            <span class="flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-slate-50 sm:h-16 sm:w-16">
+                <span class="text-xl font-bold leading-none text-slate-950 sm:text-2xl">{{ formatDateParts(booking.scheduled_date).day }}</span>
                 <span class="mt-1 text-xs font-semibold text-slate-600">{{ formatDateParts(booking.scheduled_date).month }}</span>
             </span>
             <span class="min-w-0">
@@ -101,6 +101,12 @@ const personName = (booking) => (props.showSeeker ? seekerName(booking) : provid
                         {{ personName(booking).charAt(0) }}
                     </span>
                     {{ personName(booking) }}
+                </span>
+                <span
+                    class="mt-1.5 inline-flex rounded-md px-2 py-0.5 text-xs font-semibold sm:hidden"
+                    :class="statusClasses[booking.status] || statusClasses.open"
+                >
+                    {{ formatStatus(booking.status) }}
                 </span>
             </span>
             <span

@@ -1,6 +1,8 @@
 <script setup>
+import NotificationBell from '@/Components/Dashboard/NotificationBell.vue';
+import { useUnreadMessages } from '@/composables/useUnreadMessages';
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps({
     active: {
@@ -17,6 +19,19 @@ const emit = defineEmits(['navigate', 'create']);
 
 const page = usePage();
 const mobileNavOpen = ref(false);
+const { unreadCount, refreshUnreadCount } = useUnreadMessages();
+let unreadTimer = null;
+
+onMounted(() => {
+    refreshUnreadCount();
+    unreadTimer = setInterval(refreshUnreadCount, 30000);
+});
+
+onUnmounted(() => {
+    if (unreadTimer) {
+        clearInterval(unreadTimer);
+    }
+});
 
 const navItems = [
     { key: 'dashboard', label: 'Dashboard', icon: 'fa-house' },
@@ -86,11 +101,11 @@ const handleItemClick = (item) => {
             class="fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-slate-100 bg-white px-4 py-8 transition-transform duration-200 lg:translate-x-0"
             :class="mobileNavOpen ? 'translate-x-0' : '-translate-x-full'"
         >
-            <Link :href="route('dashboard')" class="flex items-center px-3">
+            <Link :href="route('dashboard')" class="flex items-center justify-center">
                 <img
                     src="/images/mauricare-home-care-services-logo.png"
                     alt="Mauricare"
-                    class="h-14 w-auto object-contain"
+                    class="h-24 w-auto object-contain"
                 />
             </Link>
 
@@ -109,6 +124,12 @@ const handleItemClick = (item) => {
                 >
                     <i class="fa-solid mr-4 w-5 text-center text-base" :class="[item.icon, item.key === active ? 'text-teal-700' : 'text-slate-500']"></i>
                     <span>{{ item.label }}</span>
+                    <span
+                        v-if="item.key === 'messages' && unreadCount"
+                        class="ml-auto flex h-6 min-w-6 items-center justify-center rounded-full bg-teal-700 px-1.5 text-xs font-bold text-white"
+                    >
+                        {{ unreadCount > 99 ? '99+' : unreadCount }}
+                    </span>
                 </component>
             </nav>
 
@@ -141,11 +162,14 @@ const handleItemClick = (item) => {
                         alt="Mauricare"
                         class="h-10 w-auto object-contain"
                     />
-                    <Link :href="route('profile.edit')">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
-                            {{ firstName.charAt(0) }}
-                        </span>
-                    </Link>
+                    <div class="flex items-center gap-3">
+                        <NotificationBell />
+                        <Link :href="route('profile.edit')">
+                            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
+                                {{ firstName.charAt(0) }}
+                            </span>
+                        </Link>
+                    </div>
                 </div>
 
                 <header class="flex items-start justify-between gap-4">
@@ -153,12 +177,15 @@ const handleItemClick = (item) => {
                         <slot name="header" />
                     </div>
 
-                    <Link :href="route('profile.edit')" class="hidden items-center gap-3 lg:flex">
-                        <span class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-800">
-                            {{ firstName.charAt(0) }}
-                        </span>
-                        <i class="fa-solid fa-chevron-down text-sm text-slate-500"></i>
-                    </Link>
+                    <div class="hidden items-center gap-4 lg:flex">
+                        <NotificationBell />
+                        <Link :href="route('profile.edit')" class="flex items-center gap-3">
+                            <span class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-800">
+                                {{ firstName.charAt(0) }}
+                            </span>
+                            <i class="fa-solid fa-chevron-down text-sm text-slate-500"></i>
+                        </Link>
+                    </div>
                 </header>
 
                 <slot />

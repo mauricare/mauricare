@@ -155,7 +155,7 @@ const cancelBooking = async () => {
 
 <template>
     <Modal :show="show" max-width="2xl" @close="$emit('close')">
-        <form class="p-6" @submit.prevent="saveBooking">
+        <form class="p-5 sm:p-6" @submit.prevent="saveBooking">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3">
@@ -319,22 +319,23 @@ const cancelBooking = async () => {
                 {{ submitError }}
             </p>
 
-            <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
+            <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                 <DangerButton
                     v-if="canCancel"
                     type="button"
-                    class="mr-auto"
+                    class="w-full justify-center sm:mr-auto sm:w-auto"
                     :disabled="isCancelling"
                     @click="cancelBooking"
                 >
                     {{ isCancelling ? 'Cancelling...' : confirmingCancel ? 'Confirm cancellation' : 'Cancel booking' }}
                 </DangerButton>
-                <SecondaryButton type="button" @click="$emit('close')">
+                <SecondaryButton type="button" class="w-full justify-center sm:w-auto" @click="$emit('close')">
                     Close
                 </SecondaryButton>
                 <PrimaryButton
                     v-if="!isReadOnly"
                     type="submit"
+                    class="w-full justify-center sm:w-auto"
                     :disabled="isSaving"
                     :class="{ 'opacity-75': isSaving }"
                 >

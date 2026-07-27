@@ -2,6 +2,7 @@
 import BookingList from '@/Components/Dashboard/BookingList.vue';
 import CareGiverBookingModal from '@/Components/Dashboard/CareGiverBookingModal.vue';
 import HelpSupportSection from '@/Components/Dashboard/HelpSupportSection.vue';
+import MessagesSection from '@/Components/Dashboard/MessagesSection.vue';
 import { statusLabels } from '@/constants/careBookings';
 import CareGiverLayout from '@/Layouts/CareGiverLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
@@ -16,11 +17,12 @@ const selectedBooking = ref(null);
 const activeSection = ref('dashboard');
 const activeBookingFilter = ref('all');
 
-const sections = ['dashboard', 'open', 'mine', 'help'];
+const sections = ['dashboard', 'open', 'mine', 'messages', 'help'];
 
 const sectionTitles = {
     open: 'Open Requests',
     mine: 'My Bookings',
+    messages: 'Messages',
     help: 'Help & Support',
 };
 
@@ -149,14 +151,14 @@ onMounted(() => {
         <template #header>
             <div v-if="activeSection === 'dashboard'">
                 <p class="text-base font-semibold text-slate-800">Welcome back,</p>
-                <h1 class="mt-1 text-4xl font-bold leading-tight text-slate-950">
+                <h1 class="mt-1 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
                     {{ firstName }} <span aria-hidden="true">👋</span>
                 </h1>
                 <p class="mt-3 text-base text-slate-600">
                     Here are the care requests waiting for you and your upcoming visits.
                 </p>
             </div>
-            <h1 v-else class="text-3xl font-bold leading-tight text-slate-950">
+            <h1 v-else class="text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">
                 {{ sectionTitles[activeSection] }}
             </h1>
         </template>
@@ -259,12 +261,12 @@ onMounted(() => {
             <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 class="text-xl font-bold text-slate-950">My Bookings</h2>
 
-                <div class="mt-5 flex flex-wrap gap-6 border-b border-slate-100">
+                <div class="mt-5 flex gap-4 overflow-x-auto border-b border-slate-100 sm:gap-6">
                     <button
                         v-for="filter in myBookingFilters"
                         :key="filter.value"
                         type="button"
-                        class="border-b-2 px-2 pb-3 text-sm font-semibold transition"
+                        class="shrink-0 whitespace-nowrap border-b-2 px-2 pb-3 text-sm font-semibold transition"
                         :class="activeBookingFilter === filter.value
                             ? 'border-teal-700 text-teal-700'
                             : 'border-transparent text-slate-600 hover:text-slate-950'"
@@ -291,6 +293,13 @@ onMounted(() => {
                     />
                 </div>
             </section>
+        </div>
+
+        <div v-else-if="activeSection === 'messages'" class="mt-8">
+            <MessagesSection
+                empty-title="No conversations yet"
+                empty-message="Once you accept a care request, you can message the care seeker here."
+            />
         </div>
 
         <div v-else-if="activeSection === 'help'" class="mt-8">

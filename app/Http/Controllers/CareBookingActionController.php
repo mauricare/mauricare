@@ -8,6 +8,7 @@ use App\Http\Requests\ConfirmPaymentRequest;
 use App\Models\CareBooking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class CareBookingActionController extends Controller
@@ -16,15 +17,20 @@ class CareBookingActionController extends Controller
     {
         Gate::authorize('assign', $careBooking);
 
-        $claimed = CareBooking::whereKey($careBooking->id)
-            ->whereNull('care_giver_id')
-            ->where('status', BookingStatus::Open->value)
-            ->update([
+        DB::transaction(function () use ($request, $careBooking) {
+            $claimed = CareBooking::whereKey($careBooking->id)
+                ->whereNull('care_giver_id')
+                ->where('status', BookingStatus::Open->value)
+                ->lockForUpdate()
+                ->first();
+
+            abort_unless($claimed !== null, 409, 'This booking has already been taken by another care giver.');
+
+            $claimed->update([
                 'care_giver_id' => $request->user()->id,
                 'status' => BookingStatus::Assigned,
             ]);
-
-        abort_unless($claimed === 1, 409, 'This booking has already been taken by another care giver.');
+        });
 
         return $this->bookingResponse($careBooking);
     }

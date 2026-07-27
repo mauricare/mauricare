@@ -2,6 +2,7 @@
 import BookingList from '@/Components/Dashboard/BookingList.vue';
 import BookingModal from '@/Components/Dashboard/BookingModal.vue';
 import HelpSupportSection from '@/Components/Dashboard/HelpSupportSection.vue';
+import MessagesSection from '@/Components/Dashboard/MessagesSection.vue';
 import SectionEmptyState from '@/Components/Dashboard/SectionEmptyState.vue';
 import { bookingFilters, careTypes, statusClasses } from '@/constants/careBookings';
 import { formatAmount, formatDateParts, formatOption, formatStatus, formatTime, providerName } from '@/utils/bookingFormat';
@@ -167,14 +168,14 @@ onMounted(() => {
         <template #header>
             <div v-if="activeSection === 'dashboard'">
                 <p class="text-base font-semibold text-slate-800">Welcome back,</p>
-                <h1 class="mt-1 text-4xl font-bold leading-tight text-slate-950">
+                <h1 class="mt-1 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
                     {{ firstName }} <span aria-hidden="true">👋</span>
                 </h1>
                 <p class="mt-3 text-base text-slate-600">
                     We're here to make care simple and reliable for you and your loved ones.
                 </p>
             </div>
-            <h1 v-else class="text-3xl font-bold leading-tight text-slate-950">
+            <h1 v-else class="text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">
                 {{ sectionTitles[activeSection] }}
             </h1>
         </template>
@@ -183,7 +184,7 @@ onMounted(() => {
             <div class="space-y-6">
                 <div class="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)]">
                     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                        <div class="grid min-h-[300px] gap-4 p-8 md:grid-cols-[minmax(260px,0.9fr)_minmax(260px,1fr)]">
+                        <div class="grid min-h-[300px] gap-4 p-6 sm:p-8 md:grid-cols-[minmax(260px,0.9fr)_minmax(260px,1fr)]">
                             <div class="flex flex-col justify-center">
                                 <button
                                     type="button"
@@ -219,7 +220,7 @@ onMounted(() => {
                         </div>
                     </section>
 
-                    <section class="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+                    <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                         <h2 class="text-xl font-bold text-slate-950">How it works</h2>
                         <div class="mt-6 space-y-5">
                             <div class="flex gap-4">
@@ -373,12 +374,12 @@ onMounted(() => {
                     </button>
                 </div>
 
-                <div class="mt-5 flex flex-wrap gap-6 border-b border-slate-100">
+                <div class="mt-5 flex gap-4 overflow-x-auto border-b border-slate-100 sm:gap-6">
                     <button
                         v-for="filter in bookingFilters"
                         :key="filter.value"
                         type="button"
-                        class="border-b-2 px-2 pb-3 text-sm font-semibold transition"
+                        class="shrink-0 whitespace-nowrap border-b-2 px-2 pb-3 text-sm font-semibold transition"
                         :class="activeBookingFilter === filter.value
                             ? 'border-teal-700 text-teal-700'
                             : 'border-transparent text-slate-600 hover:text-slate-950'"
@@ -493,12 +494,9 @@ onMounted(() => {
         </div>
 
         <div v-else-if="activeSection === 'messages'" class="mt-8">
-            <SectionEmptyState
-                icon="fa-message"
-                title="No messages yet"
-                message="When you're connected with a care provider, your conversations will appear here. Need help in the meantime? Our support team is one click away."
-                action-label="Contact Support"
-                @action="goToSection('help')"
+            <MessagesSection
+                empty-title="No conversations yet"
+                empty-message="Once a care giver is assigned to one of your bookings, you can message them here."
             />
         </div>
 
