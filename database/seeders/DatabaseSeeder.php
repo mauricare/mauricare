@@ -66,5 +66,25 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $user->assignRole('care_seeker');
+
+        $careGiver = User::factory()->create([
+            'name' => 'Test Caregiver',
+            'email' => 'caregiver@example.com',
+        ]);
+
+        $careGiver->profile()->create([
+            'first_name' => 'Test',
+            'last_name' => 'Caregiver',
+            'age' => 35,
+            'phone' => '57000001',
+            'address' => 'Caregiver Address',
+            'city' => 'Curepipe',
+        ]);
+
+        $careGiver->careGiverProfile()->create([
+            'type' => 'nurse',
+        ]);
+
+        $careGiver->assignRole('care_giver');
     }
 }

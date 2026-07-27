@@ -2,12 +2,14 @@
 
 namespace App\Rest\Resources;
 
+use App\Enums\BookingStatus;
 use App\Models\CareBooking;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\BelongsTo;
 
 class CareBookingResource extends Resource
 {
@@ -22,13 +24,21 @@ class CareBookingResource extends Resource
     {
         return [
             'id',
+            'user_id',
+            'care_giver_id',
             'scheduled_date',
             'start_time',
             'duration_hours',
             'care_type',
             'description',
             'preferred_carer_type',
+            'address',
+            'contact_phone',
             'status',
+            'amount_due',
+            'amount_paid',
+            'payment_method',
+            'payment_reference',
             'created_at',
             'updated_at',
         ];
@@ -36,7 +46,10 @@ class CareBookingResource extends Resource
 
     public function relations(RestRequest $request): array
     {
-        return [];
+        return [
+            BelongsTo::make('user', UserResource::class),
+            BelongsTo::make('careGiver', UserResource::class),
+        ];
     }
 
     public function scopes(RestRequest $request): array
@@ -78,9 +91,17 @@ class CareBookingResource extends Resource
                 'physiotherapist',
                 'other',
             ])],
+            'address' => ['sometimes', 'string', 'max:255'],
+            'contact_phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'status' => ['sometimes', 'string', Rule::in([
-                'cancelled',
+                BookingStatus::Cancelled->value,
             ])],
+            'user_id' => ['prohibited'],
+            'care_giver_id' => ['prohibited'],
+            'amount_due' => ['prohibited'],
+            'amount_paid' => ['prohibited'],
+            'payment_method' => ['prohibited'],
+            'payment_reference' => ['prohibited'],
         ];
     }
 
@@ -93,6 +114,7 @@ class CareBookingResource extends Resource
             'care_type' => ['required'],
             'description' => ['required'],
             'preferred_carer_type' => ['required'],
+            'address' => ['required'],
         ];
     }
 
@@ -103,7 +125,19 @@ class CareBookingResource extends Resource
 
     public function searchQuery(RestRequest $request, Builder $query)
     {
-        return $query->where('user_id', $request->user()->id);
+        $user = $request->user();
+
+        if ($user->hasRole('care_giver') || $user->careGiverProfile()->exists()) {
+            return $query->where(function (Builder $query) use ($user) {
+                $query->where('care_giver_id', $user->id)
+                    ->orWhere(function (Builder $query) {
+                        $query->whereNull('care_giver_id')
+                            ->where('status', BookingStatus::Open->value);
+                    });
+            });
+        }
+
+        return $query->where('user_id', $user->id);
     }
 
     public function mutateQuery(RestRequest $request, Builder $query)
@@ -120,7 +154,7 @@ class CareBookingResource extends Resource
     {
         if ($requestBody['operation'] === 'create') {
             $model->user_id = $request->user()->id;
-            $model->status = 'pending';
+            $model->status = BookingStatus::Open;
         }
     }
 

@@ -18,19 +18,37 @@ export const carerTypes = [
     { value: 'other', label: 'Other' },
 ];
 
+export const statusLabels = {
+    open: 'Open',
+    assigned: 'Assigned',
+    awaiting_payment: 'Awaiting Payment',
+    paid: 'Paid',
+    closed: 'Closed',
+    cancelled: 'Cancelled',
+};
+
 export const bookingFilters = [
     { value: 'all', label: 'All' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'confirmed', label: 'Confirmed' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'open', label: statusLabels.open },
+    { value: 'assigned', label: statusLabels.assigned },
+    { value: 'awaiting_payment', label: statusLabels.awaiting_payment },
+    { value: 'paid', label: statusLabels.paid },
+    { value: 'closed', label: statusLabels.closed },
+    { value: 'cancelled', label: statusLabels.cancelled },
 ];
 
 export const statusClasses = {
-    pending: 'bg-amber-50 text-amber-700',
-    confirmed: 'bg-teal-50 text-teal-700',
+    open: 'bg-amber-50 text-amber-700',
+    assigned: 'bg-teal-50 text-teal-700',
+    awaiting_payment: 'bg-violet-50 text-violet-700',
+    paid: 'bg-sky-50 text-sky-700',
+    closed: 'bg-emerald-50 text-emerald-700',
     cancelled: 'bg-rose-50 text-rose-700',
-    completed: 'bg-emerald-50 text-emerald-700',
 };
 
-export const readOnlyStatuses = ['completed', 'cancelled'];
+export const editableStatuses = ['open', 'assigned'];
+
+export const paymentMethods = [
+    { value: 'cash', label: 'Cash' },
+    { value: 'juice', label: 'Juice' },
+];

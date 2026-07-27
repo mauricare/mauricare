@@ -29,6 +29,8 @@ class CareBookingTest extends TestCase
             'care_type' => 'physiotherapy',
             'description' => 'Knee rehabilitation after surgery.',
             'preferred_carer_type' => 'physiotherapist',
+            'address' => '5 Labourdonnais Street, Quatre Bornes',
+            'contact_phone' => '58880000',
         ];
     }
 
@@ -55,7 +57,7 @@ class CareBookingTest extends TestCase
         $this->assertDatabaseHas('care_bookings', [
             'user_id' => $user->id,
             'care_type' => 'physiotherapy',
-            'status' => 'pending',
+            'status' => 'open',
         ]);
     }
 
@@ -88,7 +90,7 @@ class CareBookingTest extends TestCase
             ->assertJsonPath('data.0.id', $ownBooking->id);
     }
 
-    public function test_care_seeker_can_update_a_pending_booking(): void
+    public function test_care_seeker_can_update_an_open_booking(): void
     {
         $user = $this->careSeeker();
         $booking = CareBooking::factory()->for($user)->create();
@@ -144,7 +146,7 @@ class CareBookingTest extends TestCase
                 [
                     'operation' => 'update',
                     'key' => $booking->id,
-                    'attributes' => ['status' => 'completed'],
+                    'attributes' => ['status' => 'closed'],
                 ],
             ],
         ]);
@@ -152,10 +154,28 @@ class CareBookingTest extends TestCase
         $response->assertUnprocessable();
     }
 
-    public function test_completed_booking_cannot_be_updated(): void
+    public function test_care_seeker_cannot_set_payment_fields_through_mutate(): void
     {
         $user = $this->careSeeker();
-        $booking = CareBooking::factory()->for($user)->completed()->create();
+        $booking = CareBooking::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->postJson('/api/care-bookings/mutate', [
+            'mutate' => [
+                [
+                    'operation' => 'update',
+                    'key' => $booking->id,
+                    'attributes' => ['amount_paid' => 100],
+                ],
+            ],
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_closed_booking_cannot_be_updated(): void
+    {
+        $user = $this->careSeeker();
+        $booking = CareBooking::factory()->for($user)->closed()->create();
 
         $response = $this->actingAs($user)->postJson('/api/care-bookings/mutate', [
             'mutate' => [

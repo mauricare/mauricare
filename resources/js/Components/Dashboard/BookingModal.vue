@@ -1,10 +1,11 @@
 <script setup>
+import BookingPaymentPanel from '@/Components/Dashboard/BookingPaymentPanel.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import { careTypes, carerTypes, readOnlyStatuses, statusClasses } from '@/constants/careBookings';
-import { formatStatus } from '@/utils/bookingFormat';
+import { careTypes, carerTypes, editableStatuses, statusClasses } from '@/constants/careBookings';
+import { formatStatus, providerName } from '@/utils/bookingFormat';
 import { computed, reactive, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -32,12 +33,30 @@ const bookingForm = reactive({
     duration_hours: 1,
     care_type: '',
     preferred_carer_type: '',
+    address: '',
+    contact_phone: '',
     description: '',
 });
 
 const isEditing = computed(() => Boolean(props.booking));
-const isReadOnly = computed(() => isEditing.value && readOnlyStatuses.includes(props.booking.status));
-const canCancel = computed(() => isEditing.value && !isReadOnly.value);
+const isReadOnly = computed(() => isEditing.value && !editableStatuses.includes(props.booking.status));
+const canCancel = computed(() => isEditing.value && editableStatuses.includes(props.booking.status));
+const showPayment = computed(() =>
+    isEditing.value && ['awaiting_payment', 'paid', 'closed'].includes(props.booking.status),
+);
+const hasCareGiver = computed(() => Boolean(props.booking?.care_giver));
+
+const modalSubtitle = computed(() => {
+    if (!isReadOnly.value) {
+        return 'Describe the care needed, including health state and allergies if any.';
+    }
+
+    if (props.booking.status === 'awaiting_payment') {
+        return 'The visit is completed. Please confirm the payment below.';
+    }
+
+    return 'This booking can no longer be changed.';
+});
 
 watch(
     () => props.show,
@@ -55,6 +74,8 @@ watch(
             duration_hours: props.booking?.duration_hours || 1,
             care_type: props.booking?.care_type || '',
             preferred_carer_type: props.booking?.preferred_carer_type || '',
+            address: props.booking?.address || '',
+            contact_phone: props.booking?.contact_phone || '',
             description: props.booking?.description || '',
         });
     },
@@ -144,15 +165,13 @@ const cancelBooking = async () => {
                         <span
                             v-if="isEditing"
                             class="rounded-md px-2 py-1 text-xs font-semibold"
-                            :class="statusClasses[booking.status] || statusClasses.pending"
+                            :class="statusClasses[booking.status] || statusClasses.open"
                         >
                             {{ formatStatus(booking.status) }}
                         </span>
                     </div>
                     <p class="mt-1 text-sm text-slate-600">
-                        {{ isReadOnly
-                            ? 'This booking can no longer be changed.'
-                            : 'Describe the care needed, including health state and allergies if any.' }}
+                        {{ modalSubtitle }}
                     </p>
                 </div>
                 <button
@@ -163,6 +182,18 @@ const cancelBooking = async () => {
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
+
+            <p
+                v-if="hasCareGiver"
+                class="mt-4 flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50/60 px-4 py-3 text-sm text-slate-700"
+            >
+                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
+                    {{ providerName(booking).charAt(0) }}
+                </span>
+                <span>
+                    Your care giver is <strong class="text-slate-950">{{ providerName(booking) }}</strong>
+                </span>
+            </p>
 
             <div class="mt-6 grid gap-4 sm:grid-cols-2">
                 <label class="block">
@@ -230,6 +261,37 @@ const cancelBooking = async () => {
                         {{ formErrors.preferred_carer_type }}
                     </span>
                 </label>
+
+                <label class="block">
+                    <span class="text-sm font-medium text-slate-700">Address of the visit</span>
+                    <input
+                        v-model="bookingForm.address"
+                        type="text"
+                        maxlength="255"
+                        class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 disabled:bg-slate-50 disabled:text-slate-500"
+                        placeholder="Street, city"
+                        :disabled="isReadOnly"
+                        required
+                    />
+                    <span v-if="formErrors.address" class="mt-1 block text-sm text-rose-600">
+                        {{ formErrors.address }}
+                    </span>
+                </label>
+
+                <label class="block">
+                    <span class="text-sm font-medium text-slate-700">Contact phone <span class="text-slate-400">(optional)</span></span>
+                    <input
+                        v-model="bookingForm.contact_phone"
+                        type="tel"
+                        maxlength="30"
+                        class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 disabled:bg-slate-50 disabled:text-slate-500"
+                        placeholder="e.g. 5xxx xxxx"
+                        :disabled="isReadOnly"
+                    />
+                    <span v-if="formErrors.contact_phone" class="mt-1 block text-sm text-rose-600">
+                        {{ formErrors.contact_phone }}
+                    </span>
+                </label>
             </div>
 
             <label class="mt-4 block">
@@ -246,6 +308,12 @@ const cancelBooking = async () => {
                     {{ formErrors.description }}
                 </span>
             </label>
+
+            <BookingPaymentPanel
+                v-if="showPayment"
+                :booking="booking"
+                @confirmed="$emit('saved')"
+            />
 
             <p v-if="submitError" class="mt-4 rounded-md bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
                 {{ submitError }}

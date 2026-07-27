@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -15,8 +16,11 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+Route::get('/dashboard', function (Request $request) {
+    $isCareGiver = $request->user()->hasRole('care_giver')
+        || $request->user()->careGiverProfile()->exists();
+
+    return Inertia::render($isCareGiver ? 'CareGiverDashboard' : 'Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/account-verification', function () {

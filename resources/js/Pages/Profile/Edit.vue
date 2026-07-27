@@ -1,4 +1,5 @@
 <script setup>
+import CareGiverLayout from '@/Layouts/CareGiverLayout.vue';
 import CareSeekerLayout from '@/Layouts/CareSeekerLayout.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
@@ -21,12 +22,14 @@ defineProps({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const isCareGiver = computed(() => (page.props.auth.roles || []).includes('care_giver'));
+const layoutComponent = computed(() => (isCareGiver.value ? CareGiverLayout : CareSeekerLayout));
 </script>
 
 <template>
     <Head title="Profile Settings" />
 
-    <CareSeekerLayout active="profile">
+    <component :is="layoutComponent" active="profile">
         <template #header>
             <h1 class="text-3xl font-bold leading-tight text-slate-950">Profile Settings</h1>
             <p class="mt-2 text-base text-slate-600">
@@ -42,8 +45,8 @@ const user = computed(() => page.props.auth.user);
                 <h2 class="mt-4 text-xl font-bold text-slate-950">{{ user.name }}</h2>
                 <p class="mt-1 text-sm text-slate-600">{{ user.email }}</p>
                 <span class="mt-4 inline-flex items-center gap-2 rounded-full bg-teal-50 px-4 py-1.5 text-xs font-bold text-teal-800">
-                    <i class="fa-solid fa-heart"></i>
-                    Care Seeker
+                    <i class="fa-solid" :class="isCareGiver ? 'fa-user-nurse' : 'fa-heart'"></i>
+                    {{ isCareGiver ? 'Care Giver' : 'Care Seeker' }}
                 </span>
             </section>
 
@@ -61,5 +64,5 @@ const user = computed(() => page.props.auth.user);
                 </div>
             </div>
         </div>
-    </CareSeekerLayout>
+    </component>
 </template>

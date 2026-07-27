@@ -1,10 +1,9 @@
+import { statusLabels } from '@/constants/careBookings';
+
 export const formatOption = (options, value) =>
     options.find((option) => option.value === value)?.label || value;
 
-export const formatStatus = (status) =>
-    status
-        ? status.replace('_', ' ').replace(/^\w/, (character) => character.toUpperCase())
-        : 'Pending';
+export const formatStatus = (status) => (status ? statusLabels[status] || status : statusLabels.open);
 
 export const formatDateParts = (dateValue) => {
     const date = new Date(`${dateValue}T00:00:00`);
@@ -40,4 +39,14 @@ export const formatTime = (timeValue) => {
     }).format(date);
 };
 
-export const providerName = (booking) => booking.provider || 'Provider pending';
+export const formatAmount = (value) =>
+    value == null || value === ''
+        ? ''
+        : `Rs ${Number(value).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+          })}`;
+
+export const providerName = (booking) => booking.care_giver?.name || 'Provider pending';
+
+export const seekerName = (booking) => booking.user?.name || 'Care seeker';

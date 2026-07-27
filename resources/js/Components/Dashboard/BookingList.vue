@@ -1,8 +1,8 @@
 <script setup>
 import { careTypes, statusClasses } from '@/constants/careBookings';
-import { formatDateParts, formatOption, formatStatus, formatTime, providerName } from '@/utils/bookingFormat';
+import { formatDateParts, formatOption, formatStatus, formatTime, providerName, seekerName } from '@/utils/bookingFormat';
 
-defineProps({
+const props = defineProps({
     bookings: {
         type: Array,
         required: true,
@@ -19,9 +19,27 @@ defineProps({
         type: String,
         default: 'You have no bookings yet.',
     },
+    emptyHint: {
+        type: String,
+        default: "Create a care request and we'll match you with a provider.",
+    },
+    createLabel: {
+        type: String,
+        default: 'Create Request',
+    },
+    showCreate: {
+        type: Boolean,
+        default: true,
+    },
+    showSeeker: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 defineEmits(['select', 'retry', 'create']);
+
+const personName = (booking) => (props.showSeeker ? seekerName(booking) : providerName(booking));
 </script>
 
 <template>
@@ -46,13 +64,14 @@ defineEmits(['select', 'retry', 'create']);
                 <i class="fa-regular fa-calendar-plus text-xl"></i>
             </span>
             <p class="mt-4 font-semibold text-slate-950">{{ emptyMessage }}</p>
-            <p class="mt-1 text-sm text-slate-600">Create a care request and we'll match you with a provider.</p>
+            <p class="mt-1 text-sm text-slate-600">{{ emptyHint }}</p>
             <button
+                v-if="showCreate"
                 type="button"
                 class="mt-4 rounded-md bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800"
                 @click="$emit('create')"
             >
-                Create Request
+                {{ createLabel }}
             </button>
         </div>
 
@@ -79,14 +98,14 @@ defineEmits(['select', 'retry', 'create']);
                 </span>
                 <span class="mt-1 flex items-center gap-2 text-sm text-slate-700">
                     <span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800">
-                        {{ providerName(booking).charAt(0) }}
+                        {{ personName(booking).charAt(0) }}
                     </span>
-                    {{ providerName(booking) }}
+                    {{ personName(booking) }}
                 </span>
             </span>
             <span
                 class="hidden rounded-md px-3 py-1.5 text-sm font-semibold sm:inline-flex"
-                :class="statusClasses[booking.status] || statusClasses.pending"
+                :class="statusClasses[booking.status] || statusClasses.open"
             >
                 {{ formatStatus(booking.status) }}
             </span>

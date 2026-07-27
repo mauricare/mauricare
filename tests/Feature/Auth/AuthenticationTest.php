@@ -27,7 +27,40 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_agencies_are_redirected_to_account_verification_after_login(): void
+    {
+        $user = User::factory()->create();
+        $user->agencyProfile()->create([
+            'agency_name' => 'Test Agency',
+            'contact_person' => 'Test Person',
+            'agency_address' => 'Test Address',
+            'services_offered' => 'Home care',
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
         $response->assertRedirect(route('account.verification', absolute: false));
+    }
+
+    public function test_care_givers_are_redirected_to_dashboard_after_login(): void
+    {
+        $user = User::factory()->create();
+        $user->careGiverProfile()->create(['type' => 'nurse']);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
     }
 
     public function test_care_seekers_are_redirected_to_dashboard_after_login(): void

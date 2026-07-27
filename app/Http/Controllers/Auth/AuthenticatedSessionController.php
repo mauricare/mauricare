@@ -35,11 +35,11 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        if ($user->hasRole('care_seeker') || $user->careSeekerProfile()->exists()) {
-            return redirect()->intended(route('dashboard', absolute: false));
+        if ($user->hasRole('agency') || $user->agencyProfile()->exists()) {
+            return redirect(route('account.verification', absolute: false));
         }
 
-        return redirect(route('account.verification', absolute: false));
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

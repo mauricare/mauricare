@@ -142,10 +142,10 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        if ($user->hasRole('care_seeker') || $user->careSeekerProfile()->exists()) {
-            return redirect(route('dashboard', absolute: false));
+        if ($user->hasRole('agency') || $user->agencyProfile()->exists()) {
+            return redirect(route('account.verification', absolute: false));
         }
 
-        return redirect(route('account.verification', absolute: false));
+        return redirect(route('dashboard', absolute: false));
     }
 }

@@ -4,7 +4,7 @@ import BookingModal from '@/Components/Dashboard/BookingModal.vue';
 import HelpSupportSection from '@/Components/Dashboard/HelpSupportSection.vue';
 import SectionEmptyState from '@/Components/Dashboard/SectionEmptyState.vue';
 import { bookingFilters, careTypes, statusClasses } from '@/constants/careBookings';
-import { formatDateParts, formatOption, formatStatus, formatTime, providerName } from '@/utils/bookingFormat';
+import { formatAmount, formatDateParts, formatOption, formatStatus, formatTime, providerName } from '@/utils/bookingFormat';
 import CareSeekerLayout from '@/Layouts/CareSeekerLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
@@ -61,13 +61,34 @@ const upcomingBooking = computed(() => {
     const today = new Date().toISOString().slice(0, 10);
 
     return bookings.value
-        .filter((booking) => ['pending', 'confirmed'].includes(booking.status) && booking.scheduled_date >= today)
+        .filter((booking) => ['open', 'assigned'].includes(booking.status) && booking.scheduled_date >= today)
         .sort((first, second) =>
             `${first.scheduled_date} ${first.start_time}`.localeCompare(`${second.scheduled_date} ${second.start_time}`),
         )[0] || null;
 });
 
 const firstName = computed(() => page.props.auth.user.name?.split(' ')[0] || 'there');
+
+const careProviders = computed(() => {
+    const providers = new Map();
+
+    bookings.value
+        .filter((booking) => booking.care_giver)
+        .forEach((booking) => {
+            const provider = providers.get(booking.care_giver.id) || {
+                ...booking.care_giver,
+                bookingCount: 0,
+            };
+            provider.bookingCount += 1;
+            providers.set(booking.care_giver.id, provider);
+        });
+
+    return [...providers.values()];
+});
+
+const invoiceBookings = computed(() =>
+    bookings.value.filter((booking) => booking.amount_due != null && booking.status !== 'cancelled'),
+);
 
 const loadBookings = async () => {
     isLoading.value = true;
@@ -76,6 +97,7 @@ const loadBookings = async () => {
     try {
         const response = await axios.post('/api/care-bookings/search', {
             search: {
+                includes: [{ relation: 'careGiver' }],
                 sorts: [
                     { field: 'scheduled_date', direction: 'desc' },
                     { field: 'start_time', direction: 'desc' },
@@ -285,7 +307,7 @@ onMounted(() => {
                                 </p>
                                 <span
                                     class="mt-2.5 inline-flex rounded-md px-2.5 py-1 text-xs font-semibold"
-                                    :class="statusClasses[upcomingBooking.status] || statusClasses.pending"
+                                    :class="statusClasses[upcomingBooking.status] || statusClasses.open"
                                 >
                                     {{ formatStatus(upcomingBooking.status) }}
                                 </span>
@@ -387,22 +409,87 @@ onMounted(() => {
 
         <div v-else-if="activeSection === 'providers'" class="mt-8">
             <SectionEmptyState
+                v-if="!careProviders.length"
                 icon="fa-user-group"
                 title="No care providers yet"
                 message="Once a provider is assigned to one of your bookings, they'll appear here so you can easily rebook with people you trust."
                 action-label="Create a Care Request"
                 @action="openCreateBooking"
             />
+            <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <section
+                    v-for="provider in careProviders"
+                    :key="provider.id"
+                    class="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
+                    <span class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-800">
+                        {{ provider.name.charAt(0) }}
+                    </span>
+                    <div class="min-w-0">
+                        <h3 class="truncate text-base font-bold text-slate-950">{{ provider.name }}</h3>
+                        <p class="mt-0.5 text-sm text-slate-600">
+                            {{ provider.bookingCount }} booking{{ provider.bookingCount > 1 ? 's' : '' }} with you
+                        </p>
+                    </div>
+                </section>
+            </div>
         </div>
 
         <div v-else-if="activeSection === 'invoices'" class="mt-8">
             <SectionEmptyState
+                v-if="!invoiceBookings.length"
                 icon="fa-file-invoice"
                 title="No invoices yet"
-                message="Invoices and payment receipts will appear here after your bookings are completed. You currently have nothing due."
+                message="Invoices and payment receipts will appear here after your visits are completed. You currently have nothing due."
                 action-label="View My Bookings"
                 @action="goToSection('bookings')"
             />
+            <section v-else class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-100 text-sm">
+                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <tr>
+                                <th class="px-5 py-3">Date</th>
+                                <th class="px-5 py-3">Care</th>
+                                <th class="px-5 py-3">Provider</th>
+                                <th class="px-5 py-3">Amount due</th>
+                                <th class="px-5 py-3">Amount paid</th>
+                                <th class="px-5 py-3">Reference</th>
+                                <th class="px-5 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr
+                                v-for="booking in invoiceBookings"
+                                :key="booking.id"
+                                class="cursor-pointer transition hover:bg-slate-50"
+                                @click="openBooking(booking)"
+                            >
+                                <td class="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
+                                    {{ formatDateParts(booking.scheduled_date).full }}
+                                </td>
+                                <td class="px-5 py-4 text-slate-700">{{ formatOption(careTypes, booking.care_type) }}</td>
+                                <td class="px-5 py-4 text-slate-700">{{ providerName(booking) }}</td>
+                                <td class="whitespace-nowrap px-5 py-4 font-semibold text-slate-950">
+                                    {{ formatAmount(booking.amount_due) }}
+                                </td>
+                                <td class="whitespace-nowrap px-5 py-4 text-slate-700">
+                                    {{ formatAmount(booking.amount_paid) || '—' }}
+                                </td>
+                                <td class="px-5 py-4 text-slate-700">{{ booking.payment_reference || '—' }}</td>
+                                <td class="px-5 py-4">
+                                    <span
+                                        class="inline-flex rounded-md px-2.5 py-1 text-xs font-semibold"
+                                        :class="statusClasses[booking.status] || statusClasses.open"
+                                    >
+                                        {{ formatStatus(booking.status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
 
         <div v-else-if="activeSection === 'messages'" class="mt-8">
