@@ -17,7 +17,7 @@ const form = useForm({
 const submit = () => {
     messageSent.value = false;
 
-    form.post(route('contact.submit'), {
+    form.post(route('support.contact.submit'), {
         preserveScroll: true,
         onSuccess: () => {
             form.reset('phone', 'message');

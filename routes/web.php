@@ -34,6 +34,7 @@ Route::get('/account-verification', function () {
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.submit');
 
 Route::middleware('auth')->group(function () {
+    Route::post('/support/contact', [ContactController::class, 'support'])->name('support.contact.submit');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
