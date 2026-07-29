@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "lomkit/laravel-rest-api": "^2.21",
+        "spatie/laravel-medialibrary": "^11.0",
         "spatie/laravel-permission": "^8.0",
         "tightenco/ziggy": "^2.0"
     },

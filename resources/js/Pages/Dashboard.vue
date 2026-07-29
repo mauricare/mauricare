@@ -1,6 +1,7 @@
 <script setup>
 import BookingList from '@/Components/Dashboard/BookingList.vue';
 import BookingModal from '@/Components/Dashboard/BookingModal.vue';
+import CareGiverProfileModal from '@/Components/Dashboard/CareGiverProfileModal.vue';
 import HelpSupportSection from '@/Components/Dashboard/HelpSupportSection.vue';
 import MessagesSection from '@/Components/Dashboard/MessagesSection.vue';
 import SectionEmptyState from '@/Components/Dashboard/SectionEmptyState.vue';
@@ -16,6 +17,10 @@ const isLoading = ref(false);
 const loadError = ref(false);
 const showBookingModal = ref(false);
 const editingBooking = ref(null);
+const showCareGiverProfile = ref(false);
+const profileCareGiver = ref(null);
+const providerSearch = ref('');
+const messageContactId = ref(null);
 const activeBookingFilter = ref('all');
 const activeSection = ref('dashboard');
 
@@ -68,6 +73,7 @@ const upcomingBooking = computed(() => {
         )[0] || null;
 });
 
+const isActiveCareSeeker = computed(() => Boolean(page.props.auth.user.care_seeker_is_active));
 const firstName = computed(() => page.props.auth.user.name?.split(' ')[0] || 'there');
 
 const careProviders = computed(() => {
@@ -87,6 +93,18 @@ const careProviders = computed(() => {
     return [...providers.values()];
 });
 
+const filteredCareProviders = computed(() => {
+    const query = providerSearch.value.trim().toLocaleLowerCase();
+
+    if (!query) {
+        return careProviders.value;
+    }
+
+    return careProviders.value.filter((provider) =>
+        provider.name.toLocaleLowerCase().includes(query),
+    );
+});
+
 const invoiceBookings = computed(() =>
     bookings.value.filter((booking) => booking.amount_due != null && booking.status !== 'cancelled'),
 );
@@ -98,7 +116,10 @@ const loadBookings = async () => {
     try {
         const response = await axios.post('/api/care-bookings/search', {
             search: {
-                includes: [{ relation: 'careGiver' }],
+                includes: [
+                    { relation: 'careGiver' },
+                    { relation: 'review' },
+                ],
                 sorts: [
                     { field: 'scheduled_date', direction: 'desc' },
                     { field: 'start_time', direction: 'desc' },
@@ -116,6 +137,10 @@ const loadBookings = async () => {
 };
 
 const openCreateBooking = () => {
+    if (!isActiveCareSeeker.value) {
+        return;
+    }
+
     editingBooking.value = null;
     showBookingModal.value = true;
 };
@@ -128,6 +153,23 @@ const openBooking = (booking) => {
 const closeBookingModal = () => {
     showBookingModal.value = false;
     editingBooking.value = null;
+};
+
+const openCareGiverProfile = (careGiver) => {
+    profileCareGiver.value = careGiver;
+    showCareGiverProfile.value = true;
+};
+
+const closeCareGiverProfile = () => {
+    showCareGiverProfile.value = false;
+    profileCareGiver.value = null;
+};
+
+const messageCareGiver = (careGiver) => {
+    messageContactId.value = careGiver?.id || profileCareGiver.value?.id || null;
+    closeCareGiverProfile();
+    closeBookingModal();
+    goToSection('messages');
 };
 
 const handleBookingSaved = async () => {
@@ -148,7 +190,7 @@ onMounted(() => {
         activeSection.value = params.get('section');
     }
 
-    if (params.get('create') === '1') {
+    if (params.get('create') === '1' && isActiveCareSeeker.value) {
         openCreateBooking();
     }
 
@@ -187,6 +229,7 @@ onMounted(() => {
                         <div class="grid min-h-[300px] gap-4 p-6 sm:p-8 md:grid-cols-[minmax(260px,0.9fr)_minmax(260px,1fr)]">
                             <div class="flex flex-col justify-center">
                                 <button
+                                    v-if="isActiveCareSeeker"
                                     type="button"
                                     class="mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-teal-700 text-white shadow-lg shadow-teal-100 transition hover:bg-teal-800"
                                     @click="openCreateBooking"
@@ -194,12 +237,16 @@ onMounted(() => {
                                     <i class="fa-solid fa-plus text-xl"></i>
                                 </button>
                                 <h2 class="text-2xl font-bold leading-tight text-slate-950">
-                                    Create a New<br />Care Request
+                                    <template v-if="isActiveCareSeeker">Create a New<br />Care Request</template>
+                                    <template v-else>Care requests are unavailable</template>
                                 </h2>
                                 <p class="mt-4 max-w-xs text-base leading-7 text-slate-600">
-                                    Tell us what care you or your loved one needs.
+                                    {{ isActiveCareSeeker
+                                        ? 'Tell us what care you or your loved one needs.'
+                                        : 'Your account must be activated before you can create a new booking.' }}
                                 </p>
                                 <button
+                                    v-if="isActiveCareSeeker"
                                     type="button"
                                     class="mt-6 inline-flex w-fit items-center rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
                                     @click="openCreateBooking"
@@ -280,6 +327,7 @@ onMounted(() => {
                             :bookings="recentBookings"
                             :is-loading="isLoading"
                             :load-error="loadError"
+                            :show-create="isActiveCareSeeker"
                             @select="openBooking"
                             @retry="loadBookings"
                             @create="openCreateBooking"
@@ -313,7 +361,13 @@ onMounted(() => {
                                     {{ formatStatus(upcomingBooking.status) }}
                                 </span>
                                 <p class="mt-4 flex items-center gap-3 text-sm text-slate-700">
-                                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
+                                    <img
+                                        v-if="upcomingBooking.care_giver?.avatar_url"
+                                        :src="upcomingBooking.care_giver.avatar_url"
+                                        :alt="`${providerName(upcomingBooking)} profile photo`"
+                                        class="h-9 w-9 rounded-full object-cover"
+                                    />
+                                    <span v-else class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
                                         {{ providerName(upcomingBooking).charAt(0) }}
                                     </span>
                                     with {{ providerName(upcomingBooking) }}
@@ -340,7 +394,7 @@ onMounted(() => {
                             class="flex w-full items-center gap-4 py-4 text-left text-sm font-semibold text-slate-800"
                             @click="goToSection(link.section)"
                         >
-                            <i class="fa-regular w-5 text-center text-slate-500" :class="link.icon"></i>
+                            <i class="fa-solid w-5 text-center text-slate-500" :class="link.icon"></i>
                             <span>{{ link.label }}</span>
                             <i class="fa-solid fa-chevron-right ml-auto text-xs text-slate-500"></i>
                         </button>
@@ -366,6 +420,7 @@ onMounted(() => {
                 <div class="flex items-center justify-between gap-4">
                     <h2 class="text-xl font-bold text-slate-950">All Bookings</h2>
                     <button
+                        v-if="isActiveCareSeeker"
                         type="button"
                         class="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
                         @click="openCreateBooking"
@@ -400,6 +455,7 @@ onMounted(() => {
                         :empty-message="activeBookingFilter === 'all'
                             ? 'You have no bookings yet.'
                             : `No ${activeBookingFilter} bookings.`"
+                        :show-create="isActiveCareSeeker"
                         @select="openBooking"
                         @retry="loadBookings"
                         @create="openCreateBooking"
@@ -414,25 +470,58 @@ onMounted(() => {
                 icon="fa-user-group"
                 title="No care providers yet"
                 message="Once a provider is assigned to one of your bookings, they'll appear here so you can easily rebook with people you trust."
-                action-label="Create a Care Request"
+                :action-label="isActiveCareSeeker ? 'Create a Care Request' : ''"
                 @action="openCreateBooking"
             />
-            <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <section
-                    v-for="provider in careProviders"
-                    :key="provider.id"
-                    class="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            <div v-else>
+                <label class="relative block max-w-md">
+                    <span class="sr-only">Search care providers by name</span>
+                    <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></i>
+                    <input
+                        v-model="providerSearch"
+                        type="search"
+                        placeholder="Search by name"
+                        class="block w-full rounded-md border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                    />
+                </label>
+
+                <div
+                    v-if="!filteredCareProviders.length"
+                    class="mt-5 rounded-xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm"
                 >
-                    <span class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-800">
-                        {{ provider.name.charAt(0) }}
-                    </span>
-                    <div class="min-w-0">
-                        <h3 class="truncate text-base font-bold text-slate-950">{{ provider.name }}</h3>
-                        <p class="mt-0.5 text-sm text-slate-600">
-                            {{ provider.bookingCount }} booking{{ provider.bookingCount > 1 ? 's' : '' }} with you
-                        </p>
-                    </div>
-                </section>
+                    No care providers match “{{ providerSearch.trim() }}”.
+                </div>
+
+                <div v-else class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <section
+                        v-for="provider in filteredCareProviders"
+                        :key="provider.id"
+                        class="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                    >
+                        <img
+                            v-if="provider.avatar_url"
+                            :src="provider.avatar_url"
+                            :alt="`${provider.name} profile photo`"
+                            class="h-14 w-14 rounded-full object-cover"
+                        />
+                        <span v-else class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-800">
+                            {{ provider.name.charAt(0) }}
+                        </span>
+                        <div class="min-w-0">
+                            <h3 class="truncate text-base font-bold text-slate-950">{{ provider.name }}</h3>
+                            <p class="mt-0.5 text-sm text-slate-600">
+                                {{ provider.bookingCount }} booking{{ provider.bookingCount > 1 ? 's' : '' }} with you
+                            </p>
+                            <button
+                                type="button"
+                                class="mt-3 rounded-md border border-teal-700 px-3 py-1.5 text-xs font-semibold text-teal-800 transition hover:bg-teal-700 hover:text-white"
+                                @click="openCareGiverProfile(provider)"
+                            >
+                                View profile
+                            </button>
+                        </div>
+                    </section>
+                </div>
             </div>
         </div>
 
@@ -495,6 +584,7 @@ onMounted(() => {
 
         <div v-else-if="activeSection === 'messages'" class="mt-8">
             <MessagesSection
+                :initial-contact-id="messageContactId"
                 empty-title="No conversations yet"
                 empty-message="Once a care giver is assigned to one of your bookings, you can message them here."
             />
@@ -509,6 +599,13 @@ onMounted(() => {
             :booking="editingBooking"
             @close="closeBookingModal"
             @saved="handleBookingSaved"
+            @view-care-giver="openCareGiverProfile"
+        />
+        <CareGiverProfileModal
+            :show="showCareGiverProfile"
+            :care-giver="profileCareGiver"
+            @close="closeCareGiverProfile"
+            @message="messageCareGiver"
         />
     </CareSeekerLayout>
 </template>

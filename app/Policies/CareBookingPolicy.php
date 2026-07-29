@@ -17,12 +17,13 @@ class CareBookingPolicy
     {
         return $careBooking->user_id === $user->id
             || $careBooking->care_giver_id === $user->id
-            || ($careBooking->status === BookingStatus::Open && $this->isCareGiver($user));
+            || ($careBooking->status === BookingStatus::Open && $this->isActiveCareGiver($user));
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole('care_seeker') || $user->careSeekerProfile()->exists();
+        return $user->hasRole('care_seeker')
+            && (bool) $user->careSeekerProfile?->is_active;
     }
 
     public function update(User $user, CareBooking $careBooking): bool
@@ -48,7 +49,7 @@ class CareBookingPolicy
 
     public function assign(User $user, CareBooking $careBooking): bool
     {
-        return $this->isCareGiver($user)
+        return $this->isActiveCareGiver($user)
             && $careBooking->user_id !== $user->id
             && $careBooking->care_giver_id === null
             && $careBooking->status === BookingStatus::Open;
@@ -72,6 +73,14 @@ class CareBookingPolicy
             && $careBooking->status === BookingStatus::Paid;
     }
 
+    public function review(User $user, CareBooking $careBooking): bool
+    {
+        return $careBooking->user_id === $user->id
+            && $careBooking->care_giver_id !== null
+            && $careBooking->status === BookingStatus::Closed
+            && ! $careBooking->review()->exists();
+    }
+
     public function attachUser(User $user, CareBooking $careBooking): bool
     {
         return false;
@@ -82,8 +91,9 @@ class CareBookingPolicy
         return false;
     }
 
-    private function isCareGiver(User $user): bool
+    private function isActiveCareGiver(User $user): bool
     {
-        return $user->hasRole('care_giver') || $user->careGiverProfile()->exists();
+        return $user->hasRole('care_giver')
+            && (bool) $user->careGiverProfile?->is_active;
     }
 }

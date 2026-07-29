@@ -10,10 +10,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'user_id',
     'type',
+    'is_active',
 ])]
 class CareGiverProfile extends Model
 {
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
 
     public function user(): BelongsTo
     {

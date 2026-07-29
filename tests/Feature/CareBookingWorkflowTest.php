@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\CareBooking;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -12,10 +15,21 @@ class CareBookingWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function addAvatar(User $user): void
+    {
+        Storage::fake('public');
+
+        $user->addMedia(UploadedFile::fake()->createWithContent(
+            'avatar.png',
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='),
+        ))->toMediaCollection('avatar');
+    }
+
     private function careSeeker(): User
     {
         $user = User::factory()->create();
         $user->assignRole(Role::findOrCreate('care_seeker', 'web'));
+        $user->careSeekerProfile()->create(['is_active' => true]);
 
         return $user;
     }
@@ -24,6 +38,22 @@ class CareBookingWorkflowTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole(Role::findOrCreate('care_giver', 'web'));
+        $user->careGiverProfile()->create([
+            'type' => 'nurse',
+            'is_active' => true,
+        ]);
+
+        return $user;
+    }
+
+    private function inactiveCareGiver(): User
+    {
+        $user = User::factory()->create();
+        $user->assignRole(Role::findOrCreate('care_giver', 'web'));
+        $user->careGiverProfile()->create([
+            'type' => 'nurse',
+            'is_active' => false,
+        ]);
 
         return $user;
     }
@@ -45,6 +75,35 @@ class CareBookingWorkflowTest extends TestCase
             [$openBooking->id, $ownAssignedBooking->id],
             $returnedIds->all(),
         );
+    }
+
+    public function test_inactive_care_giver_cannot_see_open_requests(): void
+    {
+        $careGiver = $this->inactiveCareGiver();
+        CareBooking::factory()->create();
+        $ownAssignedBooking = CareBooking::factory()->assigned($careGiver)->create();
+
+        $response = $this->actingAs($careGiver)->postJson('/api/care-bookings/search');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $ownAssignedBooking->id);
+    }
+
+    public function test_inactive_care_giver_cannot_assign_an_open_booking(): void
+    {
+        $careGiver = $this->inactiveCareGiver();
+        $booking = CareBooking::factory()->create();
+
+        $this->actingAs($careGiver)
+            ->postJson("/api/care-bookings/{$booking->id}/assign")
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('care_bookings', [
+            'id' => $booking->id,
+            'care_giver_id' => null,
+            'status' => 'open',
+        ]);
     }
 
     public function test_care_giver_can_assign_himself_to_an_open_booking(): void
@@ -261,6 +320,7 @@ class CareBookingWorkflowTest extends TestCase
     {
         $careGiver = $this->careGiver();
         $booking = CareBooking::factory()->create();
+        $this->addAvatar($booking->user);
 
         $response = $this->actingAs($careGiver)->postJson('/api/care-bookings/search', [
             'search' => [
@@ -272,13 +332,15 @@ class CareBookingWorkflowTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data.0.id', $booking->id)
-            ->assertJsonPath('data.0.user.name', $booking->user->name);
+            ->assertJsonPath('data.0.user.name', $booking->user->name)
+            ->assertJsonPath('data.0.user.avatar_url', $booking->user->avatar_url);
     }
 
     public function test_care_seeker_search_includes_the_care_giver_details(): void
     {
         $seeker = $this->careSeeker();
         $booking = CareBooking::factory()->assigned()->for($seeker)->create();
+        $this->addAvatar($booking->careGiver);
 
         $response = $this->actingAs($seeker)->postJson('/api/care-bookings/search', [
             'search' => [
@@ -290,6 +352,288 @@ class CareBookingWorkflowTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data.0.id', $booking->id)
-            ->assertJsonPath('data.0.care_giver.name', $booking->careGiver->name);
+            ->assertJsonPath('data.0.care_giver.name', $booking->careGiver->name)
+            ->assertJsonPath('data.0.care_giver.avatar_url', $booking->careGiver->avatar_url);
+    }
+
+    public function test_care_seeker_can_review_the_care_giver_after_a_booking_is_closed(): void
+    {
+        $seeker = $this->careSeeker();
+        $careGiver = $this->careGiver();
+        $booking = CareBooking::factory()->closed($careGiver)->for($seeker)->create();
+
+        $this->actingAs($seeker)
+            ->postJson("/api/care-bookings/{$booking->id}/review", [
+                'rating' => 5,
+                'comment' => 'Kind, punctual, and very professional.',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.rating', 5);
+
+        $this->assertDatabaseHas('reviews', [
+            'care_booking_id' => $booking->id,
+            'reviewer_id' => $seeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 5,
+            'comment' => 'Kind, punctual, and very professional.',
+        ]);
+    }
+
+    public function test_review_rating_must_be_between_one_and_five(): void
+    {
+        $seeker = $this->careSeeker();
+        $booking = CareBooking::factory()->closed()->for($seeker)->create();
+
+        $this->actingAs($seeker)
+            ->postJson("/api/care-bookings/{$booking->id}/review", ['rating' => 6])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('rating');
+    }
+
+    public function test_booking_cannot_be_reviewed_before_it_is_closed(): void
+    {
+        $seeker = $this->careSeeker();
+        $booking = CareBooking::factory()->paid()->for($seeker)->create();
+
+        $this->actingAs($seeker)
+            ->postJson("/api/care-bookings/{$booking->id}/review", ['rating' => 4])
+            ->assertForbidden();
+    }
+
+    public function test_care_giver_cannot_review_the_booking(): void
+    {
+        $careGiver = $this->careGiver();
+        $booking = CareBooking::factory()->closed($careGiver)->create();
+
+        $this->actingAs($careGiver)
+            ->postJson("/api/care-bookings/{$booking->id}/review", ['rating' => 4])
+            ->assertForbidden();
+    }
+
+    public function test_booking_cannot_be_reviewed_twice(): void
+    {
+        $seeker = $this->careSeeker();
+        $careGiver = $this->careGiver();
+        $booking = CareBooking::factory()->closed($careGiver)->for($seeker)->create();
+
+        Review::create([
+            'care_booking_id' => $booking->id,
+            'reviewer_id' => $seeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 5,
+        ]);
+
+        $this->actingAs($seeker)
+            ->postJson("/api/care-bookings/{$booking->id}/review", ['rating' => 3])
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('reviews', 1);
+    }
+
+    public function test_care_seeker_can_edit_their_review(): void
+    {
+        $seeker = $this->careSeeker();
+        $careGiver = $this->careGiver();
+        $booking = CareBooking::factory()->closed($careGiver)->for($seeker)->create();
+        $review = Review::create([
+            'care_booking_id' => $booking->id,
+            'reviewer_id' => $seeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 3,
+            'comment' => 'Good.',
+        ]);
+
+        $this->actingAs($seeker)
+            ->patchJson("/api/reviews/{$review->id}", [
+                'rating' => 5,
+                'comment' => 'Excellent care.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.rating', 5)
+            ->assertJsonPath('data.comment', 'Excellent care.');
+
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review->id,
+            'rating' => 5,
+            'comment' => 'Excellent care.',
+        ]);
+    }
+
+    public function test_care_seeker_can_delete_their_review(): void
+    {
+        $seeker = $this->careSeeker();
+        $careGiver = $this->careGiver();
+        $booking = CareBooking::factory()->closed($careGiver)->for($seeker)->create();
+        $review = Review::create([
+            'care_booking_id' => $booking->id,
+            'reviewer_id' => $seeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 4,
+        ]);
+
+        $this->actingAs($seeker)
+            ->deleteJson("/api/reviews/{$review->id}")
+            ->assertNoContent();
+
+        $this->assertDatabaseMissing('reviews', ['id' => $review->id]);
+    }
+
+    public function test_care_seeker_cannot_edit_or_delete_another_users_review(): void
+    {
+        $reviewer = $this->careSeeker();
+        $otherSeeker = $this->careSeeker();
+        $careGiver = $this->careGiver();
+        $booking = CareBooking::factory()->closed($careGiver)->for($reviewer)->create();
+        $review = Review::create([
+            'care_booking_id' => $booking->id,
+            'reviewer_id' => $reviewer->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 4,
+        ]);
+
+        $this->actingAs($otherSeeker)
+            ->patchJson("/api/reviews/{$review->id}", ['rating' => 1])
+            ->assertForbidden();
+
+        $this->actingAs($otherSeeker)
+            ->deleteJson("/api/reviews/{$review->id}")
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('reviews', ['id' => $review->id, 'rating' => 4]);
+    }
+
+    public function test_care_seeker_booking_search_includes_its_review(): void
+    {
+        $seeker = $this->careSeeker();
+        $careGiver = $this->careGiver();
+        $booking = CareBooking::factory()->closed($careGiver)->for($seeker)->create();
+        Review::create([
+            'care_booking_id' => $booking->id,
+            'reviewer_id' => $seeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 4,
+            'comment' => 'Very good care.',
+        ]);
+
+        $this->actingAs($seeker)
+            ->postJson('/api/care-bookings/search', [
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'review'],
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.0.review.rating', 4)
+            ->assertJsonPath('data.0.review.comment', 'Very good care.');
+    }
+
+    public function test_linked_care_seeker_can_view_care_giver_profile_and_all_reviews(): void
+    {
+        $seeker = $this->careSeeker();
+        $otherSeeker = $this->careSeeker();
+        $this->addAvatar($otherSeeker);
+        $careGiver = $this->careGiver();
+        $careGiver->profile()->create([
+            'first_name' => 'Marie',
+            'last_name' => 'Jean',
+            'age' => 34,
+            'phone' => '57001234',
+            'city' => 'Curepipe',
+        ]);
+        $careGiver->careGiverProfile()->update(['type' => 'nurse']);
+
+        $firstBooking = CareBooking::factory()->closed($careGiver)->for($seeker)->create();
+        $secondBooking = CareBooking::factory()->closed($careGiver)->for($otherSeeker)->create();
+
+        Review::create([
+            'care_booking_id' => $firstBooking->id,
+            'reviewer_id' => $seeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 5,
+            'comment' => 'Excellent care.',
+        ]);
+        Review::create([
+            'care_booking_id' => $secondBooking->id,
+            'reviewer_id' => $otherSeeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 3,
+            'comment' => 'Good overall.',
+        ]);
+
+        $this->actingAs($seeker)
+            ->getJson("/api/care-givers/{$careGiver->id}/profile")
+            ->assertOk()
+            ->assertJsonPath('data.name', $careGiver->name)
+            ->assertJsonPath('data.type', 'nurse')
+            ->assertJsonPath('data.age', 34)
+            ->assertJsonPath('data.city', 'Curepipe')
+            ->assertJsonPath('data.phone', '57001234')
+            ->assertJsonPath('data.average_rating', 4)
+            ->assertJsonPath('data.review_count', 2)
+            ->assertJsonPath('data.reviews.0.reviewer_name', $otherSeeker->name)
+            ->assertJsonPath('data.reviews.0.reviewer_avatar_url', $otherSeeker->avatar_url)
+            ->assertJsonPath('data.reviews.1.reviewer_name', $seeker->name)
+            ->assertJsonCount(2, 'data.reviews');
+    }
+
+    public function test_unrelated_care_seeker_cannot_view_care_giver_profile(): void
+    {
+        $seeker = $this->careSeeker();
+        $careGiver = $this->careGiver();
+
+        $this->actingAs($seeker)
+            ->getJson("/api/care-givers/{$careGiver->id}/profile")
+            ->assertForbidden();
+    }
+
+    public function test_care_giver_can_view_only_their_received_reviews(): void
+    {
+        $careGiver = $this->careGiver();
+        $otherCareGiver = $this->careGiver();
+        $seeker = $this->careSeeker();
+        $otherSeeker = $this->careSeeker();
+        $this->addAvatar($seeker);
+
+        $firstBooking = CareBooking::factory()->closed($careGiver)->for($seeker)->create();
+        $secondBooking = CareBooking::factory()->closed($careGiver)->for($otherSeeker)->create();
+        $unrelatedBooking = CareBooking::factory()->closed($otherCareGiver)->for($seeker)->create();
+
+        Review::create([
+            'care_booking_id' => $firstBooking->id,
+            'reviewer_id' => $seeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 5,
+            'comment' => 'Excellent.',
+        ]);
+        Review::create([
+            'care_booking_id' => $secondBooking->id,
+            'reviewer_id' => $otherSeeker->id,
+            'reviewee_id' => $careGiver->id,
+            'rating' => 3,
+            'comment' => 'Good.',
+        ]);
+        Review::create([
+            'care_booking_id' => $unrelatedBooking->id,
+            'reviewer_id' => $seeker->id,
+            'reviewee_id' => $otherCareGiver->id,
+            'rating' => 1,
+        ]);
+
+        $this->actingAs($careGiver)
+            ->getJson('/api/reviews/received')
+            ->assertOk()
+            ->assertJsonPath('data.average_rating', 4)
+            ->assertJsonPath('data.review_count', 2)
+            ->assertJsonPath('data.reviews.1.reviewer_name', $seeker->name)
+            ->assertJsonPath('data.reviews.1.reviewer_avatar_url', $seeker->avatar_url)
+            ->assertJsonCount(2, 'data.reviews');
+    }
+
+    public function test_care_seeker_cannot_access_received_reviews_dashboard_data(): void
+    {
+        $this->actingAs($this->careSeeker())
+            ->getJson('/api/reviews/received')
+            ->assertForbidden();
     }
 }

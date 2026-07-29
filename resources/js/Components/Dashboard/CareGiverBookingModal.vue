@@ -110,6 +110,21 @@ const confirmPaymentReceived = () => postAction('close');
                 </button>
             </div>
 
+            <div class="mt-4 flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50/60 px-4 py-3 text-sm text-slate-700">
+                <img
+                    v-if="booking.user?.avatar_url"
+                    :src="booking.user.avatar_url"
+                    :alt="`${seekerName(booking)} profile photo`"
+                    class="h-9 w-9 rounded-full object-cover"
+                />
+                <span v-else class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
+                    {{ seekerName(booking).charAt(0) }}
+                </span>
+                <span>
+                    Care seeker: <strong class="text-slate-950">{{ seekerName(booking) }}</strong>
+                </span>
+            </div>
+
             <dl class="mt-6 grid gap-x-6 gap-y-4 sm:grid-cols-2">
                 <div v-for="row in detailRows" :key="row.label">
                     <dt class="text-sm font-medium text-slate-500">{{ row.label }}</dt>

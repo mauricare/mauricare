@@ -5,7 +5,7 @@ RUN apt-get update \
         git \
         libzip-dev \
         unzip \
-    && docker-php-ext-install bcmath opcache pdo_mysql zip \
+    && docker-php-ext-install bcmath exif opcache pdo_mysql zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

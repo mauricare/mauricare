@@ -6,6 +6,8 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { careTypes, carerTypes, editableStatuses, statusClasses } from '@/constants/careBookings';
 import { formatStatus, providerName } from '@/utils/bookingFormat';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 import { computed, reactive, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -19,11 +21,17 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['close', 'saved']);
+const emit = defineEmits(['close', 'saved', 'view-care-giver']);
 
 const isSaving = ref(false);
 const isCancelling = ref(false);
 const confirmingCancel = ref(false);
+const showReviewForm = ref(false);
+const isSubmittingReview = ref(false);
+const isDeletingReview = ref(false);
+const reviewRating = ref(0);
+const reviewComment = ref('');
+const reviewError = ref('');
 const formErrors = ref({});
 const submitError = ref('');
 
@@ -45,6 +53,23 @@ const showPayment = computed(() =>
     isEditing.value && ['awaiting_payment', 'paid', 'closed'].includes(props.booking.status),
 );
 const hasCareGiver = computed(() => Boolean(props.booking?.care_giver));
+const isClosed = computed(() => props.booking?.status === 'closed');
+const existingReview = computed(() => props.booking?.review);
+
+const localDate = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
+const localTime = (date = new Date()) =>
+    `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+const minimumDate = () => isEditing.value ? undefined : localDate();
+const minimumTime = () =>
+    !isEditing.value && bookingForm.scheduled_date === localDate() ? localTime() : undefined;
 
 const modalSubtitle = computed(() => {
     if (!isReadOnly.value) {
@@ -67,7 +92,11 @@ watch(
 
         formErrors.value = {};
         submitError.value = '';
+        reviewError.value = '';
         confirmingCancel.value = false;
+        showReviewForm.value = false;
+        reviewRating.value = props.booking?.review?.rating || 0;
+        reviewComment.value = props.booking?.review?.comment || '';
         Object.assign(bookingForm, {
             scheduled_date: props.booking?.scheduled_date || '',
             start_time: props.booking?.start_time?.slice(0, 5) || '09:00',
@@ -101,9 +130,19 @@ const saveBooking = async () => {
         return;
     }
 
-    isSaving.value = true;
     formErrors.value = {};
     submitError.value = '';
+
+    const selectedAt = new Date(`${bookingForm.scheduled_date}T${bookingForm.start_time}`);
+
+    if (!isEditing.value && (Number.isNaN(selectedAt.getTime()) || selectedAt < new Date())) {
+        formErrors.value = {
+            start_time: 'The selected booking date and time must not be in the past.',
+        };
+        return;
+    }
+
+    isSaving.value = true;
 
     const payload = {
         operation: isEditing.value ? 'update' : 'create',
@@ -151,6 +190,92 @@ const cancelBooking = async () => {
         confirmingCancel.value = false;
     }
 };
+
+const submitReview = async () => {
+    if (!reviewRating.value || isSubmittingReview.value) {
+        reviewError.value = 'Please select a rating from 1 to 5 stars.';
+        return;
+    }
+
+    isSubmittingReview.value = true;
+    reviewError.value = '';
+
+    try {
+        const payload = {
+            rating: reviewRating.value,
+            comment: reviewComment.value.trim() || null,
+        };
+
+        if (existingReview.value) {
+            await axios.patch(`/api/reviews/${existingReview.value.id}`, payload);
+        } else {
+            await axios.post(`/api/care-bookings/${props.booking.id}/review`, payload);
+        }
+
+        emit('saved');
+    } catch (error) {
+        if (error.response?.status === 422) {
+            reviewError.value = Object.values(error.response.data.errors || {}).flat()[0]
+                || 'Please check your review and try again.';
+        } else if (error.response?.status === 403) {
+            reviewError.value = 'This booking cannot be reviewed.';
+        } else {
+            reviewError.value = 'Your review could not be saved. Please try again.';
+        }
+    } finally {
+        isSubmittingReview.value = false;
+    }
+};
+
+const editReview = () => {
+    reviewRating.value = existingReview.value.rating;
+    reviewComment.value = existingReview.value.comment || '';
+    reviewError.value = '';
+    showReviewForm.value = true;
+};
+
+const cancelReviewForm = () => {
+    showReviewForm.value = false;
+    reviewError.value = '';
+    reviewRating.value = existingReview.value?.rating || 0;
+    reviewComment.value = existingReview.value?.comment || '';
+};
+
+const deleteReview = async () => {
+    const result = await Swal.fire({
+        title: 'Delete your review?',
+        text: 'Your rating and comment will be permanently removed.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete review',
+        cancelButtonText: 'Keep review',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        reverseButtons: true,
+        focusCancel: true,
+        customClass: {
+            popup: 'rounded-2xl',
+            confirmButton: 'rounded-lg px-5 py-2.5 text-sm font-semibold',
+            cancelButton: 'rounded-lg px-5 py-2.5 text-sm font-semibold',
+        },
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    isDeletingReview.value = true;
+    reviewError.value = '';
+
+    try {
+        await axios.delete(`/api/reviews/${existingReview.value.id}`);
+        emit('saved');
+    } catch {
+        reviewError.value = 'Your review could not be deleted. Please try again.';
+    } finally {
+        isDeletingReview.value = false;
+    }
+};
 </script>
 
 <template>
@@ -183,17 +308,30 @@ const cancelBooking = async () => {
                 </button>
             </div>
 
-            <p
+            <div
                 v-if="hasCareGiver"
-                class="mt-4 flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50/60 px-4 py-3 text-sm text-slate-700"
+                class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-teal-100 bg-teal-50/60 px-4 py-3 text-sm text-slate-700"
             >
-                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
+                <img
+                    v-if="booking.care_giver?.avatar_url"
+                    :src="booking.care_giver.avatar_url"
+                    :alt="`${providerName(booking)} profile photo`"
+                    class="h-9 w-9 rounded-full object-cover"
+                />
+                <span v-else class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
                     {{ providerName(booking).charAt(0) }}
                 </span>
-                <span>
+                <span class="min-w-0 flex-1">
                     Your care giver is <strong class="text-slate-950">{{ providerName(booking) }}</strong>
                 </span>
-            </p>
+                <button
+                    type="button"
+                    class="rounded-md border border-teal-700 px-3 py-1.5 text-xs font-semibold text-teal-800 transition hover:bg-teal-700 hover:text-white"
+                    @click="emit('view-care-giver', booking.care_giver)"
+                >
+                    View profile
+                </button>
+            </div>
 
             <div class="mt-6 grid gap-4 sm:grid-cols-2">
                 <label class="block">
@@ -201,6 +339,7 @@ const cancelBooking = async () => {
                     <input
                         v-model="bookingForm.scheduled_date"
                         type="date"
+                        :min="minimumDate()"
                         class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 disabled:bg-slate-50 disabled:text-slate-500"
                         :disabled="isReadOnly"
                         required
@@ -216,6 +355,7 @@ const cancelBooking = async () => {
                         v-model="bookingForm.start_time"
                         type="time"
                         step="3600"
+                        :min="minimumTime()"
                         class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 disabled:bg-slate-50 disabled:text-slate-500"
                         :disabled="isReadOnly"
                         required
@@ -314,6 +454,103 @@ const cancelBooking = async () => {
                 :booking="booking"
                 @confirmed="$emit('saved')"
             />
+
+            <section v-if="isClosed" class="mt-5 rounded-xl border border-amber-200 bg-amber-50/50 p-5">
+                <template v-if="existingReview && !showReviewForm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h4 class="text-base font-semibold text-slate-950">Your review</h4>
+                        <span class="text-sm font-medium text-slate-600">Review submitted</span>
+                    </div>
+                    <div class="mt-3 flex gap-1" :aria-label="`${existingReview.rating} out of 5 stars`">
+                        <i
+                            v-for="star in 5"
+                            :key="star"
+                            class="fa-solid fa-star text-xl"
+                            :class="star <= existingReview.rating ? 'text-amber-400' : 'text-slate-300'"
+                        ></i>
+                    </div>
+                    <p v-if="existingReview.comment" class="mt-3 whitespace-pre-line text-sm text-slate-700">
+                        {{ existingReview.comment }}
+                    </p>
+                    <p v-if="reviewError" class="mt-3 text-sm font-medium text-rose-700">{{ reviewError }}</p>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <SecondaryButton type="button" @click="editReview">
+                            <i class="fa-solid fa-pen mr-2"></i>
+                            Edit review
+                        </SecondaryButton>
+                        <DangerButton
+                            type="button"
+                            :disabled="isDeletingReview"
+                            :class="{ 'opacity-75': isDeletingReview }"
+                            @click="deleteReview"
+                        >
+                            <i class="fa-solid fa-trash mr-2"></i>
+                            {{ isDeletingReview ? 'Deleting...' : 'Delete review' }}
+                        </DangerButton>
+                    </div>
+                </template>
+
+                <template v-else-if="showReviewForm">
+                    <h4 class="text-base font-semibold text-slate-950">Review {{ providerName(booking) }}</h4>
+                    <p class="mt-1 text-sm text-slate-600">How was the care you received?</p>
+
+                    <div class="mt-3">
+                        <span class="sr-only">Rating</span>
+                        <div class="flex gap-1">
+                            <button
+                                v-for="star in 5"
+                                :key="star"
+                                type="button"
+                                class="rounded p-1 text-2xl transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                :class="star <= reviewRating ? 'text-amber-400' : 'text-slate-300'"
+                                :aria-label="`${star} star${star === 1 ? '' : 's'}`"
+                                @click="reviewRating = star"
+                            >
+                                <i class="fa-solid fa-star"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <label class="mt-3 block">
+                        <span class="text-sm font-medium text-slate-700">Comment <span class="text-slate-400">(optional)</span></span>
+                        <textarea
+                            v-model="reviewComment"
+                            rows="4"
+                            maxlength="2000"
+                            class="mt-1 block w-full rounded-md border-slate-300 bg-white shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                            placeholder="Share your experience with this care giver."
+                        ></textarea>
+                    </label>
+
+                    <p v-if="reviewError" class="mt-2 text-sm font-medium text-rose-700">{{ reviewError }}</p>
+
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <PrimaryButton
+                            type="button"
+                            :disabled="isSubmittingReview"
+                            :class="{ 'opacity-75': isSubmittingReview }"
+                            @click="submitReview"
+                        >
+                            {{ isSubmittingReview ? 'Saving...' : existingReview ? 'Save changes' : 'Submit review' }}
+                        </PrimaryButton>
+                        <SecondaryButton type="button" @click="cancelReviewForm">
+                            Cancel
+                        </SecondaryButton>
+                    </div>
+                </template>
+
+                <template v-else>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h4 class="text-base font-semibold text-slate-950">How was your care?</h4>
+                            <p class="mt-1 text-sm text-slate-600">Rate your experience with {{ providerName(booking) }}.</p>
+                        </div>
+                        <PrimaryButton type="button" class="shrink-0" @click="showReviewForm = true">
+                            Leave a review
+                        </PrimaryButton>
+                    </div>
+                </template>
+            </section>
 
             <p v-if="submitError" class="mt-4 rounded-md bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
                 {{ submitError }}

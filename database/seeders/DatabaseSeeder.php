@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -46,43 +47,60 @@ class DatabaseSeeder extends Seeder
 
         // User::factory(10)->create();
 
-        $user = User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $admin = User::updateOrCreate([
+            'email' => 'admin@mail.com',
+        ], [
+            'name' => 'Administrator',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+        ]);
+        $admin->syncRoles(['admin']);
+
+        $careSeeker = User::updateOrCreate([
+            'email' => 'care_seeker@mail.com',
+        ], [
+            'name' => 'Care Seeker',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
         ]);
 
-        $user->profile()->create([
-            'first_name' => 'Test',
-            'last_name' => 'User',
+        $careSeeker->profile()->updateOrCreate([], [
+            'first_name' => 'Care',
+            'last_name' => 'Seeker',
             'age' => 30,
             'phone' => '00000000',
-            'address' => 'Test Address',
+            'address' => 'Care Seeker Address',
             'city' => 'Port Louis',
         ]);
 
-        $user->careSeekerProfile()->create([
+        $careSeeker->careSeekerProfile()->updateOrCreate([], [
             'care_for' => 'Myself',
-            'care_needs' => 'Test care needs',
+            'care_needs' => 'Home care support',
+            'is_active' => true,
         ]);
 
-        $user->assignRole('care_seeker');
+        $careSeeker->syncRoles(['care_seeker']);
 
-        $careGiver = User::factory()->create([
-            'name' => 'Test Caregiver',
-            'email' => 'caregiver@example.com',
+        $careGiver = User::updateOrCreate([
+            'email' => 'care_giver@mail.com',
+        ], [
+            'name' => 'Care Giver',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
         ]);
 
-        $careGiver->profile()->create([
-            'first_name' => 'Test',
-            'last_name' => 'Caregiver',
+        $careGiver->profile()->updateOrCreate([], [
+            'first_name' => 'Care',
+            'last_name' => 'Giver',
             'age' => 35,
             'phone' => '57000001',
             'address' => 'Caregiver Address',
             'city' => 'Curepipe',
         ]);
 
-        $careGiver->careGiverProfile()->create([
+        $careGiver->careGiverProfile()->updateOrCreate([], [
             'type' => 'nurse',
+            'is_active' => true,
         ]);
 
         $careGiver->assignRole('care_giver');

@@ -33,7 +33,7 @@ onUnmounted(() => {
     }
 });
 
-const navItems = [
+const allNavItems = [
     { key: 'dashboard', label: 'Dashboard', icon: 'fa-house' },
     { key: 'bookings', label: 'My Bookings', icon: 'fa-calendar-days' },
     { key: 'create', label: 'New Care Request', icon: 'fa-circle-plus' },
@@ -44,7 +44,11 @@ const navItems = [
     { key: 'help', label: 'Help & Support', icon: 'fa-circle-question' },
 ];
 
-const firstName = computed(() => page.props.auth.user.name?.split(' ')[0] || 'there');
+const user = computed(() => page.props.auth.user);
+const navItems = computed(() =>
+    allNavItems.filter((item) => item.key !== 'create' || user.value.care_seeker_is_active),
+);
+const firstName = computed(() => user.value.name?.split(' ')[0] || 'there');
 
 const dashboardUrl = (item) => {
     if (item.key === 'create') {
@@ -165,7 +169,13 @@ const handleItemClick = (item) => {
                     <div class="flex items-center gap-3">
                         <NotificationBell />
                         <Link :href="route('profile.edit')">
-                            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
+                            <img
+                                v-if="user.avatar_url"
+                                :src="user.avatar_url"
+                                :alt="`${user.name} profile photo`"
+                                class="h-11 w-11 rounded-full object-cover"
+                            />
+                            <span v-else class="flex h-11 w-11 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
                                 {{ firstName.charAt(0) }}
                             </span>
                         </Link>
@@ -180,7 +190,13 @@ const handleItemClick = (item) => {
                     <div class="hidden items-center gap-4 lg:flex">
                         <NotificationBell />
                         <Link :href="route('profile.edit')" class="flex items-center gap-3">
-                            <span class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-800">
+                            <img
+                                v-if="user.avatar_url"
+                                :src="user.avatar_url"
+                                :alt="`${user.name} profile photo`"
+                                class="h-14 w-14 rounded-full object-cover"
+                            />
+                            <span v-else class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-800">
                                 {{ firstName.charAt(0) }}
                             </span>
                             <i class="fa-solid fa-chevron-down text-sm text-slate-500"></i>

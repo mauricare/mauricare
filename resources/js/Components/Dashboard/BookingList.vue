@@ -40,6 +40,7 @@ const props = defineProps({
 defineEmits(['select', 'retry', 'create']);
 
 const personName = (booking) => (props.showSeeker ? seekerName(booking) : providerName(booking));
+const person = (booking) => (props.showSeeker ? booking.user : booking.care_giver);
 </script>
 
 <template>
@@ -97,7 +98,13 @@ const personName = (booking) => (props.showSeeker ? seekerName(booking) : provid
                     {{ formatTime(booking.start_time) }}
                 </span>
                 <span class="mt-1 flex items-center gap-2 text-sm text-slate-700">
-                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800">
+                    <img
+                        v-if="person(booking)?.avatar_url"
+                        :src="person(booking).avatar_url"
+                        :alt="`${personName(booking)} profile photo`"
+                        class="h-6 w-6 rounded-full object-cover"
+                    />
+                    <span v-else class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800">
                         {{ personName(booking).charAt(0) }}
                     </span>
                     {{ personName(booking) }}

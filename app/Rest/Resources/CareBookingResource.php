@@ -4,12 +4,15 @@ namespace App\Rest\Resources;
 
 use App\Enums\BookingStatus;
 use App\Models\CareBooking;
+use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\HasOne;
 
 class CareBookingResource extends Resource
 {
@@ -49,6 +52,7 @@ class CareBookingResource extends Resource
         return [
             BelongsTo::make('user', UserResource::class),
             BelongsTo::make('careGiver', UserResource::class),
+            HasOne::make('review', ReviewResource::class),
         ];
     }
 
@@ -108,8 +112,8 @@ class CareBookingResource extends Resource
     public function createRules(RestRequest $request): array
     {
         return [
-            'scheduled_date' => ['required'],
-            'start_time' => ['required'],
+            'scheduled_date' => ['required', 'date', 'after_or_equal:today'],
+            'start_time' => ['required', 'date_format:H:i'],
             'duration_hours' => ['required'],
             'care_type' => ['required'],
             'description' => ['required'],
@@ -128,12 +132,17 @@ class CareBookingResource extends Resource
         $user = $request->user();
 
         if ($user->hasRole('care_giver') || $user->careGiverProfile()->exists()) {
-            return $query->where(function (Builder $query) use ($user) {
-                $query->where('care_giver_id', $user->id)
-                    ->orWhere(function (Builder $query) {
+            $isActive = (bool) $user->careGiverProfile?->is_active;
+
+            return $query->where(function (Builder $query) use ($user, $isActive) {
+                $query->where('care_giver_id', $user->id);
+
+                if ($isActive) {
+                    $query->orWhere(function (Builder $query) {
                         $query->whereNull('care_giver_id')
                             ->where('status', BookingStatus::Open->value);
                     });
+                }
             });
         }
 
@@ -153,6 +162,19 @@ class CareBookingResource extends Resource
     public function mutating(MutateRequest $request, array $requestBody, Model $model): void
     {
         if ($requestBody['operation'] === 'create') {
+            $attributes = $requestBody['attributes'];
+            $scheduledAt = Carbon::createFromFormat(
+                'Y-m-d H:i',
+                "{$attributes['scheduled_date']} {$attributes['start_time']}",
+                config('app.timezone'),
+            );
+
+            if ($scheduledAt->isPast()) {
+                throw ValidationException::withMessages([
+                    'start_time' => 'The selected booking date and time must not be in the past.',
+                ]);
+            }
+
             $model->user_id = $request->user()->id;
             $model->status = BookingStatus::Open;
         }

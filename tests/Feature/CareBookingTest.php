@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\CareBooking;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -16,6 +17,7 @@ class CareBookingTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole(Role::findOrCreate('care_seeker', 'web'));
+        $user->careSeekerProfile()->create(['is_active' => true]);
 
         return $user;
     }
@@ -59,6 +61,53 @@ class CareBookingTest extends TestCase
             'care_type' => 'physiotherapy',
             'status' => 'open',
         ]);
+    }
+
+    public function test_inactive_care_seeker_cannot_create_a_booking(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole(Role::findOrCreate('care_seeker', 'web'));
+        $user->careSeekerProfile()->create(['is_active' => false]);
+
+        $this->actingAs($user)
+            ->postJson('/api/care-bookings/mutate', [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => $this->validAttributes(),
+                    ],
+                ],
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('care_bookings', 0);
+    }
+
+    public function test_care_seeker_cannot_create_a_booking_in_the_past(): void
+    {
+        Carbon::setTestNow('2026-07-29 12:00:00');
+        $user = $this->careSeeker();
+
+        foreach ([
+            ['scheduled_date' => '2026-07-28', 'start_time' => '14:00'],
+            ['scheduled_date' => '2026-07-29', 'start_time' => '11:00'],
+        ] as $pastSchedule) {
+            $response = $this->actingAs($user)->postJson('/api/care-bookings/mutate', [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => [
+                            ...$this->validAttributes(),
+                            ...$pastSchedule,
+                        ],
+                    ],
+                ],
+            ]);
+
+            $response->assertUnprocessable();
+        }
+
+        $this->assertDatabaseCount('care_bookings', 0);
     }
 
     public function test_user_without_care_seeker_role_cannot_create_a_booking(): void

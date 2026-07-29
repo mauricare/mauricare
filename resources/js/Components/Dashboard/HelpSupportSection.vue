@@ -105,7 +105,10 @@ const submit = () => {
             <div class="mt-6 space-y-4 text-sm">
                 <p class="flex items-center gap-3">
                     <i class="fa-solid fa-envelope w-5 text-center text-teal-200"></i>
-                    <a href="mailto:contact@mauricare.mu" class="font-semibold underline-offset-2 hover:underline">
+                    <a
+                        href="mailto:contact@mauricare.mu"
+                        class="font-semibold text-white underline decoration-white/70 underline-offset-2 hover:text-teal-100"
+                    >
                         contact@mauricare.mu
                     </a>
                 </p>

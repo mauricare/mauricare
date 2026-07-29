@@ -24,6 +24,10 @@ class CareBookingNotificationTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole(Role::findOrCreate('care_giver', 'web'));
+        $user->careGiverProfile()->create([
+            'type' => 'nurse',
+            'is_active' => true,
+        ]);
 
         return $user;
     }

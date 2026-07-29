@@ -16,12 +16,14 @@ const showBookingModal = ref(false);
 const selectedBooking = ref(null);
 const activeSection = ref('dashboard');
 const activeBookingFilter = ref('all');
-
-const sections = ['dashboard', 'open', 'mine', 'messages', 'help'];
+const reviewSummary = ref({ average_rating: null, review_count: 0, reviews: [] });
+const isLoadingReviews = ref(false);
+const reviewsError = ref(false);
 
 const sectionTitles = {
     open: 'Open Requests',
     mine: 'My Bookings',
+    reviews: 'My Reviews',
     messages: 'Messages',
     help: 'Help & Support',
 };
@@ -35,6 +37,15 @@ const myBookingFilters = [
 ];
 
 const userId = computed(() => page.props.auth.user.id);
+const isActiveCareGiver = computed(() => Boolean(page.props.auth.user.care_giver_is_active));
+const sections = computed(() => [
+    'dashboard',
+    ...(isActiveCareGiver.value ? ['open'] : []),
+    'mine',
+    'reviews',
+    'messages',
+    'help',
+]);
 const firstName = computed(() => page.props.auth.user.name?.split(' ')[0] || 'there');
 
 const openBookings = computed(() =>
@@ -64,7 +75,9 @@ const myBookingCounts = computed(() =>
 );
 
 const stats = computed(() => [
-    { label: 'Open requests', value: openBookings.value.length, icon: 'fa-clipboard-list', section: 'open' },
+    ...(isActiveCareGiver.value ? [
+        { label: 'Open requests', value: openBookings.value.length, icon: 'fa-clipboard-list', section: 'open' },
+    ] : []),
     {
         label: 'Upcoming visits',
         value: myBookings.value.filter((booking) => booking.status === 'assigned').length,
@@ -109,6 +122,32 @@ const loadBookings = async () => {
     }
 };
 
+const loadReviews = async () => {
+    isLoadingReviews.value = true;
+    reviewsError.value = false;
+
+    try {
+        const response = await axios.get('/api/reviews/received');
+        reviewSummary.value = response.data.data;
+    } catch {
+        reviewsError.value = true;
+    } finally {
+        isLoadingReviews.value = false;
+    }
+};
+
+const formatReviewDate = (value) => {
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime())
+        ? ''
+        : new Intl.DateTimeFormat('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        }).format(date);
+};
+
 const openBooking = (booking) => {
     selectedBooking.value = booking;
     showBookingModal.value = true;
@@ -127,16 +166,24 @@ const handleBookingUpdated = async () => {
 const goToSection = (section) => {
     activeSection.value = section;
     window.scrollTo({ top: 0 });
+
+    if (section === 'reviews') {
+        loadReviews();
+    }
 };
 
 onMounted(() => {
     const params = new URLSearchParams(window.location.search);
 
-    if (sections.includes(params.get('section'))) {
+    if (sections.value.includes(params.get('section'))) {
         activeSection.value = params.get('section');
     }
 
     loadBookings();
+
+    if (activeSection.value === 'reviews') {
+        loadReviews();
+    }
 });
 </script>
 
@@ -164,6 +211,22 @@ onMounted(() => {
         </template>
 
         <div v-if="activeSection === 'dashboard'" class="mt-8 space-y-6">
+            <div
+                v-if="!isActiveCareGiver"
+                class="flex items-start gap-4 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-950"
+            >
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                    <i class="fa-solid fa-clock"></i>
+                </span>
+                <div>
+                    <p class="font-bold">Your care giver account is inactive</p>
+                    <p class="mt-1 text-sm text-amber-800">
+                        You cannot view or accept new open care requests until your account is activated.
+                        Your existing bookings, messages, and reviews remain available.
+                    </p>
+                </div>
+            </div>
+
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <button
                     v-for="stat in stats"
@@ -182,7 +245,7 @@ onMounted(() => {
                 </button>
             </div>
 
-            <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section v-if="isActiveCareGiver" class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div class="flex items-center justify-between gap-4">
                     <h2 class="text-xl font-bold text-slate-950">Open Care Requests</h2>
                     <button
@@ -293,6 +356,109 @@ onMounted(() => {
                     />
                 </div>
             </section>
+        </div>
+
+        <div v-else-if="activeSection === 'reviews'" class="mt-8">
+            <div v-if="isLoadingReviews" class="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-500 shadow-sm">
+                Loading reviews...
+            </div>
+
+            <div v-else-if="reviewsError" class="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+                <p class="text-sm text-slate-600">Your reviews could not be loaded.</p>
+                <button
+                    type="button"
+                    class="mt-3 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+                    @click="loadReviews"
+                >
+                    Try again
+                </button>
+            </div>
+
+            <template v-else>
+                <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-950">Rating summary</h2>
+                            <p class="mt-1 text-sm text-slate-600">Feedback received from completed care bookings.</p>
+                        </div>
+                        <div class="flex items-center gap-4 rounded-xl bg-amber-50 px-5 py-4">
+                            <span class="text-3xl font-bold text-slate-950">
+                                {{ reviewSummary.average_rating ?? '—' }}
+                            </span>
+                            <div>
+                                <div class="flex gap-0.5" :aria-label="reviewSummary.average_rating ? `${reviewSummary.average_rating} out of 5 stars` : 'No ratings yet'">
+                                    <i
+                                        v-for="star in 5"
+                                        :key="star"
+                                        class="fa-solid fa-star"
+                                        :class="reviewSummary.average_rating && star <= Math.round(reviewSummary.average_rating)
+                                            ? 'text-amber-400'
+                                            : 'text-slate-300'"
+                                    ></i>
+                                </div>
+                                <p class="mt-1 text-xs text-slate-600">
+                                    {{ reviewSummary.review_count }} {{ reviewSummary.review_count === 1 ? 'review' : 'reviews' }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mt-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-950">Reviews received</h2>
+
+                    <div
+                        v-if="!reviewSummary.reviews.length"
+                        class="mt-5 rounded-xl border border-slate-100 bg-slate-50 px-6 py-12 text-center"
+                    >
+                        <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                            <i class="fa-regular fa-star text-xl"></i>
+                        </span>
+                        <p class="mt-4 font-semibold text-slate-950">No reviews yet</p>
+                        <p class="mt-1 text-sm text-slate-600">Reviews will appear here after care seekers rate closed bookings.</p>
+                    </div>
+
+                    <div v-else class="mt-5 grid gap-4 lg:grid-cols-2">
+                        <article
+                            v-for="review in reviewSummary.reviews"
+                            :key="review.id"
+                            class="rounded-xl border border-slate-200 p-5"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <img
+                                        v-if="review.reviewer_avatar_url"
+                                        :src="review.reviewer_avatar_url"
+                                        :alt="`${review.reviewer_name} profile photo`"
+                                        class="h-11 w-11 shrink-0 rounded-full object-cover"
+                                    />
+                                    <span
+                                        v-else
+                                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800"
+                                    >
+                                        {{ review.reviewer_name.charAt(0) }}
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-bold text-slate-950">{{ review.reviewer_name }}</p>
+                                        <div class="mt-1 flex gap-0.5" :aria-label="`${review.rating} out of 5 stars`">
+                                            <i
+                                                v-for="star in 5"
+                                                :key="star"
+                                                class="fa-solid fa-star text-sm"
+                                                :class="star <= review.rating ? 'text-amber-400' : 'text-slate-300'"
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <time class="shrink-0 text-xs text-slate-500">{{ formatReviewDate(review.created_at) }}</time>
+                            </div>
+                            <p class="mt-4 whitespace-pre-line text-sm leading-6 text-slate-700">
+                                {{ review.comment || 'No comment provided.' }}
+                            </p>
+                        </article>
+                    </div>
+                </section>
+            </template>
         </div>
 
         <div v-else-if="activeSection === 'messages'" class="mt-8">

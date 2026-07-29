@@ -16,10 +16,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'emergency_contact_phone',
     'mobility_level',
     'medical_notes',
+    'is_active',
 ])]
 class CareSeekerProfile extends Model
 {
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
 
     public function user(): BelongsTo
     {

@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[Fillable([
     'name',
@@ -19,10 +21,14 @@ use Spatie\Permission\Traits\HasRoles;
     'password',
 ])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasFactory, HasRoles, InteractsWithMedia, Notifiable;
+
+    protected $appends = [
+        'avatar_url',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -35,6 +41,29 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('avatar')
+            ->useDisk('public')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp'])
+            ->singleFile();
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        $avatar = $this->relationLoaded('media')
+            ? $this->getRelation('media')
+                ->where('collection_name', 'avatar')
+                ->sortBy('order_column')
+                ->first()
+            : $this->media()
+                ->where('collection_name', 'avatar')
+                ->orderBy('order_column')
+                ->first();
+
+        return $avatar?->getUrl();
     }
 
     public function profile(): HasOne
@@ -65,5 +94,15 @@ class User extends Authenticatable
     public function careBookings(): HasMany
     {
         return $this->hasMany(CareBooking::class);
+    }
+
+    public function reviewsGiven(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewer_id');
+    }
+
+    public function reviewsReceived(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewee_id');
     }
 }
