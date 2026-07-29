@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Mail\AdminMessageReceived;
 use App\Models\CareBooking;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -126,6 +128,38 @@ class MessagingTest extends TestCase
             ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.body', 'I need help.')
             ->assertJsonPath('data.1.body', 'How can we assist?');
+    }
+
+    public function test_admin_receives_an_email_notification_for_every_incoming_message(): void
+    {
+        Mail::fake();
+        $admin = $this->admin();
+        $careSeeker = $this->careSeeker();
+
+        $this->actingAs($careSeeker)
+            ->postJson("/api/messages/{$admin->id}", ['body' => 'Please help with my booking.'])
+            ->assertCreated();
+
+        Mail::assertSent(
+            AdminMessageReceived::class,
+            fn (AdminMessageReceived $mail): bool => $mail->hasTo('admin@mauricare.mu')
+                && $mail->sender->is($careSeeker)
+                && $mail->receivedMessage->body === 'Please help with my booking.',
+        );
+    }
+
+    public function test_messages_to_non_admin_users_do_not_send_admin_email_notifications(): void
+    {
+        Mail::fake();
+        $careSeeker = $this->careSeeker();
+        $careGiver = $this->careGiver();
+        CareBooking::factory()->assigned($careGiver)->for($careSeeker)->create();
+
+        $this->actingAs($careSeeker)
+            ->postJson("/api/messages/{$careGiver->id}", ['body' => 'Hello.'])
+            ->assertCreated();
+
+        Mail::assertNotSent(AdminMessageReceived::class);
     }
 
     public function test_seeker_can_message_an_assigned_care_giver(): void

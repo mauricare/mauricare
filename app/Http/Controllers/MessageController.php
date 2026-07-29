@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMessageRequest;
+use App\Mail\AdminMessageReceived;
 use App\Models\CareBooking;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class MessageController extends Controller
 {
@@ -96,6 +98,11 @@ class MessageController extends Controller
             'recipient_id' => $user->id,
             'body' => $request->validated('body'),
         ]);
+
+        if ($user->hasRole('admin')) {
+            Mail::to(config('mail.admin_message_notification_to'))
+                ->send(new AdminMessageReceived($authUser, $message));
+        }
 
         return response()->json(['data' => $message], 201);
     }

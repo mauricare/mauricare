@@ -119,4 +119,6 @@ return [
 
     'support_contact_to' => env('SUPPORT_CONTACT_MAIL_TO', 'contact@mauricare.mu'),
 
+    'admin_message_notification_to' => env('ADMIN_MESSAGE_NOTIFICATION_TO', 'admin@mauricare.mu'),
+
 ];
