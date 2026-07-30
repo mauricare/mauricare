@@ -1,6 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import MarketingFooter from '@/Components/MarketingFooter.vue';
 import MarketingNav from '@/Components/MarketingNav.vue';
 import TestimonialCard from '@/Components/Marketing/TestimonialCard.vue';
@@ -226,6 +226,42 @@ const testimonialSlides = computed(() => {
     return slides;
 });
 
+let revealObserver;
+
+onMounted(async () => {
+    await nextTick();
+
+    const revealElements = document.querySelectorAll('.mauricare-page .reveal');
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        revealElements.forEach((element) => element.classList.add('is-visible'));
+        return;
+    }
+
+    revealObserver = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+
+                entry.target.classList.add('is-visible');
+                revealObserver?.unobserve(entry.target);
+            });
+        },
+        {
+            threshold: 0.12,
+            rootMargin: '0px 0px -60px',
+        },
+    );
+
+    revealElements.forEach((element) => revealObserver.observe(element));
+});
+
+onBeforeUnmount(() => {
+    revealObserver?.disconnect();
+});
+
 </script>
 
 <template>
@@ -254,12 +290,16 @@ const testimonialSlides = computed(() => {
             <MarketingNav />
 
             <div class="container hero-content text-white">
-                <h1 class="fw-bold mb-4 main-title">Empowering<br />Healthier Lives,<br />Together.</h1>
-                <p class="mb-4 hero-copy">
+                <span class="hero-eyebrow">
+                    <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
+                    Trusted care across Mauritius
+                </span>
+                <h1 class="fw-bold mb-4 main-title hero-animate hero-animate-title">Empowering<br />Healthier Lives,<br />Together.</h1>
+                <p class="mb-4 hero-copy hero-animate hero-animate-copy">
                     MauriCare: Connecting Mauritian Families with Compassionate, Exceptional Home and Residential Care.
                 </p>
 
-                <div class="hero-actions">
+                <div class="hero-actions hero-animate hero-animate-actions">
                     <a href="/login?role=care_seeker" class="btn hero-button hero-button-primary fw-semibold">
                         <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                         <span>Find Care</span>
@@ -270,7 +310,7 @@ const testimonialSlides = computed(() => {
                     </a>
                 </div>
 
-                <div class="hero-trust-strip" aria-label="Mauricare service highlights">
+                <div class="hero-trust-strip hero-animate hero-animate-trust" aria-label="Mauricare service highlights">
                     <div class="hero-trust-item">
                         <i class="fa-solid fa-award" aria-hidden="true"></i>
                         <span>Trusted<br />Professionals</span>
@@ -294,7 +334,7 @@ const testimonialSlides = computed(() => {
         <main>
             <section id="about" class="section-padding about-section">
                 <div class="container">
-                    <div class="section-heading text-center mx-auto">
+                    <div class="section-heading text-center mx-auto reveal">
                         <h2 class="section-title">Why Partner with MauriCare?</h2>
                         <p class="section-copy">
                             MauriCare is more than just a platform; it's a community dedicated to fostering a healthier
@@ -306,10 +346,11 @@ const testimonialSlides = computed(() => {
 
                     <div class="partner-grid">
                         <article
-                            v-for="group in partnerGroups"
+                            v-for="(group, index) in partnerGroups"
                             :key="group.title"
-                            class="partner-card"
+                            class="partner-card reveal"
                             :class="`partner-card-${group.accent}`"
+                            :style="{ '--reveal-delay': `${index * 100}ms` }"
                         >
                             <header class="partner-card-header">
                                 <h3>{{ group.title }}</h3>
@@ -329,10 +370,11 @@ const testimonialSlides = computed(() => {
 
                     <div class="principle-grid">
                         <article
-                            v-for="principle in partnerPrinciples"
+                            v-for="(principle, index) in partnerPrinciples"
                             :key="principle.title"
-                            class="principle-card"
+                            class="principle-card reveal"
                             :class="`principle-card-${principle.accent}`"
+                            :style="{ '--reveal-delay': `${index * 100}ms` }"
                         >
                             <i :class="principle.icon" aria-hidden="true"></i>
                             <div>
@@ -346,16 +388,17 @@ const testimonialSlides = computed(() => {
 
             <section class="section-padding goals-section">
                 <div class="container-fluid px-3 px-xl-4">
-                    <div class="goals-heading">
+                    <div class="goals-heading reveal">
                         <h2>Our Goals</h2>
                     </div>
 
                     <div class="goals-grid">
                         <article
-                            v-for="goal in goalItems"
+                            v-for="(goal, index) in goalItems"
                             :key="goal.title"
-                            class="goal-item"
+                            class="goal-item reveal"
                             :class="`goal-item-${goal.accent}`"
+                            :style="{ '--reveal-delay': `${index * 70}ms` }"
                         >
                             <div class="goal-icon">
                                 <i :class="goal.icon" aria-hidden="true"></i>
@@ -369,16 +412,17 @@ const testimonialSlides = computed(() => {
 
             <section id="medical-services" class="medical-section section-padding">
                 <div class="container-fluid px-3 px-xl-4">
-                    <div class="text-center">
+                    <div class="text-center reveal">
                         <h2 class="section-title">Comprehensive Care Services</h2>
                         <p class="section-kicker mb-5">Expert Care at Home and in Residential Settings</p>
                     </div>
 
                     <div class="care-services-grid">
                         <article
-                            v-for="service in comprehensiveCareServices"
+                            v-for="(service, index) in comprehensiveCareServices"
                             :key="service.title"
-                            class="care-service-card"
+                            class="care-service-card reveal"
+                            :style="{ '--reveal-delay': `${index * 70}ms` }"
                         >
                             <i :class="service.icon" aria-hidden="true"></i>
                             <h3>{{ service.title }}</h3>
@@ -390,7 +434,7 @@ const testimonialSlides = computed(() => {
 
             <section class="caregiver-section section-padding">
                 <div class="container-fluid section-wide-container">
-                    <div class="caregiver-panel">
+                    <div class="caregiver-panel reveal">
                         <div class="row align-items-center gy-4">
                             <div class="col-lg-8">
                                 <span class="caregiver-kicker">Caregiver Opportunities</span>
@@ -518,9 +562,9 @@ const testimonialSlides = computed(() => {
 
             <section id="request-care" class="contact-section section-padding">
                 <div class="container-fluid contact-section-container">
-                    <div class="contact-panel mx-auto overflow-hidden rounded-3">
+                    <div class="contact-panel mx-auto overflow-hidden rounded-3 reveal">
                         <div class="row g-0">
-                            <div class="col-lg-5 contact-strip">
+                            <div class="col-lg-6 contact-strip">
                                 <div class="contact-intro">
                                     <span class="contact-kicker">Contact Us</span>
                                     <h2>Speak with Mauricare</h2>
@@ -562,7 +606,7 @@ const testimonialSlides = computed(() => {
                                 </div>
                             </div>
 
-                            <div class="col-lg-7">
+                            <div class="col-lg-6 contact-form-column">
                                 <form class="appointment-form" @submit.prevent="submitContact">
                                     <div v-if="contactSuccess" class="contact-success">
                                         {{ contactSuccess }}
@@ -608,7 +652,7 @@ const testimonialSlides = computed(() => {
 
             <section v-if="stories.length" class="stories-section section-padding">
                 <div class="container-fluid section-wide-container">
-                    <div class="d-flex align-items-center justify-content-between gap-3 mb-5">
+                    <div class="d-flex align-items-center justify-content-between gap-3 mb-5 reveal">
                         <h2 class="testimonials-title mb-0">Testimonials</h2>
 
                         <div v-if="testimonialSlides.length > 1" class="testimonial-controls d-flex gap-3">
@@ -642,7 +686,12 @@ const testimonialSlides = computed(() => {
                                 :class="{ active: slideIndex === 0 }"
                             >
                                 <div class="row g-4">
-                                    <div v-for="story in slide" :key="story.id" class="col-lg-4">
+                                    <div
+                                        v-for="(story, index) in slide"
+                                        :key="story.id"
+                                        class="col-lg-4 reveal"
+                                        :style="{ '--reveal-delay': `${index * 90}ms` }"
+                                    >
                                         <TestimonialCard :story="story" />
                                     </div>
                                 </div>
@@ -652,7 +701,12 @@ const testimonialSlides = computed(() => {
 
                     <div class="testimonial-mobile-list">
                         <div class="row g-4">
-                            <div v-for="story in stories" :key="story.id" class="col-md-6">
+                            <div
+                                v-for="(story, index) in stories"
+                                :key="story.id"
+                                class="col-md-6 reveal"
+                                :style="{ '--reveal-delay': `${(index % 2) * 90}ms` }"
+                            >
                                 <TestimonialCard :story="story" />
                             </div>
                         </div>
@@ -676,6 +730,13 @@ const testimonialSlides = computed(() => {
     background: #fff;
 }
 
+.reveal {
+    opacity: 0;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+}
 
 .main-title {
     margin-top: 55px;
@@ -688,6 +749,20 @@ const testimonialSlides = computed(() => {
     background:
         linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 38%, rgba(255, 255, 255, 0.12) 72%),
         url('/images/mauricare-family.png') center / cover no-repeat;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: 18%;
+    left: -90px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(17, 155, 211, 0.2), rgba(17, 155, 211, 0) 70%);
+    animation: ambient-float 7s ease-in-out infinite;
+    pointer-events: none;
 }
 
 .hero-section::after {
@@ -709,6 +784,37 @@ const testimonialSlides = computed(() => {
     padding-top: 105px;
     text-align: left;
 }
+
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid rgba(10, 166, 189, 0.2);
+    border-radius: 999px;
+    color: #087f91;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 10px 28px rgba(17, 51, 78, 0.08);
+    backdrop-filter: blur(10px);
+    font-size: 0.82rem;
+    font-weight: 800;
+    opacity: 0;
+    animation: hero-rise 0.7s 0.08s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-eyebrow i {
+    color: #df1d7a;
+}
+
+.hero-animate {
+    opacity: 0;
+    animation: hero-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-animate-title { animation-delay: 0.18s; }
+.hero-animate-copy { animation-delay: 0.3s; }
+.hero-animate-actions { animation-delay: 0.42s; }
+.hero-animate-trust { animation-delay: 0.56s; }
 
 @media (min-width: 1400px) {
     .hero-content.container {
@@ -743,6 +849,8 @@ const testimonialSlides = computed(() => {
 }
 
 .hero-button {
+    position: relative;
+    overflow: hidden;
     min-width: 188px;
     display: inline-flex;
     align-items: center;
@@ -754,6 +862,29 @@ const testimonialSlides = computed(() => {
     font-size: 1rem;
     color: #fff;
     box-shadow: 0 14px 28px rgba(18, 34, 60, 0.16);
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        background-color 0.25s ease;
+}
+
+.hero-button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.34) 48%, transparent 76%);
+    transform: translateX(-130%);
+    transition: transform 0.65s ease;
+}
+
+.hero-button:hover,
+.hero-button:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 36px rgba(18, 34, 60, 0.24);
+}
+
+.hero-button:hover::after {
+    transform: translateX(130%);
 }
 
 .hero-button-primary {
@@ -800,6 +931,13 @@ const testimonialSlides = computed(() => {
     font-size: 0.9rem;
     font-weight: 800;
     line-height: 1.2;
+    transition: background-color 0.25s ease, transform 0.25s ease;
+}
+
+.hero-trust-item:hover {
+    z-index: 1;
+    background: rgba(226, 249, 249, 0.72);
+    transform: translateY(-3px);
 }
 
 .hero-trust-item + .hero-trust-item {
@@ -929,9 +1067,16 @@ const testimonialSlides = computed(() => {
 
 .partner-card {
     padding: 1.8rem;
-    border-radius: 8px;
+    border: 1px solid rgba(17, 155, 211, 0.1);
+    border-radius: 22px;
     background: rgba(255, 255, 255, 0.72);
     box-shadow: 0 18px 42px rgba(34, 80, 118, 0.1);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.partner-card:hover {
+    border-color: rgba(17, 155, 211, 0.28);
+    box-shadow: 0 26px 58px rgba(34, 80, 118, 0.16);
 }
 
 .partner-card-header {
@@ -963,7 +1108,7 @@ const testimonialSlides = computed(() => {
     display: grid;
     gap: 2rem;
     padding: 1.8rem;
-    border-radius: 8px;
+    border-radius: 16px;
     background: #fff;
 }
 
@@ -972,12 +1117,22 @@ const testimonialSlides = computed(() => {
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 1.3rem;
     align-items: start;
+    transition: transform 0.25s ease;
+}
+
+.partner-feature:hover {
+    transform: translateX(6px);
 }
 
 .partner-feature > i {
     font-size: 3.4rem;
     line-height: 1;
     text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.partner-feature:hover > i {
+    transform: scale(1.08) rotate(-3deg);
 }
 
 .partner-feature h4 {
@@ -1018,7 +1173,7 @@ const testimonialSlides = computed(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 2rem;
     overflow: hidden;
-    border-radius: 0 0 8px 8px;
+    border-radius: 22px;
     background: #eaf6f9;
 }
 
@@ -1032,6 +1187,11 @@ const testimonialSlides = computed(() => {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.18)),
         linear-gradient(135deg, rgba(9, 153, 168, 0.12), rgba(17, 104, 200, 0.1));
+    transition: background-color 0.3s ease;
+}
+
+.principle-card:hover {
+    background-color: rgba(255, 255, 255, 0.7);
 }
 
 .principle-card + .principle-card {
@@ -1060,11 +1220,23 @@ const testimonialSlides = computed(() => {
 }
 
 .section-title {
+    position: relative;
     color: #41454f;
     font-size: clamp(2rem, 3vw, 2.85rem);
     font-weight: 800;
     line-height: 1.14;
     margin-bottom: 1rem;
+}
+
+.section-heading .section-title::after,
+.medical-section .section-title::after {
+    content: "";
+    display: block;
+    width: 72px;
+    height: 4px;
+    margin: 0.8rem auto 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #119bd3, #ec1696);
 }
 
 .section-copy,
@@ -1159,7 +1331,26 @@ const testimonialSlides = computed(() => {
 
 .goals-section {
     padding-bottom: 7.5rem;
-    background: #fff;
+    position: relative;
+    background:
+        linear-gradient(115deg, rgba(4, 19, 42, 0.88), rgba(8, 58, 75, 0.78)),
+        url('/images/our_goals.png') center / cover no-repeat;
+    background-color: #071f35;
+}
+
+.goals-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 10% 18%, rgba(17, 155, 211, 0.18), transparent 34%),
+        radial-gradient(circle at 90% 82%, rgba(236, 22, 150, 0.13), transparent 30%);
+    pointer-events: none;
+}
+
+.goals-section > .container-fluid {
+    position: relative;
+    z-index: 1;
 }
 
 .goals-heading {
@@ -1171,22 +1362,21 @@ const testimonialSlides = computed(() => {
     display: inline-block;
     position: relative;
     margin: 0;
-    color: #41454f;
+    color: #fff;
     font-size: clamp(2rem, 3vw, 2.85rem);
     font-weight: 800;
     line-height: 1.14;
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.24);
 }
 
 .goals-heading h2::after {
     content: '';
-    position: absolute;
-    left: 50%;
-    bottom: -0.5rem;
+    display: block;
     width: 72px;
-    height: 3px;
+    height: 4px;
+    margin: 0.8rem auto 0;
     border-radius: 999px;
-    background: #119bd3;
-    transform: translateX(-50%);
+    background: linear-gradient(90deg, #119bd3, #ec1696);
 }
 
 .goals-grid {
@@ -1198,6 +1388,8 @@ const testimonialSlides = computed(() => {
 }
 
 .goal-item {
+    position: relative;
+    overflow: hidden;
     min-height: 285px;
     display: grid;
     align-content: start;
@@ -1206,9 +1398,36 @@ const testimonialSlides = computed(() => {
     padding: 1.9rem 1.15rem 1.55rem;
     text-align: center;
     border: 1px solid #e5edf5;
-    border-radius: 8px;
+    border-radius: 18px;
     background: #fff;
     box-shadow: 0 16px 34px rgba(17, 75, 112, 0.08);
+    transition:
+        transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.goal-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 18%;
+    width: 64%;
+    height: 4px;
+    border-radius: 0 0 999px 999px;
+    background: var(--goal-color);
+    transform: scaleX(0.35);
+    transition: transform 0.3s ease;
+}
+
+.goal-item:hover {
+    transform: translateY(-8px);
+    border-color: rgba(17, 155, 211, 0.2);
+    box-shadow: 0 24px 48px rgba(17, 75, 112, 0.15);
+}
+
+.goal-item:hover::before {
+    transform: scaleX(1);
 }
 
 .goal-icon {
@@ -1219,6 +1438,11 @@ const testimonialSlides = computed(() => {
     font-size: 3.4rem;
     line-height: 1;
     text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.goal-item:hover .goal-icon {
+    transform: translateY(-3px) scale(1.08);
 }
 
 .goal-item h3 {
@@ -1276,26 +1500,59 @@ const testimonialSlides = computed(() => {
 }
 
 .care-service-card {
+    position: relative;
+    overflow: hidden;
     min-height: 285px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     padding: 1.9rem 1.15rem 1.55rem;
-    border-radius: 8px;
+    border-radius: 18px;
     color: #fff;
-    background: #119bd3;
+    background: linear-gradient(145deg, #119bd3, #087fac);
     text-align: center;
     box-shadow: 0 16px 34px rgba(17, 75, 112, 0.16);
+    transition:
+        transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.3s ease;
+}
+
+.care-service-card::after {
+    content: "";
+    position: absolute;
+    right: -65px;
+    bottom: -65px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.09);
+    transition: transform 0.4s ease;
+}
+
+.care-service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 52px rgba(17, 75, 112, 0.25);
+}
+
+.care-service-card:hover::after {
+    transform: scale(1.35);
 }
 
 .care-service-card i {
+    position: relative;
+    z-index: 1;
     min-height: 74px;
     display: grid;
     place-items: center;
     color: #dff6c0;
     font-size: 3.75rem;
     line-height: 1;
+    transition: transform 0.3s ease;
+}
+
+.care-service-card:hover i {
+    transform: scale(1.08) rotate(-4deg);
 }
 
 .care-service-card h3 {
@@ -1370,22 +1627,25 @@ const testimonialSlides = computed(() => {
 }
 
 .caregiver-section {
-    background: #fff;
+    padding: 0;
+    background: #119bd3;
 }
 
 .caregiver-section .section-wide-container {
-    max-width: 1400px;
+    width: 100%;
+    max-width: none;
     padding-right: 0;
     padding-left: 0;
 }
 
 .caregiver-panel {
-    padding: 3rem;
-    border-radius: 8px;
+    padding: clamp(3rem, 6vw, 6rem) clamp(1.25rem, 8vw, 9rem);
+    border-radius: 0;
     color: #fff;
     background:
         linear-gradient(90deg, rgba(17, 155, 211, 0.95), rgba(236, 22, 150, 0.82)),
         url('/images/join-mauricare.png') center 20% / cover no-repeat;
+    box-shadow: 0 28px 64px rgba(23, 77, 116, 0.18);
 }
 
 .caregiver-kicker {
@@ -1435,6 +1695,12 @@ const testimonialSlides = computed(() => {
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(4px);
+    transition: transform 0.25s ease, background-color 0.25s ease;
+}
+
+.caregiver-step:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.19);
 }
 
 .caregiver-step-icon {
@@ -1495,6 +1761,12 @@ const testimonialSlides = computed(() => {
     background: rgba(255, 255, 255, 0.16);
     backdrop-filter: blur(6px);
     text-align: center;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.caregiver-cta:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.21);
 }
 
 .caregiver-cta-icon {
@@ -1624,14 +1896,34 @@ const testimonialSlides = computed(() => {
 }
 
 .stories-section {
-    background: #f8fafc;
+    position: relative;
+    background:
+        linear-gradient(115deg, rgba(4, 19, 42, 0.9), rgba(8, 48, 67, 0.82)),
+        url('/images/mauricare-home-care-blood-test-nurse.png') center 38% / cover no-repeat;
+    background-color: #071f35;
+}
+
+.stories-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 12% 20%, rgba(17, 155, 211, 0.2), transparent 34%),
+        radial-gradient(circle at 88% 80%, rgba(236, 22, 150, 0.16), transparent 30%);
+    pointer-events: none;
+}
+
+.stories-section > .container-fluid {
+    position: relative;
+    z-index: 1;
 }
 
 .testimonials-title {
-    color: #41454f;
+    color: #fff;
     font-size: clamp(2rem, 3vw, 2.85rem);
     font-weight: 800;
     line-height: 1.14;
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.24);
 }
 
 .testimonial-control {
@@ -1640,10 +1932,11 @@ const testimonialSlides = computed(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #4b46ff;
+    border: 1px solid rgba(255, 255, 255, 0.72);
     border-radius: 50%;
-    color: #4b46ff;
-    background: transparent;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
     font-size: 1.55rem;
     line-height: 1;
     transition: 0.2s ease;
@@ -1651,8 +1944,10 @@ const testimonialSlides = computed(() => {
 
 .testimonial-control:hover,
 .testimonial-control:focus {
-    color: #fff;
-    background: #4b46ff;
+    color: #071f48;
+    background: #fff;
+    border-color: #fff;
+    transform: translateY(-2px);
 }
 
 .testimonial-mobile-list {
@@ -1660,31 +1955,50 @@ const testimonialSlides = computed(() => {
 }
 
 .contact-section {
-    padding: 100px 0;
+    padding: 0;
+    background: #fff;
 }
 
 .contact-section-container {
-    max-width: 1400px;
+    width: 100%;
+    max-width: none;
     padding-right: 0;
     padding-left: 0;
 }
 
 .contact-panel {
-    max-width: 1400px;
+    position: relative;
+    min-height: clamp(580px, 42vw, 720px);
+    max-width: none;
+    border-radius: 0 !important;
     background: #fff;
-    box-shadow: 0 22px 54px rgba(42, 66, 98, 0.12);
+    box-shadow: none;
+    transition: box-shadow 0.3s ease;
+}
+
+.contact-panel > .row {
+    min-height: inherit;
+}
+
+.contact-panel:hover {
+    box-shadow: none;
 }
 
 .contact-strip {
+    min-height: inherit;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
     gap: 2rem;
-    padding: 3rem 2rem;
+    padding: clamp(2.5rem, 4vw, 5rem) clamp(1.5rem, 3.2vw, 4rem);
     color: #fff;
     background:
-        linear-gradient(145deg, rgba(17, 155, 211, 0.98), rgba(37, 134, 255, 0.94)),
-        url('/images/mauricare-home-care-blood-test-nurse.png') center / cover no-repeat;
+        linear-gradient(90deg, rgba(5, 71, 180, 0.88), rgba(13, 126, 218, 0.48) 58%, rgba(5, 67, 116, 0.12)),
+        url('/images/mauritius-map.png') center / cover no-repeat;
+}
+
+.contact-intro {
+    max-width: 560px;
 }
 
 .contact-intro h2 {
@@ -1712,6 +2026,7 @@ const testimonialSlides = computed(() => {
 .contact-method-list {
     display: grid;
     gap: 0.75rem;
+    width: min(100%, 520px);
 }
 
 .contact-method {
@@ -1724,6 +2039,14 @@ const testimonialSlides = computed(() => {
     color: rgba(255, 255, 255, 0.86);
     background: rgba(255, 255, 255, 0.08);
     text-decoration: none;
+    transition: transform 0.25s ease, background-color 0.25s ease;
+}
+
+a.contact-method:hover,
+a.contact-method:focus-visible {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
 }
 
 .contact-method strong {
@@ -1738,20 +2061,45 @@ const testimonialSlides = computed(() => {
     background: #dff6c0;
 }
 
+.contact-form-column {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(2.5rem, 4.5vw, 5.5rem) clamp(1.5rem, 4vw, 5rem);
+    background: #fff;
+}
+
 .appointment-form {
-    padding: 3rem 2rem;
+    width: min(100%, 650px);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
 }
 
 .appointment-form .form-label {
-    color: #59606b;
+    color: #344054;
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 800;
+}
+
+.appointment-form .form-control {
+    border-color: rgba(75, 101, 135, 0.22);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.86);
+}
+
+.appointment-form .form-control:focus {
+    border-color: #119bd3;
+    box-shadow: 0 0 0 0.2rem rgba(17, 155, 211, 0.14);
 }
 
 .contact-success {
     margin-bottom: 1rem;
-    border-radius: 8px;
     padding: 0.8rem 1rem;
+    border-radius: 8px;
     color: #12643a;
     background: #e9f8ef;
     font-size: 0.92rem;
@@ -1789,6 +2137,67 @@ const testimonialSlides = computed(() => {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.72);
     font-size: 0.82rem;
+}
+
+/*
+ * Reveal motion is applied last so component-specific hover transitions remain
+ * smooth after an element enters the viewport.
+ */
+.reveal {
+    transition:
+        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        background-color 0.3s ease;
+}
+
+.reveal:not(.is-visible) {
+    transform: translateY(30px);
+}
+
+@keyframes hero-rise {
+    from {
+        opacity: 0;
+        transform: translateY(28px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ambient-float {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(34px, -20px, 0) scale(1.08);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-eyebrow,
+    .hero-animate,
+    .hero-section::before {
+        opacity: 1;
+        animation: none;
+        transform: none;
+    }
+
+    .reveal,
+    .hero-button,
+    .hero-trust-item,
+    .partner-card,
+    .partner-feature,
+    .goal-item,
+    .care-service-card,
+    .caregiver-step,
+    .caregiver-cta,
+    .contact-method {
+        transition: none;
+    }
 }
 
 @media (max-width: 991.98px) {
@@ -1897,6 +2306,22 @@ const testimonialSlides = computed(() => {
 }
 
 @media (max-width: 575.98px) {
+    .contact-panel {
+        background: #fff;
+    }
+
+    .contact-strip {
+        min-height: 610px;
+        background:
+            linear-gradient(90deg, rgba(5, 71, 180, 0.92), rgba(8, 91, 163, 0.48)),
+            url('/images/mauritius-map.png') 62% center / cover no-repeat;
+    }
+
+    .contact-form-column {
+        padding: 1.5rem;
+        background: #fff;
+    }
+
     .hero-content h1 {
         max-width: 100%;
     }
@@ -1961,13 +2386,13 @@ const testimonialSlides = computed(() => {
     }
 
     .caregiver-section .section-wide-container {
-        padding-right: 1rem;
-        padding-left: 1rem;
+        padding-right: 0;
+        padding-left: 0;
     }
 
     .contact-section-container {
-        padding-right: 1rem;
-        padding-left: 1rem;
+        padding-right: 0;
+        padding-left: 0;
     }
 
     .partner-feature-list {
