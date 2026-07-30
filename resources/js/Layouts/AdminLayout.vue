@@ -57,6 +57,15 @@ const select = (key) => {
                     <i class="fa-solid w-5 text-center" :class="menu.icon"></i>
                     {{ menu.label }}
                 </button>
+                <Link
+                    :href="route('logout')"
+                    method="post"
+                    as="button"
+                    class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-red-50 hover:text-red-700"
+                >
+                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
+                    Log out
+                </Link>
             </nav>
 
             <div class="absolute inset-x-0 bottom-0 border-t border-slate-100 p-4">
@@ -69,15 +78,6 @@ const select = (key) => {
                         <p class="truncate text-xs text-slate-500">{{ page.props.auth.user.email }}</p>
                     </div>
                 </div>
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="flex w-full items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-red-50 hover:text-red-700"
-                >
-                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
-                    Log out
-                </Link>
             </div>
         </aside>
 

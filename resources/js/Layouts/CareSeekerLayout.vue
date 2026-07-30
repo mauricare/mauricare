@@ -135,9 +135,6 @@ const handleItemClick = (item) => {
                         {{ unreadCount > 99 ? '99+' : unreadCount }}
                     </span>
                 </component>
-            </nav>
-
-            <div class="mt-auto border-t border-slate-200 pt-5">
                 <Link
                     :href="route('logout')"
                     method="post"
@@ -147,7 +144,7 @@ const handleItemClick = (item) => {
                     <i class="fa-solid fa-arrow-right-from-bracket mr-4 w-5 text-center text-slate-500"></i>
                     Logout
                 </Link>
-            </div>
+            </nav>
         </aside>
 
         <main class="lg:pl-72">
@@ -199,7 +196,6 @@ const handleItemClick = (item) => {
                             <span v-else class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-800">
                                 {{ firstName.charAt(0) }}
                             </span>
-                            <i class="fa-solid fa-chevron-down text-sm text-slate-500"></i>
                         </Link>
                     </div>
                 </header>

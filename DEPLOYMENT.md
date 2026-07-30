@@ -1,6 +1,6 @@
 # Production deployment
 
-This project includes a production Docker stack for `http://102.222.106.240`.
+This project includes a production Docker stack for `https://mauricare.mu`.
 Vite assets are compiled into the application image, so no Vite server or
 Node.js process runs in production.
 
@@ -8,7 +8,9 @@ Node.js process runs in production.
 
 - Ubuntu or another Linux distribution supported by Docker
 - Docker Engine with the Compose plugin
-- Ports `22`, `80`, and later `443` allowed through the firewall
+- Ports `22`, `80`, and `443` allowed through the firewall
+- DNS records for `mauricare.mu` and `www.mauricare.mu` pointing to
+  `102.222.106.240`
 
 ## First deployment
 
@@ -27,29 +29,71 @@ docker run --rm php:8.3-cli php -r "echo 'APP_KEY=base64:'.base64_encode(random_
 ```
 
 Paste the generated `APP_KEY` into `.env.production`. Replace both database
-password placeholders with different strong passwords. Do not commit this file.
+password placeholders with different strong passwords. Do not commit this
+plaintext file.
+
+Production settings are committed in encrypted form using SOPS and Age, matching
+the encrypted production-values approach used by `pricing-api`. Encrypt the
+completed environment:
+
+```bash
+./scripts/encrypt-production-env.sh
+git add deploy/.env.production.enc
+```
+
+The Age recipient is public and stored in `.sops.yaml`. The corresponding
+private Age identity must be stored outside Git, preferably at
+`/etc/mauricare/age-key.txt` on the production server with mode `0600`.
 
 Build and start the production services:
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+export SOPS_AGE_KEY_FILE=/etc/mauricare/age-key.txt
+./scripts/deploy-production.sh
 ```
+
+The deployment script decrypts the environment into a restricted temporary
+file, validates the Compose configuration, deploys the containers, and removes
+the temporary plaintext automatically. It never creates `.env.production` in
+the repository.
+
+### Deploy automatically on `git pull`
+
+The server workflow can remain a plain `git pull`. After installing the Age
+private key and committing `deploy/.env.production.enc`, enable the
+repository-managed post-merge hook once:
+
+```bash
+export SOPS_AGE_KEY_FILE=/etc/mauricare/age-key.txt
+./scripts/install-production-git-hook.sh
+```
+
+After this one-time setup, the production deployment command is simply:
+
+```bash
+git pull
+```
+
+When a pull merges new commits, the hook decrypts the environment temporarily,
+validates the Compose configuration, rebuilds changed images, and restarts the
+services. The private key and decrypted environment are never committed.
 
 Check the deployment:
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml ps
-docker compose --env-file .env.production -f docker-compose.prod.yml logs --tail=100 app web
-curl -I http://102.222.106.240/up
+./scripts/production-compose.sh ps
+./scripts/production-compose.sh logs --tail=100 app web caddy
+curl -I https://mauricare.mu/up
 ```
 
-The application will be available at `http://102.222.106.240`.
+The application will be available at `https://mauricare.mu`. Requests to
+`http://mauricare.mu` and either form of `www.mauricare.mu` are redirected to
+the canonical HTTPS address.
 
 ## Updating
 
 ```bash
 git pull
-docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 docker image prune -f
 ```
 
@@ -59,15 +103,22 @@ worker and scheduler wait for the app health check before starting.
 ## Useful commands
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml logs -f
-docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan about
-docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan migrate:status
-docker compose --env-file .env.production -f docker-compose.prod.yml restart worker scheduler
+./scripts/production-compose.sh logs -f
+./scripts/production-compose.sh exec app php artisan about
+./scripts/production-compose.sh exec app php artisan migrate:status
+./scripts/production-compose.sh restart worker scheduler
 ```
 
 ## HTTPS
 
-An IP address cannot normally receive a publicly trusted TLS certificate.
-Point a domain name to `102.222.106.240`, update `APP_URL` and
-`SESSION_SECURE_COOKIE=true`, then place a TLS reverse proxy such as Caddy or
-Nginx with Certbot in front of this stack.
+Caddy automatically obtains and renews publicly trusted certificates for
+`mauricare.mu` and `www.mauricare.mu`. Its certificate state is retained in the
+`caddy-data` Docker volume.
+
+Both TCP ports 80 and 443 must be reachable from the internet while Caddy
+requests the first certificate. Check certificate issuance with:
+
+```bash
+docker compose --env-file .env.production -f docker-compose.prod.yml logs --tail=100 caddy
+curl -I https://mauricare.mu
+```

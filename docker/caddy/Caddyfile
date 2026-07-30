@@ -1,0 +1,8 @@
+mauricare.mu {
+	encode zstd gzip
+	reverse_proxy web:80
+}
+
+www.mauricare.mu {
+	redir https://mauricare.mu{uri} permanent
+}

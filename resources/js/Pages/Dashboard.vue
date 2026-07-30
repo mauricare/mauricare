@@ -257,12 +257,13 @@ onMounted(() => {
                             </div>
 
                             <div class="relative hidden items-end justify-center md:flex">
-                                <div class="absolute inset-x-0 bottom-0 h-64 rounded-t-[5rem] bg-teal-50"></div>
-                                <img
-                                    src="/images/mauricare-family.png"
-                                    alt=""
-                                    class="relative z-10 max-h-72 w-full object-contain object-bottom"
-                                />
+                                <div class="h-64 w-full overflow-hidden rounded-t-[5rem] bg-teal-50">
+                                    <img
+                                        src="/images/mauricare-home-care-nurse-elderly-home-visit.png"
+                                        alt="Mauricare nurse providing an elderly home visit"
+                                        class="h-full w-full object-cover object-center"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </section>

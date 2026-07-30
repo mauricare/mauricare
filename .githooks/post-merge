@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+project_dir="$(git rev-parse --show-toplevel)"
+encrypted_env="$project_dir/deploy/.env.production.enc"
+age_key_file="${SOPS_AGE_KEY_FILE:-/etc/mauricare/age-key.txt}"
+
+if [[ ! -f "$encrypted_env" ]]; then
+    echo "Production deployment skipped: deploy/.env.production.enc is missing." >&2
+    exit 1
+fi
+
+if [[ ! -f "$age_key_file" ]]; then
+    echo "Production deployment skipped: Age key not found at $age_key_file." >&2
+    exit 1
+fi
+
+export SOPS_AGE_KEY_FILE="$age_key_file"
+exec "$project_dir/scripts/deploy-production.sh"

@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@mail.com',
         ], [
             'name' => 'Administrator',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('MCP@ssw0rd2026'),
             'email_verified_at' => now(),
         ]);
         $admin->syncRoles(['admin']);
