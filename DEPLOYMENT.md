@@ -1,13 +1,12 @@
 # Production deployment
 
-This project includes a production Docker stack for `https://mauricare.mu`.
-Vite assets are compiled into the application image, so no Vite server or
-Node.js process runs in production.
+Mauricare runs directly on the production host at `https://mauricare.mu`.
+Laravel connects to the MySQL service installed on that same server.
 
 ## Server requirements
 
-- Ubuntu or another Linux distribution supported by Docker
-- Docker Engine with the Compose plugin
+- Ubuntu or another supported Linux distribution
+- PHP 8.3, Composer, Node.js/npm, Nginx, and MySQL installed on the host
 - Ports `22`, `80`, and `443` allowed through the firewall
 - DNS records for `mauricare.mu` and `www.mauricare.mu` pointing to
   `102.222.106.240`
@@ -25,12 +24,12 @@ Create the production environment:
 
 ```bash
 cp .env.production.example .env.production
-docker run --rm php:8.3-cli php -r "echo 'APP_KEY=base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
+php -r "echo 'APP_KEY=base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
 ```
 
-Paste the generated `APP_KEY` into `.env.production`. Replace both database
-password placeholders with different strong passwords. Do not commit this
-plaintext file.
+Paste the generated `APP_KEY` into `.env.production`. Replace the database
+password placeholder with the existing host-MySQL credentials. Keep
+`DB_HOST=localhost`. Do not commit this plaintext file.
 
 Production settings are committed in encrypted form using SOPS and Age, matching
 the encrypted production-values approach used by `pricing-api`. Encrypt the
@@ -45,17 +44,17 @@ The Age recipient is public and stored in `.sops.yaml`. The corresponding
 private Age identity must be stored outside Git, preferably at
 `/etc/mauricare/age-key.txt` on the production server with mode `0600`.
 
-Build and start the production services:
+Deploy the application:
 
 ```bash
 export SOPS_AGE_KEY_FILE=/etc/mauricare/age-key.txt
 ./scripts/deploy-production.sh
 ```
 
-The deployment script decrypts the environment into a restricted temporary
-file, validates the Compose configuration, deploys the containers, and removes
-the temporary plaintext automatically. It never creates `.env.production` in
-the repository.
+The deployment script decrypts the environment into the Git-ignored `.env`
+runtime file with mode `0600`, installs production dependencies, builds frontend
+assets, runs migrations, optimizes Laravel, and restarts queue workers. MySQL
+continues running directly on the host; no database container is used.
 
 ### Deploy automatically on `git pull`
 
@@ -74,15 +73,15 @@ After this one-time setup, the production deployment command is simply:
 git pull
 ```
 
-When a pull merges new commits, the hook decrypts the environment temporarily,
-validates the Compose configuration, rebuilds changed images, and restarts the
-services. The private key and decrypted environment are never committed.
+When a pull merges new commits, the hook updates the protected runtime
+environment and deploys the host-installed Laravel application. The private key
+and decrypted environment are never committed.
 
 Check the deployment:
 
 ```bash
-./scripts/production-compose.sh ps
-./scripts/production-compose.sh logs --tail=100 app web caddy
+php artisan about
+sudo systemctl status nginx
 curl -I https://mauricare.mu/up
 ```
 
@@ -94,31 +93,32 @@ the canonical HTTPS address.
 
 ```bash
 git pull
-docker image prune -f
 ```
 
-The app container runs database migrations before it becomes healthy. The queue
-worker and scheduler wait for the app health check before starting.
+The deployment script runs database migrations and restarts Laravel queue
+workers after every successful pull.
 
 ## Useful commands
 
 ```bash
-./scripts/production-compose.sh logs -f
-./scripts/production-compose.sh exec app php artisan about
-./scripts/production-compose.sh exec app php artisan migrate:status
-./scripts/production-compose.sh restart worker scheduler
+php artisan about
+php artisan migrate:status
+php artisan queue:restart
+tail -f storage/logs/laravel.log
 ```
 
 ## HTTPS
 
-Caddy automatically obtains and renews publicly trusted certificates for
-`mauricare.mu` and `www.mauricare.mu`. Its certificate state is retained in the
-`caddy-data` Docker volume.
-
-Both TCP ports 80 and 443 must be reachable from the internet while Caddy
-requests the first certificate. Check certificate issuance with:
+The host Nginx installation uses Certbot for trusted certificates and automatic
+renewal. Install and configure it once:
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml logs --tail=100 caddy
+sudo apt update
+sudo apt install -y certbot python3-certbot-nginx
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw reload
+sudo certbot --nginx -d mauricare.mu -d www.mauricare.mu --redirect
+sudo certbot renew --dry-run
 curl -I https://mauricare.mu
 ```

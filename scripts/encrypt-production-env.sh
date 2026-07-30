@@ -20,7 +20,6 @@ fi
 required_values=(
     APP_KEY
     DB_PASSWORD
-    MYSQL_ROOT_PASSWORD
 )
 
 for key in "${required_values[@]}"; do
