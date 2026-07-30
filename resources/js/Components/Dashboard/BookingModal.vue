@@ -34,6 +34,9 @@ const reviewComment = ref('');
 const reviewError = ref('');
 const formErrors = ref({});
 const submitError = ref('');
+const repeatEnabled = ref(false);
+const repeatFrequency = ref('daily');
+const repeatUntil = ref('');
 
 const bookingForm = reactive({
     scheduled_date: '',
@@ -55,6 +58,7 @@ const showPayment = computed(() =>
 const hasCareGiver = computed(() => Boolean(props.booking?.care_giver));
 const isClosed = computed(() => props.booking?.status === 'closed');
 const existingReview = computed(() => props.booking?.review);
+const maximumRepeatedBookings = 10;
 
 const localDate = (date = new Date()) => {
     const year = date.getFullYear();
@@ -70,6 +74,71 @@ const localTime = (date = new Date()) =>
 const minimumDate = () => isEditing.value ? undefined : localDate();
 const minimumTime = () =>
     !isEditing.value && bookingForm.scheduled_date === localDate() ? localTime() : undefined;
+
+const parseLocalDate = (value) => {
+    const [year, month, day] = (value || '').split('-').map(Number);
+
+    if (!year || !month || !day) {
+        return null;
+    }
+
+    const date = new Date(year, month - 1, day);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const bookingDates = computed(() => {
+    const startDate = parseLocalDate(bookingForm.scheduled_date);
+
+    if (!startDate) {
+        return [];
+    }
+
+    const dates = [localDate(startDate)];
+
+    if (!repeatEnabled.value) {
+        return dates;
+    }
+
+    const endDate = parseLocalDate(repeatUntil.value);
+
+    if (!endDate || endDate <= startDate) {
+        return dates;
+    }
+
+    const cursor = new Date(startDate);
+    const step = repeatFrequency.value === 'weekly' ? 7 : 1;
+
+    while (dates.length <= maximumRepeatedBookings && cursor < endDate) {
+        cursor.setDate(cursor.getDate() + step);
+
+        if (cursor <= endDate) {
+            dates.push(localDate(cursor));
+        }
+    }
+
+    return dates;
+});
+
+const repeatLimitExceeded = computed(() =>
+    repeatEnabled.value && bookingDates.value.length > maximumRepeatedBookings,
+);
+
+const saveButtonLabel = computed(() => {
+    if (isSaving.value) {
+        return 'Saving...';
+    }
+
+    if (repeatLimitExceeded.value) {
+        return `Maximum ${maximumRepeatedBookings} bookings`;
+    }
+
+    if (!isEditing.value && repeatEnabled.value && bookingDates.value.length > 1) {
+        return `Create ${bookingDates.value.length} bookings`;
+    }
+
+    return 'Save booking';
+});
 
 const modalSubtitle = computed(() => {
     if (!isReadOnly.value) {
@@ -97,6 +166,9 @@ watch(
         showReviewForm.value = false;
         reviewRating.value = props.booking?.review?.rating || 0;
         reviewComment.value = props.booking?.review?.comment || '';
+        repeatEnabled.value = false;
+        repeatFrequency.value = 'daily';
+        repeatUntil.value = '';
         Object.assign(bookingForm, {
             scheduled_date: props.booking?.scheduled_date || '',
             start_time: props.booking?.start_time?.slice(0, 5) || '09:00',
@@ -121,7 +193,7 @@ const normalizeErrors = (errors) => {
 
 const mutate = async (payload) => {
     await axios.post('/api/care-bookings/mutate', {
-        mutate: [payload],
+        mutate: Array.isArray(payload) ? payload : [payload],
     });
 };
 
@@ -133,9 +205,36 @@ const saveBooking = async () => {
     formErrors.value = {};
     submitError.value = '';
 
-    const selectedAt = new Date(`${bookingForm.scheduled_date}T${bookingForm.start_time}`);
+    if (!isEditing.value && repeatEnabled.value) {
+        if (!repeatUntil.value) {
+            formErrors.value = {
+                repeat_until: 'Choose when the repeated bookings should end.',
+            };
+            return;
+        }
 
-    if (!isEditing.value && (Number.isNaN(selectedAt.getTime()) || selectedAt < new Date())) {
+        if (repeatUntil.value <= bookingForm.scheduled_date) {
+            formErrors.value = {
+                repeat_until: 'The repeat end date must be after the first booking date.',
+            };
+            return;
+        }
+
+        if (bookingDates.value.length > maximumRepeatedBookings) {
+            formErrors.value = {
+                repeat_until: `You can create up to ${maximumRepeatedBookings} bookings at once.`,
+            };
+            return;
+        }
+    }
+
+    const hasPastDate = !isEditing.value && bookingDates.value.some((date) => {
+        const selectedAt = new Date(`${date}T${bookingForm.start_time}`);
+
+        return Number.isNaN(selectedAt.getTime()) || selectedAt < new Date();
+    });
+
+    if (hasPastDate) {
         formErrors.value = {
             start_time: 'The selected booking date and time must not be in the past.',
         };
@@ -144,14 +243,19 @@ const saveBooking = async () => {
 
     isSaving.value = true;
 
-    const payload = {
-        operation: isEditing.value ? 'update' : 'create',
-        attributes: { ...bookingForm },
-    };
-
-    if (isEditing.value) {
-        payload.key = props.booking.id;
-    }
+    const payload = isEditing.value
+        ? {
+            operation: 'update',
+            key: props.booking.id,
+            attributes: { ...bookingForm },
+        }
+        : bookingDates.value.map((scheduledDate) => ({
+            operation: 'create',
+            attributes: {
+                ...bookingForm,
+                scheduled_date: scheduledDate,
+            },
+        }));
 
     try {
         await mutate(payload);
@@ -366,6 +470,59 @@ const deleteReview = async () => {
                     </span>
                 </label>
 
+                <section
+                    v-if="!isEditing"
+                    class="sm:col-span-2 rounded-xl border border-teal-100 bg-teal-50/50 p-4"
+                >
+                    <label class="flex cursor-pointer items-start gap-3">
+                        <input
+                            v-model="repeatEnabled"
+                            type="checkbox"
+                            class="mt-0.5 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
+                        />
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-900">Repeat booking</span>
+                            <span class="mt-0.5 block text-xs text-slate-600">
+                                Create a separate booking with the same details for each repeated date.
+                            </span>
+                        </span>
+                    </label>
+
+                    <div v-if="repeatEnabled" class="mt-4 grid gap-4 sm:grid-cols-2">
+                        <label class="block">
+                            <span class="text-sm font-medium text-slate-700">Repeat</span>
+                            <select
+                                v-model="repeatFrequency"
+                                class="mt-1 block w-full rounded-md border-slate-300 bg-white shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                            >
+                                <option value="daily">Every day</option>
+                                <option value="weekly">Every week</option>
+                            </select>
+                        </label>
+
+                        <label class="block">
+                            <span class="text-sm font-medium text-slate-700">Repeat until</span>
+                            <input
+                                v-model="repeatUntil"
+                                type="date"
+                                :min="bookingForm.scheduled_date || minimumDate()"
+                                class="mt-1 block w-full rounded-md border-slate-300 bg-white shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                                required
+                            />
+                            <span v-if="formErrors.repeat_until" class="mt-1 block text-sm text-rose-600">
+                                {{ formErrors.repeat_until }}
+                            </span>
+                        </label>
+                    </div>
+
+                    <p v-if="repeatLimitExceeded" class="mt-3 text-sm font-semibold text-rose-700">
+                        You can create a maximum of {{ maximumRepeatedBookings }} bookings at once. Choose an earlier end date.
+                    </p>
+                    <p v-else-if="repeatEnabled && bookingDates.length > 1" class="mt-3 text-sm font-semibold text-teal-800">
+                        {{ bookingDates.length }} separate bookings will be created.
+                    </p>
+                </section>
+
                 <label class="block">
                     <span class="text-sm font-medium text-slate-700">Type of care</span>
                     <select
@@ -573,10 +730,10 @@ const deleteReview = async () => {
                     v-if="!isReadOnly"
                     type="submit"
                     class="w-full justify-center sm:w-auto"
-                    :disabled="isSaving"
-                    :class="{ 'opacity-75': isSaving }"
+                    :disabled="isSaving || repeatLimitExceeded"
+                    :class="{ 'opacity-75': isSaving || repeatLimitExceeded }"
                 >
-                    {{ isSaving ? 'Saving...' : 'Save booking' }}
+                    {{ saveButtonLabel }}
                 </PrimaryButton>
             </div>
         </form>

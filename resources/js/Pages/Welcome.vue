@@ -3,6 +3,14 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import MarketingFooter from '@/Components/MarketingFooter.vue';
 import MarketingNav from '@/Components/MarketingNav.vue';
+import TestimonialCard from '@/Components/Marketing/TestimonialCard.vue';
+
+const props = defineProps({
+    testimonials: {
+        type: Array,
+        default: () => [],
+    },
+});
 
 const contactSuccess = ref('');
 
@@ -201,56 +209,18 @@ const goalItems = [
     },
 ];
 
-const stories = [
-    {
-        name: 'Dorothy Palmer',
-        role: 'Home Care Client',
-        initials: 'DP',
-        accent: 'blue',
-        text: 'Mauricare gave our family peace of mind. The nurse was gentle, punctual, and made my mother feel safe at home.',
-    },
-    {
-        name: 'Randy Tran',
-        role: 'Patient Family',
-        initials: 'RT',
-        accent: 'orange',
-        text: 'I was hesitant at first, but the home visit exceeded our expectations. The care plan was clear and professionally handled.',
-    },
-    {
-        name: 'Amy Turner',
-        role: 'Recovery Patient',
-        initials: 'AT',
-        accent: 'orange',
-        text: 'The team was kind, attentive, and reliable after my procedure. Having care at home made recovery much easier.',
-    },
-    {
-        name: 'Evelyn Green',
-        role: 'Patient Family',
-        initials: 'EG',
-        accent: 'blue',
-        text: 'Their support helped us care for our father with dignity. Communication was easy and the service felt genuinely personal.',
-    },
-    {
-        name: 'Joe Alan',
-        role: 'Long-term Client',
-        initials: 'JA',
-        accent: 'orange',
-        text: 'Every visit was handled with patience and professionalism. We always knew exactly what care was being provided.',
-    },
-    {
-        name: 'Nadia Bissessur',
-        role: 'Home Care Client',
-        initials: 'NB',
-        accent: 'orange',
-        text: 'A warm, dependable service. The nurse listened carefully and adjusted the care routine around our daily needs.',
-    },
-];
+const stories = computed(() =>
+    props.testimonials.map((testimonial, index) => ({
+        ...testimonial,
+        accent: index % 3 === 0 ? 'blue' : 'orange',
+    })),
+);
 
 const testimonialSlides = computed(() => {
     const slides = [];
 
-    for (let index = 0; index < stories.length; index += 3) {
-        slides.push(stories.slice(index, index + 3));
+    for (let index = 0; index < stories.value.length; index += 3) {
+        slides.push(stories.value.slice(index, index + 3));
     }
 
     return slides;
@@ -487,7 +457,7 @@ const testimonialSlides = computed(() => {
                                         <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
                                         <span>Become a Provider</span>
                                     </a>
-                                    <span class="caregiver-cta-note">Free to join · No fixed monthly costs</span>
+                                    <span class="caregiver-cta-note">Free to join · No fixed monthly costs - Pay as your earn</span>
                                 </div>
                             </div>
                         </div>
@@ -636,12 +606,12 @@ const testimonialSlides = computed(() => {
                 </div>
             </section>
 
-            <section class="stories-section section-padding">
+            <section v-if="stories.length" class="stories-section section-padding">
                 <div class="container-fluid section-wide-container">
                     <div class="d-flex align-items-center justify-content-between gap-3 mb-5">
                         <h2 class="testimonials-title mb-0">Testimonials</h2>
 
-                        <div class="testimonial-controls d-flex gap-3">
+                        <div v-if="testimonialSlides.length > 1" class="testimonial-controls d-flex gap-3">
                             <button
                                 class="testimonial-control"
                                 type="button"
@@ -672,22 +642,8 @@ const testimonialSlides = computed(() => {
                                 :class="{ active: slideIndex === 0 }"
                             >
                                 <div class="row g-4">
-                                    <div v-for="story in slide" :key="story.name" class="col-lg-4">
-                                        <article class="story-card" :class="`story-card-${story.accent}`">
-                                            <div class="stars" aria-label="5 star rating">
-                                                <span v-for="star in 5" :key="star"></span>
-                                            </div>
-
-                                            <p>{{ story.text }}</p>
-
-                                            <div class="story-person d-flex align-items-center gap-3">
-                                                <span class="story-avatar">{{ story.initials }}</span>
-                                                <div>
-                                                    <strong>{{ story.name }}</strong>
-                                                    <small>{{ story.role }}</small>
-                                                </div>
-                                            </div>
-                                        </article>
+                                    <div v-for="story in slide" :key="story.id" class="col-lg-4">
+                                        <TestimonialCard :story="story" />
                                     </div>
                                 </div>
                             </div>
@@ -696,22 +652,8 @@ const testimonialSlides = computed(() => {
 
                     <div class="testimonial-mobile-list">
                         <div class="row g-4">
-                            <div v-for="story in stories" :key="story.name" class="col-md-6">
-                                <article class="story-card" :class="`story-card-${story.accent}`">
-                                    <div class="stars" aria-label="5 star rating">
-                                        <span v-for="star in 5" :key="star"></span>
-                                    </div>
-
-                                    <p>{{ story.text }}</p>
-
-                                    <div class="story-person d-flex align-items-center gap-3">
-                                        <span class="story-avatar">{{ story.initials }}</span>
-                                        <div>
-                                            <strong>{{ story.name }}</strong>
-                                            <small>{{ story.role }}</small>
-                                        </div>
-                                    </div>
-                                </article>
+                            <div v-for="story in stories" :key="story.id" class="col-md-6">
+                                <TestimonialCard :story="story" />
                             </div>
                         </div>
                     </div>
@@ -1685,22 +1627,6 @@ const testimonialSlides = computed(() => {
     background: #f8fafc;
 }
 
-.story-card {
-    min-height: 360px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 2.1rem;
-    background: #fff;
-    border: 1px solid #d4dbe5;
-    border-radius: 18px;
-    box-shadow: none;
-}
-
-.story-card-blue {
-    border-color: #4b46ff;
-}
-
 .testimonials-title {
     color: #41454f;
     font-size: clamp(2rem, 3vw, 2.85rem);
@@ -1731,66 +1657,6 @@ const testimonialSlides = computed(() => {
 
 .testimonial-mobile-list {
     display: none;
-}
-
-.stars {
-    display: flex;
-    gap: 0.45rem;
-    margin-bottom: 2rem;
-}
-
-.stars span::before {
-    content: "\2605";
-    color: #f59a00;
-    font-size: 1.45rem;
-    line-height: 1;
-}
-
-.story-card-blue .stars span::before {
-    color: #4b46ff;
-}
-
-.story-card p {
-    color: #69707a;
-    font-size: 0.96rem;
-    line-height: 1.7;
-    margin-bottom: 2.25rem;
-}
-
-.story-person strong {
-    display: block;
-    color: #414752;
-    font-size: 0.96rem;
-    font-weight: 800;
-}
-
-.story-person small {
-    display: block;
-    color: #69707a;
-    font-size: 0.86rem;
-    margin-top: 0.3rem;
-}
-
-.story-card-blue .story-person strong {
-    color: #4b46ff;
-}
-
-.story-avatar {
-    width: 54px;
-    height: 54px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border-radius: 50%;
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, #119bd3, #ec1696);
-}
-
-.story-card-orange .story-avatar {
-    background: linear-gradient(135deg, #f6b33b, #f07f1a);
 }
 
 .contact-section {
@@ -1930,6 +1796,26 @@ const testimonialSlides = computed(() => {
         min-height: 680px;
     }
 
+    :deep(.mauricare-nav .navbar-collapse.show),
+    :deep(.mauricare-nav .navbar-collapse.collapsing) {
+        margin-top: 0.5rem;
+        padding: 1rem;
+        border: 1px solid rgba(10, 95, 121, 0.12);
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 18px 42px rgba(17, 51, 78, 0.18);
+        backdrop-filter: blur(14px);
+    }
+
+    :deep(.mauricare-nav.is-scrolled .navbar-collapse .nav-link) {
+        color: #071f48;
+    }
+
+    :deep(.mauricare-nav.is-scrolled .navbar-collapse .btn-outline-light) {
+        color: #071f48;
+        border-color: rgba(7, 31, 72, 0.5);
+    }
+
     :deep(.mauricare-nav .navbar-brand) {
         max-width: 220px;
     }
@@ -1994,10 +1880,6 @@ const testimonialSlides = computed(() => {
 
     .testimonial-mobile-list {
         display: block;
-    }
-
-    .story-card {
-        min-height: 320px;
     }
 
     .care-services-grid {

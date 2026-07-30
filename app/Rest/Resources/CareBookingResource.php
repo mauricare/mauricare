@@ -162,6 +162,12 @@ class CareBookingResource extends Resource
     public function mutating(MutateRequest $request, array $requestBody, Model $model): void
     {
         if ($requestBody['operation'] === 'create') {
+            if (count($request->input('mutate', [])) > 10) {
+                throw ValidationException::withMessages([
+                    'mutate' => 'You can create up to 10 bookings at once.',
+                ]);
+            }
+
             $attributes = $requestBody['attributes'];
             $scheduledAt = Carbon::createFromFormat(
                 'Y-m-d H:i',

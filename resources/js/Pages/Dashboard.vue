@@ -13,6 +13,8 @@ import { computed, onMounted, ref } from 'vue';
 
 const page = usePage();
 const bookings = ref([]);
+const totalBookings = ref(0);
+const hasLoadedBookings = ref(false);
 const isLoading = ref(false);
 const loadError = ref(false);
 const showBookingModal = ref(false);
@@ -129,6 +131,8 @@ const loadBookings = async () => {
         });
 
         bookings.value = response.data.data || [];
+        totalBookings.value = response.data.total ?? bookings.value.length;
+        hasLoadedBookings.value = true;
     } catch {
         loadError.value = true;
     } finally {
@@ -313,7 +317,16 @@ onMounted(() => {
 
                 <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex items-center justify-between gap-4">
-                        <h2 class="text-xl font-bold text-slate-950">My Bookings</h2>
+                        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <h2 class="text-xl font-bold text-slate-950">My Bookings</h2>
+                            <span
+                                v-if="hasLoadedBookings && !loadError"
+                                class="text-sm font-medium text-slate-500"
+                            >
+                                ({{ recentBookings.length }} of {{ totalBookings }}
+                                booking{{ totalBookings === 1 ? '' : 's' }})
+                            </span>
+                        </div>
                         <button
                             type="button"
                             class="text-sm font-semibold text-slate-900"

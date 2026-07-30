@@ -63,6 +63,55 @@ class CareBookingTest extends TestCase
         ]);
     }
 
+    public function test_care_seeker_can_create_separate_repeated_bookings(): void
+    {
+        $user = $this->careSeeker();
+        $dates = collect(range(7, 9))
+            ->map(fn (int $days) => now()->addDays($days)->format('Y-m-d'));
+
+        $response = $this->actingAs($user)->postJson('/api/care-bookings/mutate', [
+            'mutate' => $dates
+                ->map(fn (string $date) => [
+                    'operation' => 'create',
+                    'attributes' => [
+                        ...$this->validAttributes(),
+                        'scheduled_date' => $date,
+                    ],
+                ])
+                ->all(),
+        ]);
+
+        $response->assertOk();
+
+        $this->assertDatabaseCount('care_bookings', 3);
+
+        $dates->each(fn (string $date) => $this->assertDatabaseHas('care_bookings', [
+            'user_id' => $user->id,
+            'scheduled_date' => $date,
+            'status' => 'open',
+        ]));
+    }
+
+    public function test_care_seeker_cannot_create_more_than_10_bookings_at_once(): void
+    {
+        $user = $this->careSeeker();
+
+        $response = $this->actingAs($user)->postJson('/api/care-bookings/mutate', [
+            'mutate' => collect(range(1, 11))
+                ->map(fn (int $days) => [
+                    'operation' => 'create',
+                    'attributes' => [
+                        ...$this->validAttributes(),
+                        'scheduled_date' => now()->addDays($days)->format('Y-m-d'),
+                    ],
+                ])
+                ->all(),
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseCount('care_bookings', 0);
+    }
+
     public function test_inactive_care_seeker_cannot_create_a_booking(): void
     {
         $user = User::factory()->create();

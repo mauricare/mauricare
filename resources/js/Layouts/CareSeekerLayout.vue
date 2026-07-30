@@ -102,7 +102,7 @@ const handleItemClick = (item) => {
         ></div>
 
         <aside
-            class="fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-slate-100 bg-white px-4 py-8 transition-transform duration-200 lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-30 flex w-72 touch-pan-y flex-col overflow-y-auto overscroll-contain border-r border-slate-100 bg-white px-4 py-8 transition-transform duration-200 lg:translate-x-0"
             :class="mobileNavOpen ? 'translate-x-0' : '-translate-x-full'"
         >
             <Link :href="route('dashboard')" class="flex items-center justify-center">

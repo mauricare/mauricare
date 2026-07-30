@@ -1,4 +1,5 @@
 <script setup>
+import AdminImpersonationMenu from '@/Components/Admin/AdminImpersonationMenu.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -30,7 +31,7 @@ const select = (key) => {
 <template>
     <div class="min-h-screen bg-slate-100 text-slate-900">
         <aside
-            class="fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-200 bg-white transition-transform lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform lg:translate-x-0"
             :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
         >
             <div class="flex h-32 items-center justify-center border-b border-slate-100 px-4">
@@ -43,7 +44,7 @@ const select = (key) => {
                 </Link>
             </div>
 
-            <nav class="space-y-2 p-4">
+            <nav class="flex-1 touch-pan-y space-y-2 overflow-y-auto overscroll-contain p-4">
                 <button
                     v-for="menu in menus"
                     :key="menu.key"
@@ -68,7 +69,7 @@ const select = (key) => {
                 </Link>
             </nav>
 
-            <div class="absolute inset-x-0 bottom-0 border-t border-slate-100 p-4">
+            <div class="shrink-0 border-t border-slate-100 p-4">
                 <div class="mb-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#117d73] font-bold text-white">
                         {{ page.props.auth.user.name?.charAt(0)?.toUpperCase() }}
@@ -89,7 +90,24 @@ const select = (key) => {
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <div class="ml-auto flex items-center gap-3">
-                    <span class="rounded-full bg-[#e8f7f4] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#117d73]">Administrator</span>
+                    <span class="hidden rounded-full bg-[#e8f7f4] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#117d73] sm:inline-flex">
+                        Administrator
+                    </span>
+                    <AdminImpersonationMenu />
+                    <div class="flex items-center gap-2">
+                        <img
+                            v-if="page.props.auth.user.avatar_url"
+                            :src="page.props.auth.user.avatar_url"
+                            :alt="`${page.props.auth.user.name} profile photo`"
+                            class="h-10 w-10 rounded-full object-cover"
+                        />
+                        <span
+                            v-else
+                            class="flex h-10 w-10 items-center justify-center rounded-full bg-[#117d73] font-bold text-white"
+                        >
+                            {{ page.props.auth.user.name?.charAt(0)?.toUpperCase() }}
+                        </span>
+                    </div>
                 </div>
             </header>
 
