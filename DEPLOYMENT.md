@@ -5,9 +5,8 @@ Laravel connects to the MySQL service installed on that same server.
 
 ## Server requirements
 
-- Ubuntu or another supported Linux distribution
-- PHP 8.3, Composer, Node.js/npm, Nginx, and MySQL installed on the host
-- Ports `22`, `80`, and `443` allowed through the firewall
+- A cPanel account with SSH, PHP, Composer, Node.js/npm, and MySQL
+- AutoSSL enabled by the hosting provider
 - DNS records for `mauricare.mu` and `www.mauricare.mu` pointing to
   `102.222.106.240`
 
@@ -109,16 +108,11 @@ tail -f storage/logs/laravel.log
 
 ## HTTPS
 
-The host Nginx installation uses Certbot for trusted certificates and automatic
-renewal. Install and configure it once:
+TLS and firewall access are managed by the cPanel hosting provider. In cPanel,
+open **Security → SSL/TLS Status**, select `mauricare.mu` and
+`www.mauricare.mu`, and run AutoSSL. After the certificate is active, open
+**Domains → Domains** and enable **Force HTTPS Redirect** for `mauricare.mu`.
 
-```bash
-sudo apt update
-sudo apt install -y certbot python3-certbot-nginx
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw reload
-sudo certbot --nginx -d mauricare.mu -d www.mauricare.mu --redirect
-sudo certbot renew --dry-run
-curl -I https://mauricare.mu
-```
+If AutoSSL or Force HTTPS Redirect is unavailable, ask the hosting provider to
+enable AutoSSL and HTTPS for both hostnames. A jailed-shell user cannot install
+Certbot, manage the firewall, or bind Caddy to ports 80 and 443.
