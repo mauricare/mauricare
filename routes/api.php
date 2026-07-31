@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBookingController;
+use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CareBookingActionController;
 use App\Http\Controllers\CareGiverProfileController;
@@ -24,6 +25,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
         Route::get('bookings', [AdminBookingController::class, 'index'])->name('bookings.index');
         Route::patch('bookings/{careBooking}/cancel', [AdminBookingController::class, 'cancel'])->name('bookings.cancel');
+        Route::get('invoices/care-givers', [AdminInvoiceController::class, 'careGivers'])->name('invoices.care-givers');
+        Route::get('invoices/estimate', [AdminInvoiceController::class, 'estimate'])->name('invoices.estimate');
+        Route::get('invoices', [AdminInvoiceController::class, 'index'])->name('invoices.index');
+        Route::post('invoices', [AdminInvoiceController::class, 'store'])->name('invoices.store');
+        Route::post('invoices/{invoice}/send', [AdminInvoiceController::class, 'send'])->name('invoices.send');
+        Route::get('invoices/{invoice}', [AdminInvoiceController::class, 'show'])->name('invoices.show');
     });
 
     Rest::resource('users', UsersController::class)->except(['mutate']);

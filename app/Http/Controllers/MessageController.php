@@ -47,6 +47,13 @@ class MessageController extends Controller
             ->groupBy(fn (Message $message) => $message->sender_id === $user->id ? $message->recipient_id : $message->sender_id)
             ->map(fn ($messages) => $messages->first());
 
+        $lastReceivedMessages = Message::where('recipient_id', $user->id)
+            ->whereIn('sender_id', $contactIds)
+            ->latest('id')
+            ->get()
+            ->groupBy('sender_id')
+            ->map(fn ($messages) => $messages->first());
+
         return response()->json([
             'data' => $contacts->map(fn (User $contact) => [
                 'id' => $contact->id,
@@ -55,6 +62,7 @@ class MessageController extends Controller
                 'is_admin' => $contact->hasRole('admin'),
                 'unread_count' => (int) ($unreadCounts[$contact->id] ?? 0),
                 'last_message' => $lastMessages->get($contact->id)?->only(['id', 'body', 'sender_id', 'created_at', 'updated_at']),
+                'last_received_at' => $lastReceivedMessages->get($contact->id)?->created_at,
             ])->values(),
         ]);
     }

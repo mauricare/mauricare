@@ -475,7 +475,7 @@ class CareBookingWorkflowTest extends TestCase
             ->deleteJson("/api/reviews/{$review->id}")
             ->assertNoContent();
 
-        $this->assertDatabaseMissing('reviews', ['id' => $review->id]);
+        $this->assertSoftDeleted($review);
     }
 
     public function test_care_seeker_cannot_edit_or_delete_another_users_review(): void

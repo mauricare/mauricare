@@ -17,6 +17,10 @@ const props = defineProps({
         type: Number,
         default: null,
     },
+    groupContacts: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const page = usePage();
@@ -51,6 +55,29 @@ const filteredContacts = computed(() => {
     return contacts.value.filter((contact) =>
         contact.name.toLocaleLowerCase().includes(query),
     );
+});
+
+const contactGroups = computed(() => {
+    if (!props.groupContacts) {
+        return [{ key: 'all', label: '', contacts: filteredContacts.value }];
+    }
+
+    const active = filteredContacts.value
+        .filter((contact) => contact.last_message)
+        .sort((a, b) => {
+            const aTime = new Date(a.last_received_at || a.last_message.created_at).getTime();
+            const bTime = new Date(b.last_received_at || b.last_message.created_at).getTime();
+
+            return bTime - aTime;
+        });
+    const notStarted = filteredContacts.value
+        .filter((contact) => !contact.last_message)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    return [
+        { key: 'active', label: 'Active conversations', contacts: active },
+        { key: 'not-started', label: 'Not started yet', contacts: notStarted },
+    ].filter((group) => group.contacts.length);
 });
 
 const scrollToBottom = async () => {
@@ -321,42 +348,50 @@ onUnmounted(() => {
                     >
                         No conversations match “{{ contactSearch.trim() }}”.
                     </p>
-                    <button
-                        v-for="contact in filteredContacts"
-                        :key="contact.id"
-                        type="button"
-                        class="flex w-full items-center gap-3 border-b border-slate-50 px-5 py-4 text-left transition hover:bg-slate-50"
-                        :class="{ 'bg-teal-50/60': selectedContact?.id === contact.id }"
-                        @click="selectContact(contact)"
-                    >
-                        <img
-                            v-if="contact.avatar_url"
-                            :src="contact.avatar_url"
-                            :alt="`${contact.name} profile photo`"
-                            class="h-11 w-11 shrink-0 rounded-full object-cover"
-                        />
-                        <span v-else class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
-                            {{ contact.name.charAt(0) }}
-                        </span>
-                        <span class="min-w-0 flex-1">
-                            <span class="flex items-center gap-2">
-                                <span class="block truncate text-sm font-bold text-slate-950">{{ contact.name }}</span>
-                                <span
-                                    v-if="contact.is_admin"
-                                    class="shrink-0 rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal-800"
-                                >
-                                    Admin
-                                </span>
-                            </span>
-                            <span class="mt-0.5 block truncate text-xs text-slate-500">{{ previewText(contact) }}</span>
-                        </span>
-                        <span
-                            v-if="contact.unread_count"
-                            class="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-teal-700 px-1.5 text-xs font-bold text-white"
+                    <template v-for="group in contactGroups" :key="group.key">
+                        <h3
+                            v-if="group.label"
+                            class="border-b border-slate-100 bg-slate-50 px-5 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500"
                         >
-                            {{ contact.unread_count }}
-                        </span>
-                    </button>
+                            {{ group.label }} ({{ group.contacts.length }})
+                        </h3>
+                        <button
+                            v-for="contact in group.contacts"
+                            :key="contact.id"
+                            type="button"
+                            class="flex w-full items-center gap-3 border-b border-slate-50 px-5 py-4 text-left transition hover:bg-slate-50"
+                            :class="{ 'bg-teal-50/60': selectedContact?.id === contact.id }"
+                            @click="selectContact(contact)"
+                        >
+                            <img
+                                v-if="contact.avatar_url"
+                                :src="contact.avatar_url"
+                                :alt="`${contact.name} profile photo`"
+                                class="h-11 w-11 shrink-0 rounded-full object-cover"
+                            />
+                            <span v-else class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800">
+                                {{ contact.name.charAt(0) }}
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="flex items-center gap-2">
+                                    <span class="block truncate text-sm font-bold text-slate-950">{{ contact.name }}</span>
+                                    <span
+                                        v-if="contact.is_admin"
+                                        class="shrink-0 rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal-800"
+                                    >
+                                        Admin
+                                    </span>
+                                </span>
+                                <span class="mt-0.5 block truncate text-xs text-slate-500">{{ previewText(contact) }}</span>
+                            </span>
+                            <span
+                                v-if="contact.unread_count"
+                                class="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-teal-700 px-1.5 text-xs font-bold text-white"
+                            >
+                                {{ contact.unread_count }}
+                            </span>
+                        </button>
+                    </template>
                 </div>
             </aside>
 

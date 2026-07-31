@@ -253,6 +253,34 @@ class MessagingTest extends TestCase
             ->assertJsonPath('data.0.last_message.body', 'Two');
     }
 
+    public function test_admin_contacts_identify_the_latest_received_message(): void
+    {
+        $admin = $this->admin();
+        $careSeeker = $this->careSeeker();
+
+        Message::create([
+            'sender_id' => $careSeeker->id,
+            'recipient_id' => $admin->id,
+            'body' => 'First incoming message',
+        ]);
+        $latestReceived = Message::create([
+            'sender_id' => $careSeeker->id,
+            'recipient_id' => $admin->id,
+            'body' => 'Latest incoming message',
+        ]);
+        Message::create([
+            'sender_id' => $admin->id,
+            'recipient_id' => $careSeeker->id,
+            'body' => 'Admin reply',
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/messages/contacts')
+            ->assertOk()
+            ->assertJsonPath('data.0.last_message.body', 'Admin reply')
+            ->assertJsonPath('data.0.last_received_at', $latestReceived->created_at->toISOString());
+    }
+
     public function test_unread_count_reflects_unread_messages_and_resets_after_reading(): void
     {
         $seeker = $this->careSeeker();
@@ -349,7 +377,7 @@ class MessagingTest extends TestCase
             ->deleteJson("/api/messages/{$message->id}")
             ->assertNoContent();
 
-        $this->assertDatabaseMissing('messages', ['id' => $message->id]);
+        $this->assertSoftDeleted($message);
     }
 
     public function test_recipient_cannot_delete_a_message(): void

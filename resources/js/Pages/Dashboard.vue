@@ -599,6 +599,7 @@ onMounted(() => {
         <div v-else-if="activeSection === 'messages'" class="mt-8">
             <MessagesSection
                 :initial-contact-id="messageContactId"
+                group-contacts
                 empty-title="No conversations yet"
                 empty-message="Once a care giver is assigned to one of your bookings, you can message them here."
             />

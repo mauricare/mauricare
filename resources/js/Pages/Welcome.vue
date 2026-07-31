@@ -2259,6 +2259,11 @@ a.contact-method:focus-visible {
         padding: 72px 0;
     }
 
+    .caregiver-section,
+    .contact-section {
+        padding: 0;
+    }
+
     .about-section {
         padding-top: 40px;
     }

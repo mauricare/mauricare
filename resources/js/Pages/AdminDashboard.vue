@@ -1,6 +1,7 @@
 <script setup>
 import AdminBookingsTable from '@/Components/Admin/AdminBookingsTable.vue';
 import AdminUserTable from '@/Components/Admin/AdminUserTable.vue';
+import AdminInvoices from '@/Components/Admin/AdminInvoices.vue';
 import MessagesSection from '@/Components/Dashboard/MessagesSection.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head } from '@inertiajs/vue3';
@@ -40,15 +41,10 @@ const selectSection = (section) => {
         <AdminBookingsTable v-else-if="activeSection === 'bookings'" />
         <MessagesSection
             v-else-if="activeSection === 'messages'"
+            group-contacts
             empty-title="No care users available"
             empty-message="Care seekers and care givers will appear here when they create an account."
         />
-        <section v-else class="rounded-2xl border border-slate-200 bg-white px-6 py-20 text-center shadow-sm">
-            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#e8f7f4] text-2xl text-[#117d73]">
-                <i class="fa-solid fa-file-invoice"></i>
-            </div>
-            <h2 class="mt-5 text-xl font-bold">Invoice management</h2>
-            <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">This menu is ready. Its invoice features will be added later.</p>
-        </section>
+        <AdminInvoices v-else />
     </AdminLayout>
 </template>

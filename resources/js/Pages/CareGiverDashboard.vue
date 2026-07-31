@@ -463,6 +463,7 @@ onMounted(() => {
 
         <div v-else-if="activeSection === 'messages'" class="mt-8">
             <MessagesSection
+                group-contacts
                 empty-title="No conversations yet"
                 empty-message="Once you accept a care request, you can message the care seeker here."
             />

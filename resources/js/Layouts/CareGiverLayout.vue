@@ -1,5 +1,7 @@
 <script setup>
 import NotificationBell from '@/Components/Dashboard/NotificationBell.vue';
+import ThemeToggle from '@/Components/Dashboard/ThemeToggle.vue';
+import { useDashboardTheme } from '@/composables/useDashboardTheme';
 import { useUnreadMessages } from '@/composables/useUnreadMessages';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
@@ -19,6 +21,7 @@ const emit = defineEmits(['navigate']);
 
 const page = usePage();
 const mobileNavOpen = ref(false);
+const { isDark } = useDashboardTheme();
 const { unreadCount, refreshUnreadCount } = useUnreadMessages();
 let unreadTimer = null;
 
@@ -83,7 +86,7 @@ const handleItemClick = (item) => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#f7fafc] text-slate-950">
+    <div class="dashboard-theme min-h-screen bg-[#f7fafc] text-slate-950" :class="{ 'dashboard-dark': isDark }">
         <div
             v-if="mobileNavOpen"
             class="fixed inset-0 z-20 bg-slate-950/40 lg:hidden"
@@ -153,6 +156,7 @@ const handleItemClick = (item) => {
                         class="h-10 w-auto object-contain"
                     />
                     <div class="flex items-center gap-3">
+                        <ThemeToggle />
                         <NotificationBell />
                         <Link :href="route('profile.edit')">
                             <img
@@ -174,6 +178,7 @@ const handleItemClick = (item) => {
                     </div>
 
                     <div class="hidden items-center gap-4 lg:flex">
+                        <ThemeToggle />
                         <NotificationBell />
                         <Link :href="route('profile.edit')" class="flex items-center gap-3">
                             <img

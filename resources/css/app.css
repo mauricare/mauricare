@@ -1,3 +1,107 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+    .dashboard-theme {
+        transition: background-color 180ms ease, color 180ms ease;
+    }
+
+    .dashboard-dark {
+        color-scheme: dark;
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+    }
+
+    .dashboard-dark .bg-white,
+    .dashboard-dark .bg-white\/95 {
+        background-color: #111c2f !important;
+    }
+
+    .dashboard-dark .bg-slate-50,
+    .dashboard-dark .bg-slate-50\/60,
+    .dashboard-dark .bg-gray-100 {
+        background-color: #162238 !important;
+    }
+
+    .dashboard-dark .bg-slate-100,
+    .dashboard-dark .bg-gray-50 {
+        background-color: #0f172a !important;
+    }
+
+    .dashboard-dark .bg-teal-50,
+    .dashboard-dark .bg-teal-50\/60,
+    .dashboard-dark .bg-\[\#e8f7f4\] {
+        background-color: rgba(13, 148, 136, 0.16) !important;
+    }
+
+    .dashboard-dark .text-slate-950,
+    .dashboard-dark .text-slate-900,
+    .dashboard-dark .text-gray-900,
+    .dashboard-dark .text-gray-800 {
+        color: #f8fafc !important;
+    }
+
+    .dashboard-dark .text-slate-800,
+    .dashboard-dark .text-slate-700,
+    .dashboard-dark .text-gray-700 {
+        color: #dbe4ef !important;
+    }
+
+    .dashboard-dark .text-slate-600,
+    .dashboard-dark .text-slate-500,
+    .dashboard-dark .text-gray-600,
+    .dashboard-dark .text-gray-500 {
+        color: #aebdd0 !important;
+    }
+
+    .dashboard-dark .text-slate-400,
+    .dashboard-dark .text-gray-400 {
+        color: #94a3b8 !important;
+    }
+
+    .dashboard-dark .border-slate-50,
+    .dashboard-dark .border-slate-100,
+    .dashboard-dark .border-slate-200,
+    .dashboard-dark .border-gray-100,
+    .dashboard-dark .border-gray-200,
+    .dashboard-dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+        border-color: #28364c !important;
+    }
+
+    .dashboard-dark input,
+    .dashboard-dark select,
+    .dashboard-dark textarea {
+        border-color: #3a4a62 !important;
+        background-color: #0f1a2d !important;
+        color: #f8fafc !important;
+    }
+
+    .dashboard-dark input::placeholder,
+    .dashboard-dark textarea::placeholder {
+        color: #8090a6 !important;
+    }
+
+    .dashboard-dark select option {
+        background-color: #111c2f;
+        color: #f8fafc;
+    }
+
+    .dashboard-dark .shadow-sm,
+    .dashboard-dark .shadow,
+    .dashboard-dark .shadow-xl {
+        --tw-shadow-color: rgba(0, 0, 0, 0.32) !important;
+    }
+
+    .dashboard-dark .hover\:bg-slate-50:hover,
+    .dashboard-dark .hover\:bg-slate-100:hover,
+    .dashboard-dark .hover\:bg-gray-100:hover {
+        background-color: #233149 !important;
+    }
+
+    .dashboard-dark .dashboard-theme-toggle {
+        border-color: #3a4a62 !important;
+        background-color: #162238 !important;
+        color: #facc15 !important;
+    }
+}

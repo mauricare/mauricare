@@ -5,13 +5,16 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import ThemeToggle from '@/Components/Dashboard/ThemeToggle.vue';
+import { useDashboardTheme } from '@/composables/useDashboardTheme';
 import { Link } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
+const { isDark } = useDashboardTheme();
 </script>
 
 <template>
-    <div>
+    <div class="dashboard-theme" :class="{ 'dashboard-dark': isDark }">
         <div class="min-h-screen bg-gray-100">
             <nav
                 class="border-b border-gray-100 bg-white"
@@ -43,6 +46,7 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                            <ThemeToggle />
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
@@ -90,6 +94,7 @@ const showingNavigationDropdown = ref(false);
 
                         <!-- Hamburger -->
                         <div class="-me-2 flex items-center sm:hidden">
+                            <ThemeToggle />
                             <button
                                 @click="
                                     showingNavigationDropdown =

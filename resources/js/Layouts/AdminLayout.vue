@@ -1,5 +1,7 @@
 <script setup>
 import AdminImpersonationMenu from '@/Components/Admin/AdminImpersonationMenu.vue';
+import ThemeToggle from '@/Components/Dashboard/ThemeToggle.vue';
+import { useDashboardTheme } from '@/composables/useDashboardTheme';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -13,6 +15,7 @@ defineProps({
 const emit = defineEmits(['select']);
 const page = usePage();
 const mobileOpen = ref(false);
+const { isDark } = useDashboardTheme();
 
 const menus = [
     { key: 'care_seekers', label: 'Care Seekers', icon: 'fa-users' },
@@ -29,7 +32,7 @@ const select = (key) => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-slate-100 text-slate-900">
+    <div class="dashboard-theme min-h-screen bg-slate-100 text-slate-900" :class="{ 'dashboard-dark': isDark }">
         <aside
             class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform lg:translate-x-0"
             :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
@@ -90,6 +93,7 @@ const select = (key) => {
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <div class="ml-auto flex items-center gap-3">
+                    <ThemeToggle />
                     <span class="hidden rounded-full bg-[#e8f7f4] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#117d73] sm:inline-flex">
                         Administrator
                     </span>
