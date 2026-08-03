@@ -28,7 +28,7 @@ class AdminUserController extends Controller
     public function show(User $user): JsonResponse
     {
         $this->ensureManagedUser($user);
-        $user->load(['profile', 'careSeekerProfile', 'careGiverProfile', 'media']);
+        $user->load(['profile', 'careSeekerProfile', 'careGiverProfile', 'documents', 'media']);
 
         return response()->json(['data' => $this->serializeUser($user, true)]);
     }
@@ -70,7 +70,7 @@ class AdminUserController extends Controller
             }
         });
 
-        $user->load(['profile', 'careSeekerProfile', 'careGiverProfile', 'media']);
+        $user->load(['profile', 'careSeekerProfile', 'careGiverProfile', 'documents', 'media']);
 
         return response()->json([
             'message' => 'User updated successfully.',
@@ -185,6 +185,16 @@ class AdminUserController extends Controller
 
         if ($detailed) {
             $data['role_profile'] = $roleProfile?->toArray() ?? [];
+            $data['documents'] = $user->documents
+                ->map(fn ($document): array => [
+                    'id' => $document->id,
+                    'type' => $document->type,
+                    'name' => $document->original_name,
+                    'mime_type' => $document->mime_type,
+                    'size' => $document->size,
+                    'download_url' => route('documents.download', $document),
+                ])
+                ->values();
 
             $bookingCounts = CareBooking::query()
                 ->where($role === 'care_giver' ? 'care_giver_id' : 'user_id', $user->id)

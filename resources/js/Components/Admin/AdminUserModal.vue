@@ -85,6 +85,15 @@ const labelClass = 'block text-sm font-medium text-slate-700';
 const formatDate = (date) => date
     ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(date))
     : '';
+const formatFileSize = (bytes) => {
+    if (!bytes) return '';
+    if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+const documentTypeLabel = (type) => ({
+    cv: 'CV',
+    agency_license: 'Agency licence',
+}[type] || 'Document');
 const detailRows = computed(() => {
     if (!user.value) return [];
     const common = [
@@ -180,6 +189,44 @@ const detailRows = computed(() => {
                                 </span>
                                 <p class="mt-3 text-2xl font-bold text-slate-900">{{ user.paid_invoice_count || 0 }}</p>
                             </div>
+                        </div>
+                    </section>
+                    <section class="sm:col-span-2">
+                        <h4 class="mb-3 text-sm font-bold text-slate-900">Documents</h4>
+                        <div
+                            v-if="!user.documents?.length"
+                            class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-6 text-center text-sm text-slate-500"
+                        >
+                            No documents uploaded.
+                        </div>
+                        <div v-else class="space-y-3">
+                            <article
+                                v-for="document in user.documents"
+                                :key="document.id"
+                                class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-4"
+                            >
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-[#117d73]">
+                                        <i class="fa-solid fa-file-shield"></i>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-semibold text-slate-900">{{ document.name }}</p>
+                                        <p class="text-xs text-slate-500">
+                                            {{ documentTypeLabel(document.type) }}
+                                            <span v-if="document.size"> · {{ formatFileSize(document.size) }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <a
+                                    :href="document.download_url"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-[#117d73] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0d6c63]"
+                                >
+                                    <i class="fa-solid fa-download"></i>
+                                    View
+                                </a>
+                            </article>
                         </div>
                     </section>
                     <div v-for="[label, value] in detailRows" :key="label" class="rounded-lg border border-slate-200 p-3">

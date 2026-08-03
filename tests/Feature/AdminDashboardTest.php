@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
 use App\Models\CareBooking;
+use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -166,6 +168,35 @@ class AdminDashboardTest extends TestCase
             'user_id' => $careSeeker->id,
             'care_for' => 'Parent',
         ]);
+    }
+
+    public function test_admin_can_view_and_download_a_users_private_documents(): void
+    {
+        Storage::fake('local');
+        $admin = $this->admin();
+        $careGiver = $this->careGiver();
+        Storage::disk('local')->put('care-giver-cvs/cv.pdf', 'private cv');
+        $document = Document::create([
+            'user_id' => $careGiver->id,
+            'type' => 'cv',
+            'disk' => 'local',
+            'path' => 'care-giver-cvs/cv.pdf',
+            'original_name' => 'care-giver-cv.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => 10,
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson("/api/admin/users/{$careGiver->id}")
+            ->assertOk()
+            ->assertJsonPath('data.documents.0.id', $document->id)
+            ->assertJsonPath('data.documents.0.name', 'care-giver-cv.pdf')
+            ->assertJsonPath('data.documents.0.type', 'cv')
+            ->assertJsonPath('data.documents.0.download_url', route('documents.download', $document));
+
+        $this->actingAs($admin)
+            ->get(route('documents.download', $document))
+            ->assertDownload('care-giver-cv.pdf');
     }
 
     public function test_admin_can_delete_a_managed_user_but_not_an_admin(): void
