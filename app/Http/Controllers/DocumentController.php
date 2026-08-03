@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Support\Audit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -17,6 +18,8 @@ class DocumentController extends Controller
         );
         abort_unless($document->disk === 'local', 404);
         abort_unless(Storage::disk('local')->exists($document->path), 404);
+
+        Audit::record($request, 'document.downloaded', $document->user, $document);
 
         return Storage::disk('local')->download(
             $document->path,

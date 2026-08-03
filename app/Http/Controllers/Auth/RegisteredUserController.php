@@ -22,7 +22,9 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        return Inertia::render('Auth/Register', [
+            'privacyNoticeVersion' => config('privacy.notice_version'),
+        ]);
     }
 
     /**
@@ -56,6 +58,10 @@ class RegisteredUserController extends Controller
             'services_offered' => 'required_if:role,agency|nullable|string|max:1000',
             'agency_license' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'privacy_notice_version' => ['required', 'string', 'in:'.config('privacy.notice_version')],
+            'privacy_notice_accepted' => ['accepted'],
+            'health_data_consent' => ['required_if:role,care_seeker', 'accepted'],
+            'data_subject_authority_confirmed' => ['required_if:role,care_seeker', 'accepted'],
         ]);
 
         $cv = $request->file('cv');
@@ -137,6 +143,15 @@ class RegisteredUserController extends Controller
         }
 
         $user->assignRole(Role::findOrCreate($request->role, 'web'));
+
+        $user->privacyAcceptances()->create([
+            'notice_version' => $request->privacy_notice_version,
+            'notice_accepted_at' => now(),
+            'health_data_consent_at' => $request->role === 'care_seeker' ? now() : null,
+            'data_subject_authority_confirmed_at' => $request->role === 'care_seeker' ? now() : null,
+            'ip_address' => $request->ip(),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 1000),
+        ]);
 
         event(new Registered($user));
 

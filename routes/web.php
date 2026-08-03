@@ -52,6 +52,13 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/privacy', fn () => Inertia::render('PrivacyPolicy', [
+    'version' => config('privacy.notice_version'),
+    'controllerName' => config('privacy.controller_name'),
+    'controllerEmail' => config('privacy.controller_email'),
+    'dpoEmail' => config('privacy.dpo_email'),
+]))->name('privacy-policy');
+
 Route::get('/dashboard', function (Request $request) {
     if ($request->user()->hasRole('admin')) {
         return Inertia::render('AdminDashboard');

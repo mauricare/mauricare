@@ -6,6 +6,8 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, ref } from 'vue';
 
+const props = defineProps({ privacyNoticeVersion: { type: String, required: true } });
+
 const processing = ref(false);
 const showSuccessModal = ref(false);
 const registeredEmail = ref('');
@@ -40,6 +42,10 @@ const form = useForm({
     agency_license: null,
     password: '',
     password_confirmation: '',
+    privacy_notice_version: props.privacyNoticeVersion,
+    privacy_notice_accepted: false,
+    health_data_consent: false,
+    data_subject_authority_confirmed: false,
 });
 
 const setRole = (role) => {
@@ -78,6 +84,8 @@ const submit = async () => {
     appendAttribute(payload, 'city', form.city);
     appendAttribute(payload, 'password', form.password);
     appendAttribute(payload, 'password_confirmation', form.password_confirmation);
+    appendAttribute(payload, 'privacy_notice_version', form.privacy_notice_version);
+    appendAttribute(payload, 'privacy_notice_accepted', form.privacy_notice_accepted ? '1' : '0');
 
     if (form.role === 'care_giver') {
         appendAttribute(payload, 'care_giver_type', form.care_giver_type);
@@ -85,6 +93,8 @@ const submit = async () => {
     }
 
     if (form.role === 'care_seeker') {
+        appendAttribute(payload, 'health_data_consent', form.health_data_consent ? '1' : '0');
+        appendAttribute(payload, 'data_subject_authority_confirmed', form.data_subject_authority_confirmed ? '1' : '0');
         appendAttribute(payload, 'care_for', form.care_for);
         appendAttribute(payload, 'care_needs', form.care_needs);
         appendAttribute(payload, 'preferred_contact_method', form.preferred_contact_method);
@@ -391,6 +401,27 @@ const submit = async () => {
                 </div>
             </div>
 
+            <div class="consent-panel">
+                <label class="consent-row">
+                    <input v-model="form.privacy_notice_accepted" type="checkbox" required />
+                    <span>I have read the <Link :href="route('privacy-policy')" target="_blank">Privacy Notice</Link> (version {{ privacyNoticeVersion }}) and understand how Mauricare uses my personal data.</span>
+                </label>
+                <InputError :message="form.errors.privacy_notice_accepted" />
+
+                <template v-if="form.role === 'care_seeker'">
+                    <label class="consent-row">
+                        <input v-model="form.health_data_consent" type="checkbox" required />
+                        <span>I explicitly consent to Mauricare processing the health and care information I provide to arrange and deliver care. I understand I may withdraw consent, subject to other lawful retention obligations.</span>
+                    </label>
+                    <InputError :message="form.errors.health_data_consent" />
+                    <label class="consent-row">
+                        <input v-model="form.data_subject_authority_confirmed" type="checkbox" required />
+                        <span>I confirm that I am the person receiving care, or I am authorised by that person or am their parent/legal guardian. If the person is under 16, I confirm parental or guardian authority.</span>
+                    </label>
+                    <InputError :message="form.errors.data_subject_authority_confirmed" />
+                </template>
+            </div>
+
             <button class="auth-button" :class="{ disabled: processing }" :disabled="processing">
                 Register
             </button>
@@ -561,6 +592,11 @@ const submit = async () => {
     background: #2586ff;
     font-weight: 800;
 }
+
+.consent-panel { display: grid; gap: .75rem; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; }
+.consent-row { display: flex; align-items: flex-start; gap: .65rem; color: #475569; font-size: .86rem; line-height: 1.5; }
+.consent-row input { width: 1rem; height: 1rem; margin-top: .2rem; flex: none; }
+.consent-row a { color: #087ea4; font-weight: 700; text-decoration: underline; }
 
 .auth-button:hover,
 .auth-button:focus {

@@ -58,10 +58,15 @@ const close = () => {
 };
 
 const startImpersonation = (user) => {
+    const reason = window.prompt('Enter the support or care reason for accessing this account:');
+    if (!reason) return;
+    const password = window.prompt('Confirm your administrator password:');
+    if (!password) return;
+
     isStarting.value = true;
     error.value = '';
 
-    router.post(route('impersonation.start', user.id), {}, {
+    router.post(route('impersonation.start', user.id), { reason, password }, {
         preserveScroll: false,
         onError: () => {
             error.value = 'Unable to impersonate this user.';

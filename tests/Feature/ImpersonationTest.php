@@ -12,6 +12,8 @@ class ImpersonationTest extends TestCase
 {
     use RefreshDatabase;
 
+    private array $impersonationCredentials = ['reason' => 'Customer support investigation', 'password' => 'password'];
+
     public function test_admin_can_search_for_users_to_impersonate(): void
     {
         $admin = $this->userWithRole('admin');
@@ -42,7 +44,7 @@ class ImpersonationTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($user)
-            ->post(route('impersonation.start', $target))
+            ->post(route('impersonation.start', $target), $this->impersonationCredentials)
             ->assertForbidden();
 
         $this->assertAuthenticatedAs($user);
@@ -54,7 +56,7 @@ class ImpersonationTest extends TestCase
         $target = $this->userWithRole('care_seeker');
 
         $this->actingAs($admin)
-            ->post(route('impersonation.start', $target))
+            ->post(route('impersonation.start', $target), $this->impersonationCredentials)
             ->assertRedirect(route('dashboard'));
 
         $this->assertAuthenticatedAs($admin);
@@ -87,10 +89,10 @@ class ImpersonationTest extends TestCase
         $target = $this->userWithRole('care_seeker');
 
         $this->actingAs($admin)
-            ->post(route('impersonation.start', $secondAdmin))
+            ->post(route('impersonation.start', $secondAdmin), $this->impersonationCredentials)
             ->assertRedirect(route('dashboard'));
 
-        $this->post(route('impersonation.start', $target))
+        $this->post(route('impersonation.start', $target), $this->impersonationCredentials)
             ->assertStatus(409);
 
         $this->assertAuthenticatedAs($admin);
@@ -105,7 +107,7 @@ class ImpersonationTest extends TestCase
         $booking = CareBooking::factory()->create();
 
         $this->actingAs($admin)
-            ->post(route('impersonation.start', $careGiver))
+            ->post(route('impersonation.start', $careGiver), $this->impersonationCredentials)
             ->assertRedirect(route('dashboard'));
 
         $this->withHeader('Referer', config('app.url'))
@@ -130,7 +132,7 @@ class ImpersonationTest extends TestCase
         $careSeeker = $this->userWithRole('care_seeker');
 
         $this->actingAs($admin)
-            ->post(route('impersonation.start', $careSeeker))
+            ->post(route('impersonation.start', $careSeeker), $this->impersonationCredentials)
             ->assertRedirect(route('dashboard'));
 
         $this->withHeader('Referer', config('app.url'))

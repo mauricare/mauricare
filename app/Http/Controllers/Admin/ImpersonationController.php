@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -48,6 +49,10 @@ class ImpersonationController extends Controller
 
     public function start(Request $request, User $user): RedirectResponse
     {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'min:10', 'max:500'],
+            'password' => ['required', 'current_password'],
+        ]);
         abort_if($request->session()->has('impersonator_id'), 409, 'End the current impersonation first.');
         abort_if($request->user()->is($user), 422, 'You cannot impersonate your own account.');
 
@@ -56,6 +61,7 @@ class ImpersonationController extends Controller
             'impersonated_user_id' => $user->getKey(),
         ]);
         $request->session()->forget('auth.password_confirmed_at');
+        Audit::record($request, 'impersonation.started', $user, $user, ['reason' => $validated['reason']]);
 
         if ($user->hasRole('agency') || $user->agencyProfile()->exists()) {
             return redirect()->route('account.verification');
@@ -81,6 +87,8 @@ class ImpersonationController extends Controller
                 ->route('login')
                 ->with('status', 'The administrator account is no longer available.');
         }
+
+        Audit::record($request, 'impersonation.stopped', $request->user(), $request->user());
 
         $request->session()->forget([
             'impersonator_id',

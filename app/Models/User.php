@@ -4,22 +4,23 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
     'name',
     'email',
     'password',
+    'erasure_requested_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements HasMedia
@@ -41,6 +42,7 @@ class User extends Authenticatable implements HasMedia
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'erasure_requested_at' => 'datetime',
         ];
     }
 
@@ -90,6 +92,11 @@ class User extends Authenticatable implements HasMedia
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
+    }
+
+    public function privacyAcceptances(): HasMany
+    {
+        return $this->hasMany(PrivacyAcceptance::class);
     }
 
     public function careBookings(): HasMany

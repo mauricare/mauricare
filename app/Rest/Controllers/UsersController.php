@@ -72,6 +72,10 @@ class UsersController extends Controller
                 'max:5120',
             ],
             'mutate.0.attributes.password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'mutate.0.attributes.privacy_notice_version' => ['required', 'string', Rule::in([config('privacy.notice_version')])],
+            'mutate.0.attributes.privacy_notice_accepted' => ['accepted'],
+            'mutate.0.attributes.health_data_consent' => [Rule::requiredIf($role === 'care_seeker'), 'accepted'],
+            'mutate.0.attributes.data_subject_authority_confirmed' => [Rule::requiredIf($role === 'care_seeker'), 'accepted'],
         ], [], [
             'mutate.0.attributes.role' => 'role',
             'mutate.0.attributes.first_name' => 'first name',
@@ -96,6 +100,9 @@ class UsersController extends Controller
             'mutate.0.attributes.services_offered' => 'services offered',
             'mutate.0.attributes.agency_license' => 'agency license',
             'mutate.0.attributes.password' => 'password',
+            'mutate.0.attributes.privacy_notice_accepted' => 'privacy notice acknowledgement',
+            'mutate.0.attributes.health_data_consent' => 'health data consent',
+            'mutate.0.attributes.data_subject_authority_confirmed' => 'authority to provide care information',
         ]);
 
         $attributes = $validated['mutate'][0]['attributes'];
@@ -175,6 +182,15 @@ class UsersController extends Controller
             }
 
             $user->assignRole(Role::findOrCreate($role, 'web'));
+
+            $user->privacyAcceptances()->create([
+                'notice_version' => $attributes['privacy_notice_version'],
+                'notice_accepted_at' => now(),
+                'health_data_consent_at' => $role === 'care_seeker' ? now() : null,
+                'data_subject_authority_confirmed_at' => $role === 'care_seeker' ? now() : null,
+                'ip_address' => $request->ip(),
+                'user_agent' => mb_substr((string) $request->userAgent(), 0, 1000),
+            ]);
 
             event(new Registered($user));
 

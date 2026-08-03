@@ -147,12 +147,10 @@ class ProfileTest extends TestCase
             ])
             ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseHas('care_seeker_profiles', [
-            'user_id' => $user->id,
-            'care_for' => 'Myself',
-            'preferred_contact_method' => 'phone',
-            'mobility_level' => 'Assisted',
-        ]);
+        $profile = $user->careSeekerProfile()->firstOrFail();
+        $this->assertSame('Myself', $profile->care_for);
+        $this->assertSame('phone', $profile->preferred_contact_method);
+        $this->assertSame('Assisted', $profile->mobility_level);
 
         $profile = $user->careSeekerProfile()->firstOrFail();
         $this->assertSame('Penicillin allergy', $profile->medical_notes);

@@ -27,6 +27,10 @@ class CareSeekerProfile extends Model
     {
         return [
             'is_active' => 'boolean',
+            'care_needs' => 'encrypted',
+            'emergency_contact_name' => 'encrypted',
+            'emergency_contact_phone' => 'encrypted',
+            'mobility_level' => 'encrypted',
             'medical_notes' => 'encrypted',
         ];
     }

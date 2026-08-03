@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -176,6 +177,9 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        $user->forceFill(['erasure_requested_at' => now()])->save();
+        Audit::record($request, 'account.erasure_requested', $user, $user);
 
         Auth::logout();
 
