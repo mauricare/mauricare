@@ -95,8 +95,8 @@ class RegisteredUserController extends Controller
             if ($cv) {
                 $user->documents()->create([
                     'type' => 'cv',
-                    'disk' => 'public',
-                    'path' => $cv->store('care-giver-cvs', 'public'),
+                    'disk' => 'local',
+                    'path' => $cv->store('care-giver-cvs', 'local'),
                     'original_name' => $cv->getClientOriginalName(),
                     'mime_type' => $cv->getClientMimeType(),
                     'size' => $cv->getSize(),
@@ -127,8 +127,8 @@ class RegisteredUserController extends Controller
             if ($agencyLicense) {
                 $user->documents()->create([
                     'type' => 'agency_license',
-                    'disk' => 'public',
-                    'path' => $agencyLicense->store('agency-licenses', 'public'),
+                    'disk' => 'local',
+                    'path' => $agencyLicense->store('agency-licenses', 'local'),
                     'original_name' => $agencyLicense->getClientOriginalName(),
                     'mime_type' => $agencyLicense->getClientMimeType(),
                     'size' => $agencyLicense->getSize(),

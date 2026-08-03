@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Document;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -151,11 +153,18 @@ class ProfileTest extends TestCase
             'preferred_contact_method' => 'phone',
             'mobility_level' => 'Assisted',
         ]);
+
+        $profile = $user->careSeekerProfile()->firstOrFail();
+        $this->assertSame('Penicillin allergy', $profile->medical_notes);
+        $this->assertStringNotContainsString(
+            'Penicillin allergy',
+            DB::table('care_seeker_profiles')->where('id', $profile->id)->value('medical_notes'),
+        );
     }
 
     public function test_care_giver_can_update_type_and_replace_cv(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $user = User::factory()->create();
         $user->assignRole(Role::findOrCreate('care_giver', 'web'));
         $user->careGiverProfile()->create(['type' => 'nurse']);
@@ -182,12 +191,16 @@ class ProfileTest extends TestCase
             'user_id' => $user->id,
             'type' => 'cv',
             'original_name' => 'cv.pdf',
+            'disk' => 'local',
         ]);
+
+        $document = $user->documents()->where('type', 'cv')->firstOrFail();
+        Storage::disk('local')->assertExists($document->path);
     }
 
     public function test_agency_can_update_all_registration_profile_fields(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $user = User::factory()->create();
         $user->assignRole(Role::findOrCreate('agency', 'web'));
         $user->agencyProfile()->create([
@@ -218,7 +231,32 @@ class ProfileTest extends TestCase
             'user_id' => $user->id,
             'type' => 'agency_license',
             'original_name' => 'license.pdf',
+            'disk' => 'local',
         ]);
+    }
+
+    public function test_private_document_download_is_limited_to_owner_and_admin(): void
+    {
+        Storage::fake('local');
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::findOrCreate('admin', 'web'));
+        Storage::disk('local')->put('care-giver-cvs/private.pdf', 'private document');
+        $document = Document::create([
+            'user_id' => $owner->id,
+            'type' => 'cv',
+            'disk' => 'local',
+            'path' => 'care-giver-cvs/private.pdf',
+            'original_name' => 'cv.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => 16,
+        ]);
+
+        $this->get(route('documents.download', $document))->assertRedirect(route('login'));
+        $this->actingAs($otherUser)->get(route('documents.download', $document))->assertForbidden();
+        $this->actingAs($owner)->get(route('documents.download', $document))->assertDownload('cv.pdf');
+        $this->actingAs($admin)->get(route('documents.download', $document))->assertDownload('cv.pdf');
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

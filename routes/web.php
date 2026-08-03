@@ -3,6 +3,7 @@
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Review;
 use Illuminate\Foundation\Application;
@@ -69,6 +70,9 @@ Route::get('/account-verification', function () {
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.submit');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/documents/{document}/download', [DocumentController::class, 'download'])
+        ->name('documents.download');
+
     Route::prefix('impersonation')->name('impersonation.')->group(function (): void {
         Route::middleware('admin')->group(function (): void {
             Route::get('users', [ImpersonationController::class, 'users'])->name('users');

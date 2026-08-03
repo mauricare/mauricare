@@ -46,7 +46,7 @@ class ProfileController extends Controller
             'roleProfile' => $roleProfile,
             'document' => $document ? [
                 'name' => $document->original_name,
-                'url' => Storage::disk($document->disk)->url($document->path),
+                'url' => route('documents.download', $document),
             ] : null,
         ]);
     }
@@ -133,8 +133,8 @@ class ProfileController extends Controller
 
         $user->documents()->create([
             'type' => $type,
-            'disk' => 'public',
-            'path' => $file->store($directory, 'public'),
+            'disk' => 'local',
+            'path' => $file->store($directory, 'local'),
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getClientMimeType(),
             'size' => $file->getSize(),
