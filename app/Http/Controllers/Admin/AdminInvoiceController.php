@@ -70,6 +70,67 @@ class AdminInvoiceController extends Controller
         ]);
     }
 
+    public function uninvoicedBookings(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'period_start' => ['required', 'date'],
+            'period_end' => ['required', 'date', 'after_or_equal:period_start'],
+        ]);
+
+        $bookings = CareBooking::query()
+            ->with(['user:id,name,email', 'careGiver:id,name,email'])
+            ->where('status', BookingStatus::Closed->value)
+            ->whereNull('invoice_id')
+            ->whereHas('careGiver')
+            ->whereBetween('scheduled_date', [$validated['period_start'], $validated['period_end']])
+            ->orderBy('scheduled_date')
+            ->orderBy('id')
+            ->get();
+
+        $groups = $bookings
+            ->groupBy('care_giver_id')
+            ->map(function ($careGiverBookings): array {
+                /** @var CareBooking $first */
+                $first = $careGiverBookings->first();
+
+                return [
+                    'care_giver' => [
+                        'id' => $first->careGiver->id,
+                        'name' => $first->careGiver->name,
+                        'email' => $first->careGiver->email,
+                    ],
+                    'bookings_count' => $careGiverBookings->count(),
+                    'booking_total' => number_format($careGiverBookings->sum(
+                        fn (CareBooking $booking): float => (float) ($booking->amount_paid ?? $booking->amount_due ?? 0)
+                    ), 2, '.', ''),
+                    'bookings' => $careGiverBookings->map(fn (CareBooking $booking): array => [
+                        'id' => $booking->id,
+                        'scheduled_date' => $booking->scheduled_date->format('Y-m-d'),
+                        'care_type' => $booking->care_type,
+                        'care_seeker' => [
+                            'id' => $booking->user->id,
+                            'name' => $booking->user->name,
+                            'email' => $booking->user->email,
+                        ],
+                        'amount' => $booking->amount_paid ?? $booking->amount_due ?? '0.00',
+                    ])->values(),
+                ];
+            })
+            ->sortBy(fn (array $group): string => $group['care_giver']['name'])
+            ->values();
+
+        return response()->json([
+            'data' => $groups,
+            'summary' => [
+                'care_givers_count' => $groups->count(),
+                'bookings_count' => $bookings->count(),
+                'booking_total' => number_format($bookings->sum(
+                    fn (CareBooking $booking): float => (float) ($booking->amount_paid ?? $booking->amount_due ?? 0)
+                ), 2, '.', ''),
+            ],
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -164,6 +225,24 @@ class AdminInvoiceController extends Controller
         ]);
     }
 
+    public function markPaid(Invoice $invoice): JsonResponse
+    {
+        if ($invoice->paid_at) {
+            throw ValidationException::withMessages([
+                'invoice' => 'This invoice has already been marked as paid.',
+            ]);
+        }
+
+        $invoice->update(['paid_at' => now()]);
+
+        return response()->json([
+            'message' => 'Invoice marked as paid.',
+            'data' => [
+                'paid_at' => $invoice->paid_at->toISOString(),
+            ],
+        ]);
+    }
+
     private function serializeInvoice(Invoice $invoice): array
     {
         return [
@@ -176,6 +255,7 @@ class AdminInvoiceController extends Controller
             'amount_due' => $invoice->amount_due,
             'sent_at' => $invoice->sent_at?->toISOString(),
             'sent_count' => $invoice->sent_count,
+            'paid_at' => $invoice->paid_at?->toISOString(),
             'bookings_count' => $invoice->bookings_count ?? $invoice->bookings->count(),
             'created_at' => $invoice->created_at->toISOString(),
             'care_giver' => [

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
 use App\Models\CareBooking;
+use App\Models\Invoice;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -76,6 +77,27 @@ class AdminDashboardTest extends TestCase
         $careGiver = $this->careGiver();
         CareBooking::factory()->for($careSeeker)->assigned($careGiver)->create();
         $closedBooking = CareBooking::factory()->for($careSeeker)->closed($careGiver)->create();
+        Invoice::create([
+            'invoice_number' => 'INV-PROFILE-001',
+            'care_giver_id' => $careGiver->id,
+            'generated_by' => $admin->id,
+            'period_start' => '2026-07-01',
+            'period_end' => '2026-07-31',
+            'rate' => 10,
+            'booking_total' => 1500,
+            'amount_due' => 150,
+            'paid_at' => now(),
+        ]);
+        Invoice::create([
+            'invoice_number' => 'INV-PROFILE-002',
+            'care_giver_id' => $careGiver->id,
+            'generated_by' => $admin->id,
+            'period_start' => '2026-08-01',
+            'period_end' => '2026-08-31',
+            'rate' => 10,
+            'booking_total' => 2000,
+            'amount_due' => 200,
+        ]);
         Review::create([
             'care_booking_id' => $closedBooking->id,
             'reviewer_id' => $careSeeker->id,
@@ -91,6 +113,8 @@ class AdminDashboardTest extends TestCase
             ->assertJsonPath('data.booking_counts.closed', 1)
             ->assertJsonPath('data.booking_counts.open', 0)
             ->assertJsonPath('data.booking_total', 2)
+            ->assertJsonPath('data.invoice_count', 2)
+            ->assertJsonPath('data.paid_invoice_count', 1)
             ->assertJsonPath('data.average_rating', 5)
             ->assertJsonPath('data.review_count', 1)
             ->assertJsonPath('data.reviews.0.reviewer_name', $careSeeker->name)
@@ -167,6 +191,8 @@ class AdminDashboardTest extends TestCase
         $careSeeker = $this->careSeeker();
         $open = CareBooking::factory()->for($careSeeker)->create();
         CareBooking::factory()->for($careSeeker)->cancelled()->create();
+        $matchedSeeker = $this->careSeeker(['name' => 'Unique Search Person']);
+        CareBooking::factory()->for($matchedSeeker)->closed()->create();
 
         $this->actingAs($admin)
             ->getJson('/api/admin/bookings?status=open')
@@ -175,6 +201,14 @@ class AdminDashboardTest extends TestCase
             ->assertJsonPath('data.0.id', $open->id)
             ->assertJsonPath('status_counts.open', 1)
             ->assertJsonPath('status_counts.cancelled', 1);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/bookings?search=Unique%20Search')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('status_counts.open', 0)
+            ->assertJsonPath('status_counts.closed', 1)
+            ->assertJsonPath('status_counts.cancelled', 0);
 
         $this->actingAs($admin)
             ->patchJson("/api/admin/bookings/{$open->id}/cancel")
@@ -201,6 +235,58 @@ class AdminDashboardTest extends TestCase
             'id' => $closed->id,
             'status' => BookingStatus::Closed->value,
         ]);
+    }
+
+    public function test_admin_statistics_report_monthly_booking_invoice_and_join_metrics(): void
+    {
+        $admin = $this->admin();
+        $careSeeker = $this->careSeeker(['created_at' => '2026-08-02 09:00:00']);
+        $careGiver = $this->careGiver(['created_at' => '2026-08-02 10:00:00']);
+        CareBooking::factory()->for($careSeeker)->closed($careGiver)->create([
+            'created_at' => '2026-08-03 09:00:00',
+        ]);
+        CareBooking::factory()->for($careSeeker)->cancelled()->create([
+            'created_at' => '2026-08-04 09:00:00',
+        ]);
+        Invoice::create([
+            'invoice_number' => 'INV-STATS-PAID',
+            'care_giver_id' => $careGiver->id,
+            'generated_by' => $admin->id,
+            'period_start' => '2026-08-01',
+            'period_end' => '2026-08-31',
+            'rate' => 10,
+            'booking_total' => 2500,
+            'amount_due' => 250,
+            'paid_at' => '2026-08-05 09:00:00',
+            'created_at' => '2026-08-04 09:00:00',
+        ]);
+        Invoice::create([
+            'invoice_number' => 'INV-STATS-UNPAID',
+            'care_giver_id' => $careGiver->id,
+            'generated_by' => $admin->id,
+            'period_start' => '2026-08-01',
+            'period_end' => '2026-08-31',
+            'rate' => 10,
+            'booking_total' => 1000,
+            'amount_due' => 100,
+            'created_at' => '2026-08-06 09:00:00',
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/statistics?year=2026&month=8')
+            ->assertOk()
+            ->assertJsonPath('data.paid_invoice_total', '250.00')
+            ->assertJsonPath('data.paid_invoice_count', 1)
+            ->assertJsonPath('data.invoices_generated', 2)
+            ->assertJsonPath('data.unpaid_invoice_count', 1)
+            ->assertJsonPath('data.unpaid_invoice_total', '100.00')
+            ->assertJsonPath('data.bookings_created', 2)
+            ->assertJsonPath('data.bookings_closed', 1)
+            ->assertJsonPath('data.bookings_cancelled', 1)
+            ->assertJsonPath('data.booking_closure_rate', 50)
+            ->assertJsonPath('data.care_seekers_joined', 1)
+            ->assertJsonPath('data.care_givers_joined', 1)
+            ->assertJsonCount(12, 'monthly');
     }
 
     private function admin(array $attributes = []): User

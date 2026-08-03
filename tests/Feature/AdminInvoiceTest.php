@@ -111,6 +111,53 @@ class AdminInvoiceTest extends TestCase
             ->assertJsonPath('data.booking_total', '3000.00');
     }
 
+    public function test_admin_can_view_uninvoiced_closed_bookings_grouped_by_care_giver(): void
+    {
+        $admin = $this->userWithRole('admin');
+        $careGiver = $this->userWithRole('care_giver');
+        $firstSeeker = $this->userWithRole('care_seeker');
+        $secondSeeker = $this->userWithRole('care_seeker');
+        CareBooking::factory()->for($firstSeeker)->closed($careGiver)->create([
+            'scheduled_date' => '2026-07-10',
+            'amount_paid' => 1200,
+        ]);
+        CareBooking::factory()->for($secondSeeker)->closed($careGiver)->create([
+            'scheduled_date' => '2026-07-20',
+            'amount_paid' => 1800,
+        ]);
+        CareBooking::factory()->for($firstSeeker)->closed($careGiver)->create([
+            'scheduled_date' => '2026-08-01',
+            'amount_paid' => 9000,
+        ]);
+        CareBooking::factory()->for($firstSeeker)->assigned($careGiver)->create([
+            'scheduled_date' => '2026-07-15',
+        ]);
+
+        $invoice = Invoice::create([
+            'invoice_number' => 'INV-EXCLUDED-001',
+            'care_giver_id' => $careGiver->id,
+            'generated_by' => $admin->id,
+            'period_start' => '2026-07-01',
+            'period_end' => '2026-07-31',
+            'rate' => 10,
+            'booking_total' => 5000,
+            'amount_due' => 500,
+        ]);
+        CareBooking::factory()->for($firstSeeker)->closed($careGiver)->create([
+            'invoice_id' => $invoice->id,
+            'scheduled_date' => '2026-07-12',
+            'amount_paid' => 5000,
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/uninvoiced-bookings?period_start=2026-07-01&period_end=2026-07-31')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('summary.care_givers_count', 1)
+            ->assertJsonPath('summary.bookings_count', 2)
+            ->assertJsonPath('summary.booking_total', '3000.00');
+    }
+
     public function test_invoice_endpoints_are_restricted_to_admins(): void
     {
         $careGiver = $this->userWithRole('care_giver');
@@ -237,5 +284,33 @@ class AdminInvoiceTest extends TestCase
             ->assertJsonValidationErrors('email');
 
         Mail::assertNothingSent();
+    }
+
+    public function test_admin_can_mark_an_invoice_as_paid_only_once(): void
+    {
+        $admin = $this->userWithRole('admin');
+        $careGiver = $this->userWithRole('care_giver');
+        $invoice = Invoice::create([
+            'invoice_number' => 'INV-PAID-001',
+            'care_giver_id' => $careGiver->id,
+            'generated_by' => $admin->id,
+            'period_start' => '2026-08-01',
+            'period_end' => '2026-08-31',
+            'rate' => 10,
+            'booking_total' => 1500,
+            'amount_due' => 150,
+        ]);
+
+        $this->actingAs($admin)
+            ->patchJson("/api/admin/invoices/{$invoice->id}/paid")
+            ->assertOk()
+            ->assertJsonPath('message', 'Invoice marked as paid.');
+
+        $this->assertNotNull($invoice->fresh()->paid_at);
+
+        $this->actingAs($admin)
+            ->patchJson("/api/admin/invoices/{$invoice->id}/paid")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('invoice');
     }
 }

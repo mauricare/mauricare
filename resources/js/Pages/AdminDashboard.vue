@@ -2,19 +2,23 @@
 import AdminBookingsTable from '@/Components/Admin/AdminBookingsTable.vue';
 import AdminUserTable from '@/Components/Admin/AdminUserTable.vue';
 import AdminInvoices from '@/Components/Admin/AdminInvoices.vue';
+import AdminUninvoicedBookings from '@/Components/Admin/AdminUninvoicedBookings.vue';
+import AdminStatistics from '@/Components/Admin/AdminStatistics.vue';
 import MessagesSection from '@/Components/Dashboard/MessagesSection.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
-const validSections = ['care_seekers', 'care_givers', 'bookings', 'messages', 'invoices'];
+const validSections = ['statistics', 'care_seekers', 'care_givers', 'bookings', 'uninvoiced_bookings', 'messages', 'invoices'];
 const initialSection = new URLSearchParams(window.location.search).get('section');
-const activeSection = ref(validSections.includes(initialSection) ? initialSection : 'care_seekers');
+const activeSection = ref(validSections.includes(initialSection) ? initialSection : 'statistics');
 
 const titles = {
+    statistics: ['Statistics', 'Track bookings, invoice revenue and user growth by month or year.'],
     care_seekers: ['Care Seekers', 'Manage care seeker accounts and profile information.'],
     care_givers: ['Care Givers', 'Manage care giver accounts and availability.'],
     bookings: ['Bookings', 'Review and manage bookings across every status.'],
+    uninvoiced_bookings: ['Uninvoiced Bookings', 'Review closed bookings that have not yet been included in an invoice.'],
     messages: ['Messages', 'Communicate directly with care seekers and care givers.'],
     invoices: ['Invoices', 'Invoice management will be available here.'],
 };
@@ -36,9 +40,11 @@ const selectSection = (section) => {
             <p class="mt-2 text-sm text-slate-500">{{ heading[1] }}</p>
         </div>
 
-        <AdminUserTable v-if="activeSection === 'care_seekers'" type="care_seeker" />
+        <AdminStatistics v-if="activeSection === 'statistics'" />
+        <AdminUserTable v-else-if="activeSection === 'care_seekers'" type="care_seeker" />
         <AdminUserTable v-else-if="activeSection === 'care_givers'" type="care_giver" />
         <AdminBookingsTable v-else-if="activeSection === 'bookings'" />
+        <AdminUninvoicedBookings v-else-if="activeSection === 'uninvoiced_bookings'" />
         <MessagesSection
             v-else-if="activeSection === 'messages'"
             group-contacts

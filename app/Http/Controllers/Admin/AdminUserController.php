@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminUpdateUserRequest;
 use App\Models\CareBooking;
+use App\Models\Invoice;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -198,6 +199,14 @@ class AdminUserController extends Controller
             $data['booking_total'] = $data['booking_counts']->sum();
 
             if ($role === 'care_giver') {
+                $data['invoice_count'] = Invoice::query()
+                    ->where('care_giver_id', $user->id)
+                    ->count();
+                $data['paid_invoice_count'] = Invoice::query()
+                    ->where('care_giver_id', $user->id)
+                    ->whereNotNull('paid_at')
+                    ->count();
+
                 $reviews = $user->reviewsReceived()
                     ->with('reviewer.media')
                     ->latest('id')

@@ -165,6 +165,23 @@ const detailRows = computed(() => {
                             </div>
                         </div>
                     </section>
+                    <section v-if="isCareGiver" class="sm:col-span-2">
+                        <h4 class="mb-3 text-sm font-bold text-slate-900">Invoice summary</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="rounded-xl border border-slate-200 p-4">
+                                <span class="inline-flex rounded-full bg-teal-100 px-2 py-1 text-xs font-semibold text-teal-700">
+                                    Invoices generated
+                                </span>
+                                <p class="mt-3 text-2xl font-bold text-slate-900">{{ user.invoice_count || 0 }}</p>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 p-4">
+                                <span class="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                                    Invoices paid
+                                </span>
+                                <p class="mt-3 text-2xl font-bold text-slate-900">{{ user.paid_invoice_count || 0 }}</p>
+                            </div>
+                        </div>
+                    </section>
                     <div v-for="[label, value] in detailRows" :key="label" class="rounded-lg border border-slate-200 p-3">
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ label }}</p>
                         <p class="mt-1 whitespace-pre-wrap text-sm text-slate-800">{{ value || '—' }}</p>

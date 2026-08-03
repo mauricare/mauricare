@@ -6,6 +6,7 @@ const invoices = ref([]);
 const selectedInvoice = ref(null);
 const isLoading = ref(true);
 const isGenerating = ref(false);
+const payingInvoiceId = ref(null);
 const isSendingInvoice = ref(false);
 const showSendConfirmation = ref(false);
 const sendRecipientEmail = ref('');
@@ -31,6 +32,7 @@ const invoiceSearch = ref('');
 const invoiceCareGiver = ref('');
 const invoicePeriodStart = ref('');
 const invoicePeriodEnd = ref('');
+const invoicePaymentStatus = ref('');
 const form = reactive({
     care_giver_id: '',
     period_start: localDateValue(new Date(today.getFullYear(), today.getMonth(), 1)),
@@ -106,13 +108,15 @@ const filteredInvoices = computed(() => {
             || invoice.period_end >= invoicePeriodStart.value;
         const matchesEnd = !invoicePeriodEnd.value
             || invoice.period_start <= invoicePeriodEnd.value;
+        const matchesPayment = !invoicePaymentStatus.value
+            || (invoicePaymentStatus.value === 'paid' ? Boolean(invoice.paid_at) : !invoice.paid_at);
 
-        return matchesSearch && matchesCareGiver && matchesStart && matchesEnd;
+        return matchesSearch && matchesCareGiver && matchesStart && matchesEnd && matchesPayment;
     });
 });
 
 const hasInvoiceFilters = computed(() =>
-    invoiceSearch.value || invoiceCareGiver.value || invoicePeriodStart.value || invoicePeriodEnd.value,
+    invoiceSearch.value || invoiceCareGiver.value || invoicePeriodStart.value || invoicePeriodEnd.value || invoicePaymentStatus.value,
 );
 
 const clearInvoiceFilters = () => {
@@ -120,6 +124,7 @@ const clearInvoiceFilters = () => {
     invoiceCareGiver.value = '';
     invoicePeriodStart.value = '';
     invoicePeriodEnd.value = '';
+    invoicePaymentStatus.value = '';
 };
 
 const loadEstimate = async () => {
@@ -201,6 +206,23 @@ const viewInvoice = async (invoice) => {
         selectedInvoice.value = response.data.data;
     } catch {
         error.value = 'The invoice preview could not be loaded.';
+    }
+};
+
+const markInvoicePaid = async (invoice) => {
+    if (invoice.paid_at || payingInvoiceId.value) return;
+
+    payingInvoiceId.value = invoice.id;
+    error.value = '';
+
+    try {
+        const response = await axios.patch(`/api/admin/invoices/${invoice.id}/paid`);
+        Object.assign(invoice, response.data.data);
+        if (selectedInvoice.value?.id === invoice.id) Object.assign(selectedInvoice.value, response.data.data);
+    } catch (requestError) {
+        error.value = requestError.response?.data?.message || 'The invoice could not be marked as paid.';
+    } finally {
+        payingInvoiceId.value = null;
     }
 };
 
@@ -429,6 +451,10 @@ onUnmounted(() => {
                             <span v-if="selectedInvoice.sent_count > 1">({{ selectedInvoice.sent_count }} times)</span>
                         </span>
                         <span v-else class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">Not sent</span>
+                        <span v-if="selectedInvoice.paid_at" class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
+                            <i class="fa-solid fa-money-check-dollar"></i>Paid {{ dateTime(selectedInvoice.paid_at) }}
+                        </span>
+                        <span v-else class="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">Unpaid</span>
                     </div>
                 </div>
                 <div class="flex gap-2">
@@ -483,7 +509,7 @@ onUnmounted(() => {
             <p v-if="isLoading" class="px-6 py-10 text-center text-sm text-slate-500">Loading invoices…</p>
             <p v-else-if="!invoices.length" class="px-6 py-10 text-center text-sm text-slate-500">No invoices have been generated yet.</p>
             <div v-else>
-                <div class="grid gap-3 border-b border-slate-100 bg-slate-50/60 p-4 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(180px,0.8fr)_160px_160px_auto]">
+                <div class="grid gap-3 border-b border-slate-100 bg-slate-50/60 p-4 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(180px,0.8fr)_160px_160px_auto_auto]">
                     <label class="relative block">
                         <span class="sr-only">Search generated invoices</span>
                         <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></i>
@@ -504,14 +530,26 @@ onUnmounted(() => {
                         <span class="mb-1 block text-xs font-semibold text-slate-500 xl:hidden">Period to</span>
                         <input v-model="invoicePeriodEnd" type="date" :min="invoicePeriodStart" title="Period to" class="block w-full rounded-md border-slate-300 py-2 text-sm focus:border-teal-500 focus:ring-teal-500" />
                     </label>
+                    <div class="inline-flex rounded-md border border-slate-300 bg-white p-1" aria-label="Filter invoices by payment status">
+                        <button
+                            v-for="option in [{ value: '', label: 'All' }, { value: 'unpaid', label: 'Unpaid' }, { value: 'paid', label: 'Paid' }]"
+                            :key="option.value || 'all'"
+                            type="button"
+                            class="rounded px-3 py-1 text-xs font-bold transition"
+                            :class="invoicePaymentStatus === option.value ? 'bg-[#117d73] text-white' : 'text-slate-600 hover:bg-slate-100'"
+                            @click="invoicePaymentStatus = option.value"
+                        >
+                            {{ option.label }}
+                        </button>
+                    </div>
                     <button v-if="hasInvoiceFilters" type="button" class="rounded-md px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900" @click="clearInvoiceFilters">
                         Clear
                     </button>
                 </div>
                 <p v-if="!filteredInvoices.length" class="px-6 py-10 text-center text-sm text-slate-500">No invoices match these filters.</p>
                 <div v-else class="overflow-x-auto">
-                    <table class="min-w-full text-sm"><thead class="bg-slate-50 text-left text-xs uppercase text-slate-500"><tr><th class="px-5 py-3">Invoice</th><th class="px-5 py-3">Care giver</th><th class="px-5 py-3">Period</th><th class="px-5 py-3">Bookings</th><th class="px-5 py-3">Email status</th><th class="px-5 py-3 text-right">Amount due</th><th class="px-5 py-3"></th></tr></thead>
-                        <tbody class="divide-y divide-slate-100"><tr v-for="invoice in filteredInvoices" :key="invoice.id"><td class="px-5 py-4 font-semibold">{{ invoice.invoice_number }}</td><td class="px-5 py-4">{{ invoice.care_giver.name }}</td><td class="px-5 py-4">{{ date(invoice.period_start) }} – {{ date(invoice.period_end) }}</td><td class="px-5 py-4">{{ invoice.bookings_count }}</td><td class="px-5 py-4"><span v-if="invoice.sent_at" class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700"><i class="fa-solid fa-circle-check"></i>Sent</span><span v-else class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">Not sent</span></td><td class="px-5 py-4 text-right font-semibold">{{ money(invoice.amount_due) }}</td><td class="px-5 py-4 text-right"><button type="button" class="font-semibold text-teal-700 hover:text-teal-900" @click="viewInvoice(invoice)">Preview</button></td></tr></tbody>
+                    <table class="min-w-full text-sm"><thead class="bg-slate-50 text-left text-xs uppercase text-slate-500"><tr><th class="px-5 py-3">Invoice</th><th class="px-5 py-3">Care giver</th><th class="px-5 py-3">Period</th><th class="px-5 py-3">Bookings</th><th class="px-5 py-3">Email</th><th class="px-5 py-3">Payment</th><th class="px-5 py-3 text-right">Amount due</th><th class="px-5 py-3"></th></tr></thead>
+                        <tbody class="divide-y divide-slate-100"><tr v-for="invoice in filteredInvoices" :key="invoice.id"><td class="px-5 py-4 font-semibold">{{ invoice.invoice_number }}</td><td class="px-5 py-4">{{ invoice.care_giver.name }}</td><td class="px-5 py-4">{{ date(invoice.period_start) }} – {{ date(invoice.period_end) }}</td><td class="px-5 py-4">{{ invoice.bookings_count }}</td><td class="px-5 py-4"><span v-if="invoice.sent_at" class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700"><i class="fa-solid fa-circle-check"></i>Sent</span><span v-else class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">Not sent</span></td><td class="px-5 py-4"><span v-if="invoice.paid_at" class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700"><i class="fa-solid fa-check"></i>Paid</span><span v-else class="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">Unpaid</span></td><td class="px-5 py-4 text-right font-semibold">{{ money(invoice.amount_due) }}</td><td class="px-5 py-4"><div class="flex items-center justify-end gap-3"><button v-if="!invoice.paid_at" type="button" class="whitespace-nowrap rounded-md bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60" :disabled="payingInvoiceId === invoice.id" @click="markInvoicePaid(invoice)"><i class="fa-solid mr-1" :class="payingInvoiceId === invoice.id ? 'fa-spinner fa-spin' : 'fa-money-check-dollar'"></i>{{ payingInvoiceId === invoice.id ? 'Saving…' : 'Mark paid' }}</button><button type="button" class="font-semibold text-teal-700 hover:text-teal-900" @click="viewInvoice(invoice)">Preview</button></div></td></tr></tbody>
                     </table>
                 </div>
             </div>

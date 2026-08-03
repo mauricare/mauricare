@@ -1,6 +1,7 @@
 <script setup>
 import NotificationBell from '@/Components/Dashboard/NotificationBell.vue';
 import ThemeToggle from '@/Components/Dashboard/ThemeToggle.vue';
+import LogoutButton from '@/Components/Dashboard/LogoutButton.vue';
 import { useDashboardTheme } from '@/composables/useDashboardTheme';
 import { useUnreadMessages } from '@/composables/useUnreadMessages';
 import { Link, usePage } from '@inertiajs/vue3';
@@ -138,15 +139,12 @@ const handleItemClick = (item) => {
                         {{ unreadCount > 99 ? '99+' : unreadCount }}
                     </span>
                 </component>
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="flex w-full items-center rounded-xl px-5 py-4 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                <LogoutButton
+                    button-class="flex w-full items-center rounded-xl px-5 py-4 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
                     <i class="fa-solid fa-arrow-right-from-bracket mr-4 w-5 text-center text-slate-500"></i>
                     Logout
-                </Link>
+                </LogoutButton>
             </nav>
         </aside>
 

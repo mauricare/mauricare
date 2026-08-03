@@ -1,6 +1,7 @@
 <script setup>
 import AdminImpersonationMenu from '@/Components/Admin/AdminImpersonationMenu.vue';
 import ThemeToggle from '@/Components/Dashboard/ThemeToggle.vue';
+import LogoutButton from '@/Components/Dashboard/LogoutButton.vue';
 import { useDashboardTheme } from '@/composables/useDashboardTheme';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -18,10 +19,12 @@ const mobileOpen = ref(false);
 const { isDark } = useDashboardTheme();
 
 const menus = [
+    { key: 'statistics', label: 'Statistics', icon: 'fa-chart-pie' },
     { key: 'care_seekers', label: 'Care Seekers', icon: 'fa-users' },
     { key: 'care_givers', label: 'Care Givers', icon: 'fa-user-nurse' },
     { key: 'bookings', label: 'Bookings', icon: 'fa-calendar-check' },
     { key: 'messages', label: 'Messages', icon: 'fa-message' },
+    { key: 'uninvoiced_bookings', label: 'Uninvoiced Bookings', icon: 'fa-receipt' },
     { key: 'invoices', label: 'Invoices', icon: 'fa-file-invoice' },
 ];
 
@@ -61,15 +64,12 @@ const select = (key) => {
                     <i class="fa-solid w-5 text-center" :class="menu.icon"></i>
                     {{ menu.label }}
                 </button>
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-red-50 hover:text-red-700"
+                <LogoutButton
+                    button-class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-red-50 hover:text-red-700"
                 >
                     <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
                     Log out
-                </Link>
+                </LogoutButton>
             </nav>
 
             <div class="shrink-0 border-t border-slate-100 p-4">

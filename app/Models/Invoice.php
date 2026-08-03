@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'amount_due',
     'sent_at',
     'sent_count',
+    'paid_at',
 ])]
 class Invoice extends Model
 {
@@ -35,6 +36,7 @@ class Invoice extends Model
             'amount_due' => 'decimal:2',
             'sent_at' => 'datetime',
             'sent_count' => 'integer',
+            'paid_at' => 'datetime',
         ];
     }
 

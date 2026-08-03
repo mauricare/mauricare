@@ -22,30 +22,19 @@ class AdminBookingController extends Controller
         ]);
         $search = trim($validated['search'] ?? '');
 
-        $bookings = CareBooking::query()
+        $filteredQuery = CareBooking::query()
+            ->when($search !== '', fn (Builder $query): Builder => $this->applySearch($query, $search));
+
+        $bookings = (clone $filteredQuery)
             ->with(['user.media', 'careGiver.media'])
             ->when(
                 isset($validated['status']),
                 fn (Builder $query): Builder => $query->where('status', $validated['status'])
             )
-            ->when($search !== '', function (Builder $query) use ($search): void {
-                $query->where(function (Builder $query) use ($search): void {
-                    if (ctype_digit($search)) {
-                        $query->orWhereKey((int) $search);
-                    }
-                    $query->orWhere('care_type', 'like', "%{$search}%")
-                        ->orWhereHas('user', fn (Builder $userQuery): Builder => $userQuery
-                            ->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%"))
-                        ->orWhereHas('careGiver', fn (Builder $userQuery): Builder => $userQuery
-                            ->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%"));
-                });
-            })
             ->latest('id')
             ->paginate($validated['per_page'] ?? 10);
 
-        $counts = CareBooking::query()
+        $counts = (clone $filteredQuery)
             ->selectRaw('status, count(*) as aggregate')
             ->groupBy('status')
             ->pluck('aggregate', 'status');
@@ -65,6 +54,23 @@ class AdminBookingController extends Controller
                     $status->value => (int) ($counts[$status->value] ?? 0),
                 ]),
         ]);
+    }
+
+    private function applySearch(Builder $query, string $search): Builder
+    {
+        return $query->where(function (Builder $query) use ($search): void {
+            if (ctype_digit($search)) {
+                $query->orWhereKey((int) $search);
+            }
+
+            $query->orWhere('care_type', 'like', "%{$search}%")
+                ->orWhereHas('user', fn (Builder $userQuery): Builder => $userQuery
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%"))
+                ->orWhereHas('careGiver', fn (Builder $userQuery): Builder => $userQuery
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%"));
+        });
     }
 
     public function cancel(CareBooking $careBooking): JsonResponse

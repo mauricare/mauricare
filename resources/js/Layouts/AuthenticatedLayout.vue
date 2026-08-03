@@ -6,6 +6,7 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import ThemeToggle from '@/Components/Dashboard/ThemeToggle.vue';
+import LogoutButton from '@/Components/Dashboard/LogoutButton.vue';
 import { useDashboardTheme } from '@/composables/useDashboardTheme';
 import { Link } from '@inertiajs/vue3';
 
@@ -80,13 +81,9 @@ const { isDark } = useDashboardTheme();
                                         >
                                             Profile
                                         </DropdownLink>
-                                        <DropdownLink
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                        >
+                                        <LogoutButton button-class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none">
                                             Log Out
-                                        </DropdownLink>
+                                        </LogoutButton>
                                     </template>
                                 </Dropdown>
                             </div>
@@ -172,13 +169,9 @@ const { isDark } = useDashboardTheme();
                             <ResponsiveNavLink :href="route('profile.edit')">
                                 Profile
                             </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                :href="route('logout')"
-                                method="post"
-                                as="button"
-                            >
+                            <LogoutButton button-class="block w-full border-l-4 border-transparent py-2 pe-4 ps-3 text-start text-base font-medium text-gray-600 transition duration-150 ease-in-out hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 focus:border-gray-300 focus:bg-gray-50 focus:text-gray-800 focus:outline-none">
                                 Log Out
-                            </ResponsiveNavLink>
+                            </LogoutButton>
                         </div>
                     </div>
                 </div>
