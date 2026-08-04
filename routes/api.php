@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBookingController;
+use App\Http\Controllers\Admin\AdminCareOptionController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminStatisticsController;
 use App\Http\Controllers\Admin\AdminUserController;
@@ -19,6 +20,10 @@ Rest::resource('users', UsersController::class)->only(['mutate']);
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('admin')->middleware('admin')->name('api.admin.')->group(function (): void {
         Route::get('statistics', [AdminStatisticsController::class, 'index'])->name('statistics.index');
+        Route::get('care-options', [AdminCareOptionController::class, 'index'])->name('care-options.index');
+        Route::post('care-options', [AdminCareOptionController::class, 'store'])->name('care-options.store');
+        Route::patch('care-options/{careOption}', [AdminCareOptionController::class, 'update'])->name('care-options.update');
+        Route::delete('care-options/{careOption}', [AdminCareOptionController::class, 'destroy'])->name('care-options.destroy');
         Route::get('care-seekers', [AdminUserController::class, 'careSeekers'])->name('care-seekers.index');
         Route::get('care-givers', [AdminUserController::class, 'careGivers'])->name('care-givers.index');
         Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');

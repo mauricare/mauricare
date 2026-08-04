@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import { useCareOptions } from '@/composables/useCareOptions';
 import { useForm, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -23,6 +24,7 @@ const props = defineProps({
         default: null,
     },
 });
+const { carerTypes } = useCareOptions();
 
 const user = usePage().props.auth.user;
 
@@ -177,11 +179,7 @@ const submit = () => {
                             required
                         >
                             <option value="" disabled>Select a type</option>
-                            <option value="doctor">Doctor</option>
-                            <option value="nurse">Nurse</option>
-                            <option value="carers">Carers</option>
-                            <option value="physiotherapist">Physiotherapist</option>
-                            <option value="other">Other</option>
+                            <option v-for="type in carerTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
                         </select>
                         <InputError class="mt-2" :message="form.errors.care_giver_type" />
                     </div>

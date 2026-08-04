@@ -4,6 +4,7 @@ namespace App\Rest\Resources;
 
 use App\Enums\BookingStatus;
 use App\Models\CareBooking;
+use App\Models\CareOption;
 use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -76,25 +77,9 @@ class CareBookingResource extends Resource
             'scheduled_date' => ['sometimes', 'date'],
             'start_time' => ['sometimes', 'date_format:H:i'],
             'duration_hours' => ['sometimes', 'integer', 'in:1'],
-            'care_type' => ['sometimes', 'string', Rule::in([
-                'personal_care',
-                'nursing_care',
-                'physiotherapy',
-                'post_hospital_recovery',
-                'respite_care',
-                'companionship',
-                'wound_care',
-                'home_icu_support',
-                'other',
-            ])],
+            'care_type' => ['sometimes', 'string', Rule::in(CareOption::values('care_type'))],
             'description' => ['sometimes', 'string', 'max:2000'],
-            'preferred_carer_type' => ['sometimes', 'string', Rule::in([
-                'doctor',
-                'nurse',
-                'carers',
-                'physiotherapist',
-                'other',
-            ])],
+            'preferred_carer_type' => ['sometimes', 'string', Rule::in(CareOption::values('carer_type'))],
             'address' => ['sometimes', 'string', 'max:255'],
             'contact_phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'status' => ['sometimes', 'string', Rule::in([

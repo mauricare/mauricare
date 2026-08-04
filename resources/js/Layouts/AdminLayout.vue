@@ -26,6 +26,7 @@ const menus = [
     { key: 'messages', label: 'Messages', icon: 'fa-message' },
     { key: 'uninvoiced_bookings', label: 'Uninvoiced Bookings', icon: 'fa-receipt' },
     { key: 'invoices', label: 'Invoices', icon: 'fa-file-invoice' },
+    { key: 'settings', label: 'Settings', icon: 'fa-gear' },
 ];
 
 const select = (key) => {

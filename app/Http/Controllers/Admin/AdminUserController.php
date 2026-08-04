@@ -110,13 +110,25 @@ class AdminUserController extends Controller
     {
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'in:all,active,inactive'],
+            'sort_by' => ['nullable', 'in:user,city,joined'],
+            'sort_direction' => ['nullable', 'in:asc,desc'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:5', 'max:50'],
         ]);
         $search = trim($validated['search'] ?? '');
+        $status = $validated['status'] ?? 'all';
+        $sortBy = $validated['sort_by'] ?? 'joined';
+        $sortDirection = $validated['sort_direction'] ?? 'desc';
+        $profileRelation = $role === 'care_giver' ? 'careGiverProfile' : 'careSeekerProfile';
 
         $users = User::role($role)
             ->with(['profile', 'careSeekerProfile', 'careGiverProfile', 'media'])
+            ->when($status !== 'all', function (Builder $query) use ($profileRelation, $status): void {
+                $query->whereHas($profileRelation, function (Builder $profileQuery) use ($status): void {
+                    $profileQuery->where('is_active', $status === 'active');
+                });
+            })
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $query->where('name', 'like', "%{$search}%")
@@ -129,12 +141,18 @@ class AdminUserController extends Controller
                         });
                 });
             })
-            ->latest('id')
+            ->when($sortBy === 'city', fn (Builder $query) => $query
+                ->leftJoin('user_profiles', 'user_profiles.user_id', '=', 'users.id')
+                ->select('users.*')
+                ->orderBy('user_profiles.city', $sortDirection))
+            ->when($sortBy === 'user', fn (Builder $query) => $query->orderBy('users.name', $sortDirection))
+            ->when($sortBy === 'joined', fn (Builder $query) => $query->orderBy('users.created_at', $sortDirection))
+            ->orderBy('users.id', $sortDirection)
             ->paginate($validated['per_page'] ?? 10);
 
         return response()->json([
             'data' => collect($users->items())
-                ->map(fn (User $user): array => $this->serializeUser($user))
+                ->map(fn (User $user): array => $this->serializeUser($user, false, $role))
                 ->values(),
             'meta' => [
                 'current_page' => $users->currentPage(),
@@ -158,9 +176,9 @@ class AdminUserController extends Controller
         abort(404);
     }
 
-    private function serializeUser(User $user, bool $detailed = false): array
+    private function serializeUser(User $user, bool $detailed = false, ?string $role = null): array
     {
-        $role = $user->hasRole('care_giver') ? 'care_giver' : 'care_seeker';
+        $role ??= $user->hasRole('care_giver') ? 'care_giver' : 'care_seeker';
         $roleProfile = $role === 'care_giver'
             ? $user->careGiverProfile
             : $user->careSeekerProfile;

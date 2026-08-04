@@ -2,7 +2,8 @@
 import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import { careTypes, carerTypes, paymentMethods, statusClasses } from '@/constants/careBookings';
+import { paymentMethods, statusClasses } from '@/constants/careBookings';
+import { useCareOptions } from '@/composables/useCareOptions';
 import { formatAmount, formatDateParts, formatOption, formatStatus, formatTime, seekerName } from '@/utils/bookingFormat';
 import { computed, ref, watch } from 'vue';
 
@@ -16,6 +17,7 @@ const props = defineProps({
         default: null,
     },
 });
+const { careTypes, carerTypes } = useCareOptions();
 
 const emit = defineEmits(['close', 'updated']);
 
@@ -48,8 +50,8 @@ const detailRows = computed(() => {
         { label: 'Care seeker', value: seekerName(props.booking) },
         { label: 'Date', value: formatDateParts(props.booking.scheduled_date).full },
         { label: 'Time', value: `${formatTime(props.booking.start_time)} (${props.booking.duration_hours}h)` },
-        { label: 'Type of care', value: formatOption(careTypes, props.booking.care_type) },
-        { label: 'Carer requested', value: formatOption(carerTypes, props.booking.preferred_carer_type) },
+        { label: 'Type of care', value: formatOption(careTypes.value, props.booking.care_type) },
+        { label: 'Carer requested', value: formatOption(carerTypes.value, props.booking.preferred_carer_type) },
         { label: 'Address', value: props.booking.address || '—' },
         { label: 'Contact phone', value: props.booking.contact_phone || '—' },
     ];

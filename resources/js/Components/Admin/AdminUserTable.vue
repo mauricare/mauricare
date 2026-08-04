@@ -14,6 +14,9 @@ const props = defineProps({
 const users = ref([]);
 const meta = ref({ current_page: 1, last_page: 1, total: 0 });
 const search = ref('');
+const status = ref('all');
+const sortBy = ref('joined');
+const sortDirection = ref('desc');
 const loading = ref(false);
 const error = ref('');
 const selectedUserId = ref(null);
@@ -23,23 +26,38 @@ const messageBody = ref('');
 const messageError = ref('');
 const sendingMessage = ref(false);
 let searchTimer;
+let latestRequest = 0;
 
 const endpoint = computed(() => props.type === 'care_giver' ? '/api/admin/care-givers' : '/api/admin/care-seekers');
 const singularLabel = computed(() => props.type === 'care_giver' ? 'care giver' : 'care seeker');
 
 const loadUsers = async (page = 1) => {
+    const requestId = ++latestRequest;
     loading.value = true;
     error.value = '';
     try {
         const response = await window.axios.get(endpoint.value, {
-            params: { search: search.value || undefined, page, per_page: 10 },
+            params: {
+                search: search.value || undefined,
+                status: status.value,
+                sort_by: sortBy.value,
+                sort_direction: sortDirection.value,
+                page,
+                per_page: 10,
+            },
         });
-        users.value = response.data.data;
-        meta.value = response.data.meta;
+        if (requestId === latestRequest) {
+            users.value = response.data.data;
+            meta.value = response.data.meta;
+        }
     } catch (exception) {
-        error.value = exception.response?.data?.message || 'Unable to load users.';
+        if (requestId === latestRequest) {
+            error.value = exception.response?.data?.message || 'Unable to load users.';
+        }
     } finally {
-        loading.value = false;
+        if (requestId === latestRequest) {
+            loading.value = false;
+        }
     }
 };
 
@@ -49,9 +67,34 @@ watch(search, () => {
 });
 watch(() => props.type, () => {
     search.value = '';
+    status.value = 'all';
     loadUsers(1);
 });
 onMounted(() => loadUsers());
+
+const setStatus = (value) => {
+    if (status.value === value) return;
+
+    status.value = value;
+    loadUsers(1);
+};
+
+const sortUsers = (column) => {
+    if (sortBy.value === column) {
+        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortDirection.value = column === 'joined' ? 'desc' : 'asc';
+    }
+
+    loadUsers(1);
+};
+
+const sortIcon = (column) => {
+    if (sortBy.value !== column) return 'fa-solid fa-sort text-slate-300';
+
+    return sortDirection.value === 'asc' ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down';
+};
 
 const openModal = (user, mode) => {
     selectedUserId.value = user.id;
@@ -116,6 +159,9 @@ const toggleStatus = async (user) => {
             is_active: !user.is_active,
         });
         user.is_active = response.data.is_active;
+        if (status.value !== 'all') {
+            await loadUsers(meta.value.current_page);
+        }
         showAdminSuccess(`${user.name} has been ${user.is_active ? 'activated' : 'deactivated'}.`);
     } catch (exception) {
         showAdminError(exception.response?.data?.message || `Unable to ${action} this user.`);
@@ -152,9 +198,22 @@ const formatDate = (date) => date ? new Intl.DateTimeFormat('en-GB', { dateStyle
                 <h2 class="text-lg font-bold capitalize">{{ type === 'care_giver' ? 'Care Givers' : 'Care Seekers' }}</h2>
                 <p class="mt-1 text-sm text-slate-500">{{ meta.total }} registered {{ meta.total === 1 ? singularLabel : `${singularLabel}s` }}</p>
             </div>
-            <div class="relative w-full sm:w-80">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></i>
-                <input v-model="search" type="search" :placeholder="`Search ${singularLabel}s...`" class="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm focus:border-[#117d73] focus:outline-none focus:ring-2 focus:ring-[#117d73]/20" />
+            <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+                <div class="inline-flex rounded-xl border border-slate-300 bg-slate-50 p-1" role="group" aria-label="Filter users by status">
+                    <button
+                        v-for="option in ['all', 'active', 'inactive']"
+                        :key="option"
+                        type="button"
+                        class="rounded-lg px-3 py-1.5 text-sm font-semibold capitalize transition"
+                        :class="status === option ? 'bg-[#117d73] text-white shadow-sm' : 'text-slate-600 hover:bg-white'"
+                        :aria-pressed="status === option"
+                        @click="setStatus(option)"
+                    >{{ option }}</button>
+                </div>
+                <div class="relative w-full sm:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></i>
+                    <input v-model="search" type="search" :placeholder="`Search ${singularLabel}s...`" class="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm focus:border-[#117d73] focus:outline-none focus:ring-2 focus:ring-[#117d73]/20" />
+                </div>
             </div>
         </div>
 
@@ -163,11 +222,17 @@ const formatDate = (date) => date ? new Intl.DateTimeFormat('en-GB', { dateStyle
             <table class="w-full min-w-[920px] text-left text-sm">
                 <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
-                        <th class="px-5 py-3">User</th>
+                        <th class="px-5 py-3" :aria-sort="sortBy === 'user' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+                            <button type="button" class="inline-flex items-center gap-2 hover:text-slate-800" @click="sortUsers('user')">User <i :class="sortIcon('user')"></i></button>
+                        </th>
                         <th class="px-5 py-3">Phone</th>
-                        <th class="px-5 py-3">City</th>
+                        <th class="px-5 py-3" :aria-sort="sortBy === 'city' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+                            <button type="button" class="inline-flex items-center gap-2 hover:text-slate-800" @click="sortUsers('city')">City <i :class="sortIcon('city')"></i></button>
+                        </th>
                         <th class="px-5 py-3">Status</th>
-                        <th class="px-5 py-3">Joined</th>
+                        <th class="px-5 py-3" :aria-sort="sortBy === 'joined' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+                            <button type="button" class="inline-flex items-center gap-2 hover:text-slate-800" @click="sortUsers('joined')">Joined <i :class="sortIcon('joined')"></i></button>
+                        </th>
                         <th class="px-5 py-3 text-right">Actions</th>
                     </tr>
                 </thead>

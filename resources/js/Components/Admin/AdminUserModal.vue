@@ -1,6 +1,7 @@
 <script setup>
 import Modal from '@/Components/Modal.vue';
 import { statusClasses, statusLabels } from '@/constants/careBookings';
+import { useCareOptions } from '@/composables/useCareOptions';
 import { computed, reactive, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -11,6 +12,7 @@ const props = defineProps({
         default: 'view',
     },
 });
+const { carerTypes } = useCareOptions();
 
 const emit = defineEmits(['close', 'saved']);
 const user = ref(null);
@@ -335,11 +337,7 @@ const detailRows = computed(() => {
                             <label :class="labelClass">Care giver type
                                 <select v-model="form.care_giver_type" :class="fieldClass">
                                     <option value="">Select a type</option>
-                                    <option value="doctor">Doctor</option>
-                                    <option value="nurse">Nurse</option>
-                                    <option value="carers">Carer</option>
-                                    <option value="physiotherapist">Physiotherapist</option>
-                                    <option value="other">Other</option>
+                                    <option v-for="type in carerTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
                                 </select>
                             </label>
                         </div>

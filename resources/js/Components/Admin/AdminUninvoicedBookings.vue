@@ -1,7 +1,10 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useCareOptions } from '@/composables/useCareOptions';
+import { formatOption } from '@/utils/bookingFormat';
 
 const today = new Date();
+const { careTypes } = useCareOptions();
 const localDateValue = (value) => [
     value.getFullYear(),
     String(value.getMonth() + 1).padStart(2, '0'),
@@ -15,6 +18,7 @@ const period = reactive({
 const groups = ref([]);
 const summary = ref({ care_givers_count: 0, bookings_count: 0, booking_total: '0.00' });
 const search = ref('');
+const expandedCareGivers = ref([]);
 const isLoading = ref(false);
 const error = ref('');
 
@@ -53,12 +57,21 @@ const loadBookings = async () => {
             },
         });
         groups.value = response.data.data || [];
+        expandedCareGivers.value = [];
         summary.value = response.data.summary;
     } catch (requestError) {
         error.value = requestError.response?.data?.message || 'Uninvoiced bookings could not be loaded.';
     } finally {
         isLoading.value = false;
     }
+};
+
+const isExpanded = (careGiverId) => expandedCareGivers.value.includes(careGiverId);
+
+const toggleGroup = (careGiverId) => {
+    expandedCareGivers.value = isExpanded(careGiverId)
+        ? expandedCareGivers.value.filter((id) => id !== careGiverId)
+        : [...expandedCareGivers.value, careGiverId];
 };
 
 onMounted(loadBookings);
@@ -116,20 +129,29 @@ onMounted(loadBookings);
 
             <div v-else class="divide-y divide-slate-200">
                 <article v-for="group in filteredGroups" :key="group.care_giver.id">
-                    <div class="flex flex-col gap-2 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                        type="button"
+                        class="flex w-full flex-col gap-2 bg-slate-50 px-5 py-4 text-left transition hover:bg-slate-100 sm:flex-row sm:items-center sm:justify-between"
+                        :aria-expanded="isExpanded(group.care_giver.id)"
+                        :aria-controls="`care-giver-bookings-${group.care_giver.id}`"
+                        @click="toggleGroup(group.care_giver.id)"
+                    >
                         <div>
-                            <h3 class="font-bold text-slate-950">{{ group.care_giver.name }}</h3>
+                            <h3 class="flex items-center gap-3 font-bold text-slate-950">
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-400 transition-transform" :class="{ 'rotate-90': isExpanded(group.care_giver.id) }"></i>
+                                {{ group.care_giver.name }}
+                            </h3>
                             <p class="text-sm text-slate-500">{{ group.care_giver.email }}</p>
                         </div>
                         <div class="text-sm sm:text-right">
                             <p class="font-semibold text-slate-700">{{ group.bookings_count }} booking{{ group.bookings_count === 1 ? '' : 's' }}</p>
                             <p class="font-bold text-teal-700">{{ money(group.booking_total) }}</p>
                         </div>
-                    </div>
-                    <div class="overflow-x-auto">
+                    </button>
+                    <div v-show="isExpanded(group.care_giver.id)" :id="`care-giver-bookings-${group.care_giver.id}`" class="overflow-x-auto">
                         <table class="min-w-full text-sm">
                             <thead class="text-left text-xs uppercase text-slate-500"><tr><th class="px-5 py-3">Booking</th><th class="px-5 py-3">Date</th><th class="px-5 py-3">Care type</th><th class="px-5 py-3">Care seeker</th><th class="px-5 py-3 text-right">Paid amount</th></tr></thead>
-                            <tbody class="divide-y divide-slate-100"><tr v-for="booking in group.bookings" :key="booking.id"><td class="px-5 py-3 font-semibold">#{{ booking.id }}</td><td class="px-5 py-3">{{ date(booking.scheduled_date) }}</td><td class="px-5 py-3 capitalize">{{ booking.care_type.replaceAll('_', ' ') }}</td><td class="px-5 py-3"><span class="block font-semibold">{{ booking.care_seeker.name }}</span><span class="block text-xs text-slate-500">{{ booking.care_seeker.email }}</span></td><td class="px-5 py-3 text-right font-semibold">{{ money(booking.amount) }}</td></tr></tbody>
+                            <tbody class="divide-y divide-slate-100"><tr v-for="booking in group.bookings" :key="booking.id"><td class="px-5 py-3 font-semibold">#{{ booking.id }}</td><td class="px-5 py-3">{{ date(booking.scheduled_date) }}</td><td class="px-5 py-3">{{ formatOption(careTypes, booking.care_type) }}</td><td class="px-5 py-3"><span class="block font-semibold">{{ booking.care_seeker.name }}</span><span class="block text-xs text-slate-500">{{ booking.care_seeker.email }}</span></td><td class="px-5 py-3 text-right font-semibold">{{ money(booking.amount) }}</td></tr></tbody>
                         </table>
                     </div>
                 </article>

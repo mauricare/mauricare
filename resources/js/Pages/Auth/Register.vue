@@ -4,12 +4,14 @@ import InputError from '@/Components/InputError.vue';
 import Modal from '@/Components/Modal.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
+import { useCareOptions } from '@/composables/useCareOptions';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
     privacyNoticeVersion: { type: String, required: true },
     termsVersion: { type: String, required: true },
 });
+const { carerTypes } = useCareOptions();
 
 const processing = ref(false);
 const showSuccessModal = ref(false);
@@ -223,11 +225,7 @@ const submit = async () => {
                         <label for="care_giver_type">Type</label>
                         <select id="care_giver_type" v-model="form.care_giver_type" required>
                             <option value="" disabled>Select a type</option>
-                            <option value="doctor">Doctor</option>
-                            <option value="nurse">Nurse</option>
-                            <option value="carers">Carers</option>
-                            <option value="physiotherapist">Physiotherapist</option>
-                            <option value="other">Other</option>
+                            <option v-for="type in carerTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
                         </select>
                         <InputError :message="form.errors.care_giver_type" />
                     </div>

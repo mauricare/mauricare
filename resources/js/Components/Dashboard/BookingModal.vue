@@ -4,7 +4,8 @@ import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import { careTypes, carerTypes, editableStatuses, statusClasses } from '@/constants/careBookings';
+import { editableStatuses, statusClasses } from '@/constants/careBookings';
+import { useCareOptions } from '@/composables/useCareOptions';
 import { formatStatus, providerName } from '@/utils/bookingFormat';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
@@ -20,6 +21,7 @@ const props = defineProps({
         default: null,
     },
 });
+const { careTypes, carerTypes } = useCareOptions();
 
 const emit = defineEmits(['close', 'saved', 'view-care-giver']);
 

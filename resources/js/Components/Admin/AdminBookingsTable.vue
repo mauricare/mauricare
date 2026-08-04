@@ -1,14 +1,18 @@
 <script setup>
-import { careTypes, statusClasses, statusLabels } from '@/constants/careBookings';
+import { statusClasses, statusLabels } from '@/constants/careBookings';
+import { useCareOptions } from '@/composables/useCareOptions';
 import { confirmAdminAction, showAdminError, showAdminSuccess } from '@/utils/adminAlerts';
 import { formatOption } from '@/utils/bookingFormat';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const bookings = ref([]);
+const { careTypes } = useCareOptions();
 const meta = ref({ current_page: 1, last_page: 1, total: 0 });
 const statusCounts = ref({});
 const activeStatus = ref('');
 const search = ref('');
+const sortBy = ref('booking');
+const sortDirection = ref('desc');
 const loading = ref(false);
 const error = ref('');
 let searchTimer;
@@ -30,6 +34,8 @@ const loadBookings = async (page = 1) => {
             params: {
                 status: activeStatus.value || undefined,
                 search: search.value || undefined,
+                sort_by: sortBy.value,
+                sort_direction: sortDirection.value,
                 page,
                 per_page: 10,
             },
@@ -50,6 +56,23 @@ watch(search, () => {
     searchTimer = setTimeout(() => loadBookings(1), 350);
 });
 onMounted(() => loadBookings());
+
+const sortBookings = (column) => {
+    if (sortBy.value === column) {
+        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortDirection.value = column === 'booking' || column === 'schedule' ? 'desc' : 'asc';
+    }
+
+    loadBookings(1);
+};
+
+const sortIcon = (column) => {
+    if (sortBy.value !== column) return 'fa-solid fa-sort text-slate-300';
+
+    return sortDirection.value === 'asc' ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down';
+};
 
 const cancelBooking = async (booking) => {
     const confirmed = await confirmAdminAction({
@@ -108,13 +131,19 @@ const formatMoney = (amount) => `Rs ${Number(amount || 0).toFixed(2)}`;
             <table class="w-full min-w-[1100px] text-left text-sm">
                 <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
-                        <th class="px-5 py-3">Booking</th>
-                        <th class="px-5 py-3">Care seeker</th>
-                        <th class="px-5 py-3">Care giver</th>
-                        <th class="px-5 py-3">Schedule</th>
-                        <th class="px-5 py-3">Type</th>
-                        <th class="px-5 py-3">Amount</th>
-                        <th class="px-5 py-3">Status</th>
+                        <th v-for="column in [
+                            { key: 'booking', label: 'Booking' },
+                            { key: 'care_seeker', label: 'Care seeker' },
+                            { key: 'care_giver', label: 'Care giver' },
+                            { key: 'schedule', label: 'Schedule' },
+                            { key: 'type', label: 'Type' },
+                            { key: 'amount', label: 'Amount' },
+                            { key: 'status', label: 'Status' },
+                        ]" :key="column.key" class="px-5 py-3" :aria-sort="sortBy === column.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+                            <button type="button" class="inline-flex items-center gap-2 hover:text-slate-800" @click="sortBookings(column.key)">
+                                {{ column.label }} <i :class="sortIcon(column.key)"></i>
+                            </button>
+                        </th>
                         <th class="px-5 py-3 text-right">Action</th>
                     </tr>
                 </thead>

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
+use App\Models\CareOption;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -39,7 +40,7 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::requiredIf($role === 'care_giver'),
                 'nullable',
                 'string',
-                Rule::in(['doctor', 'nurse', 'carers', 'physiotherapist', 'other']),
+                Rule::in(CareOption::values('carer_type', false)),
             ],
             'cv' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
             'care_for' => [Rule::requiredIf($role === 'care_seeker'), 'nullable', 'string', 'max:255'],

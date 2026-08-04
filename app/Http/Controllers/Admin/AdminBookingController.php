@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CareBooking;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,10 +18,14 @@ class AdminBookingController extends Controller
         $validated = $request->validate([
             'status' => ['nullable', Rule::enum(BookingStatus::class)],
             'search' => ['nullable', 'string', 'max:255'],
+            'sort_by' => ['nullable', 'in:booking,care_seeker,care_giver,schedule,type,amount,status'],
+            'sort_direction' => ['nullable', 'in:asc,desc'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:5', 'max:50'],
         ]);
         $search = trim($validated['search'] ?? '');
+        $sortBy = $validated['sort_by'] ?? 'booking';
+        $sortDirection = $validated['sort_direction'] ?? 'desc';
 
         $filteredQuery = CareBooking::query()
             ->when($search !== '', fn (Builder $query): Builder => $this->applySearch($query, $search));
@@ -31,7 +36,22 @@ class AdminBookingController extends Controller
                 isset($validated['status']),
                 fn (Builder $query): Builder => $query->where('status', $validated['status'])
             )
-            ->latest('id')
+            ->when($sortBy === 'booking', fn (Builder $query): Builder => $query->orderBy('id', $sortDirection))
+            ->when($sortBy === 'care_seeker', fn (Builder $query): Builder => $query->orderBy(
+                User::select('name')->whereColumn('users.id', 'care_bookings.user_id'),
+                $sortDirection
+            ))
+            ->when($sortBy === 'care_giver', fn (Builder $query): Builder => $query->orderBy(
+                User::select('name')->whereColumn('users.id', 'care_bookings.care_giver_id'),
+                $sortDirection
+            ))
+            ->when($sortBy === 'schedule', fn (Builder $query): Builder => $query
+                ->orderBy('scheduled_date', $sortDirection)
+                ->orderBy('start_time', $sortDirection))
+            ->when($sortBy === 'type', fn (Builder $query): Builder => $query->orderBy('care_type', $sortDirection))
+            ->when($sortBy === 'amount', fn (Builder $query): Builder => $query->orderBy('amount_due', $sortDirection))
+            ->when($sortBy === 'status', fn (Builder $query): Builder => $query->orderBy('status', $sortDirection))
+            ->orderBy('id', $sortDirection)
             ->paginate($validated['per_page'] ?? 10);
 
         $counts = (clone $filteredQuery)

@@ -5,13 +5,15 @@ import CareGiverProfileModal from '@/Components/Dashboard/CareGiverProfileModal.
 import HelpSupportSection from '@/Components/Dashboard/HelpSupportSection.vue';
 import MessagesSection from '@/Components/Dashboard/MessagesSection.vue';
 import SectionEmptyState from '@/Components/Dashboard/SectionEmptyState.vue';
-import { bookingFilters, careTypes, statusClasses } from '@/constants/careBookings';
+import { bookingFilters, statusClasses } from '@/constants/careBookings';
+import { useCareOptions } from '@/composables/useCareOptions';
 import { formatAmount, formatDateParts, formatOption, formatStatus, formatTime, providerName } from '@/utils/bookingFormat';
 import CareSeekerLayout from '@/Layouts/CareSeekerLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 
 const page = usePage();
+const { careTypes } = useCareOptions();
 const bookings = ref([]);
 const totalBookings = ref(0);
 const hasLoadedBookings = ref(false);

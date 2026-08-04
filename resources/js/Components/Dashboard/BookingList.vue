@@ -1,5 +1,6 @@
 <script setup>
-import { careTypes, statusClasses } from '@/constants/careBookings';
+import { statusClasses } from '@/constants/careBookings';
+import { useCareOptions } from '@/composables/useCareOptions';
 import { formatDateParts, formatOption, formatStatus, formatTime, providerName, seekerName } from '@/utils/bookingFormat';
 
 const props = defineProps({
@@ -36,6 +37,7 @@ const props = defineProps({
         default: false,
     },
 });
+const { careTypes } = useCareOptions();
 
 defineEmits(['select', 'retry', 'create']);
 

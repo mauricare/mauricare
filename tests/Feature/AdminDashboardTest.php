@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
 use App\Models\CareBooking;
+use App\Models\CareOption;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Review;
@@ -25,6 +26,32 @@ class AdminDashboardTest extends TestCase
             ->get('/dashboard')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('AdminDashboard'));
+    }
+
+    public function test_admin_can_manage_dynamic_care_options(): void
+    {
+        $admin = $this->admin();
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/admin/care-options', [
+                'category' => 'care_type',
+                'label' => 'Dementia Support',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.value', 'dementia_support')
+            ->assertJsonPath('data.is_active', true);
+
+        $optionId = $response->json('data.id');
+        $this->patchJson("/api/admin/care-options/{$optionId}", [
+            'label' => 'Specialist Dementia Support',
+            'sort_order' => 1,
+            'is_active' => false,
+        ])->assertOk()
+            ->assertJsonPath('data.label', 'Specialist Dementia Support')
+            ->assertJsonPath('data.is_active', false);
+
+        $this->assertNotContains('dementia_support', CareOption::values('care_type'));
+        $this->assertContains('dementia_support', CareOption::values('care_type', false));
     }
 
     public function test_non_admin_cannot_use_admin_endpoints(): void
@@ -70,6 +97,97 @@ class AdminDashboardTest extends TestCase
             'user_id' => $careGiver->id,
             'is_active' => false,
         ]);
+    }
+
+    public function test_admin_can_filter_each_user_type_by_active_status(): void
+    {
+        $admin = $this->admin();
+        $activeSeeker = $this->careSeeker(['email' => 'active-seeker@example.com']);
+        $inactiveSeeker = $this->careSeeker(['email' => 'inactive-seeker@example.com']);
+        $inactiveSeeker->careSeekerProfile()->update(['is_active' => false]);
+        $activeGiver = $this->careGiver(['email' => 'active-giver@example.com']);
+        $inactiveGiver = $this->careGiver(['email' => 'inactive-giver@example.com']);
+        $inactiveGiver->careGiverProfile()->update(['is_active' => false]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-seekers?status=active')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $activeSeeker->id)
+            ->assertJsonPath('meta.total', 1);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-seekers?status=inactive')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $inactiveSeeker->id);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-givers?status=active')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $activeGiver->id);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-givers?status=inactive')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $inactiveGiver->id);
+    }
+
+    public function test_status_filter_and_display_use_the_profile_for_the_current_tab(): void
+    {
+        $admin = $this->admin();
+        $user = $this->careSeeker(['email' => 'dual-role@example.com']);
+        Role::findOrCreate('care_giver');
+        $user->assignRole('care_giver');
+        $user->careGiverProfile()->create([
+            'type' => 'nurse',
+            'is_active' => false,
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-seekers?status=active')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $user->id)
+            ->assertJsonPath('data.0.role', 'care_seeker')
+            ->assertJsonPath('data.0.is_active', true);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-givers?status=inactive')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $user->id)
+            ->assertJsonPath('data.0.role', 'care_giver')
+            ->assertJsonPath('data.0.is_active', false);
+    }
+
+    public function test_admin_can_sort_users_by_name_city_and_joined_date(): void
+    {
+        $admin = $this->admin();
+        $zulu = $this->careSeeker(['name' => 'Zulu User', 'created_at' => '2026-01-01 00:00:00']);
+        $alpha = $this->careSeeker(['name' => 'Alpha User', 'created_at' => '2026-02-01 00:00:00']);
+        $zulu->profile()->update(['city' => 'Albion']);
+        $alpha->profile()->update(['city' => 'Vacoas']);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-seekers?sort_by=user&sort_direction=asc')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $alpha->id)
+            ->assertJsonPath('data.1.id', $zulu->id);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-seekers?sort_by=city&sort_direction=asc')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $zulu->id)
+            ->assertJsonPath('data.1.id', $alpha->id);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/care-seekers?sort_by=joined&sort_direction=desc')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $alpha->id)
+            ->assertJsonPath('data.1.id', $zulu->id);
     }
 
     public function test_care_giver_view_includes_booking_counts_and_reviews(): void
@@ -250,6 +368,39 @@ class AdminDashboardTest extends TestCase
             'id' => $open->id,
             'status' => BookingStatus::Cancelled->value,
         ]);
+    }
+
+    public function test_admin_can_sort_bookings(): void
+    {
+        $admin = $this->admin();
+        $zuluSeeker = $this->careSeeker(['name' => 'Zulu Seeker']);
+        $alphaSeeker = $this->careSeeker(['name' => 'Alpha Seeker']);
+        $later = CareBooking::factory()->for($zuluSeeker)->create([
+            'scheduled_date' => '2026-09-10',
+            'amount_due' => 500,
+        ]);
+        $earlier = CareBooking::factory()->for($alphaSeeker)->create([
+            'scheduled_date' => '2026-08-10',
+            'amount_due' => 100,
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/bookings?sort_by=care_seeker&sort_direction=asc')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $earlier->id)
+            ->assertJsonPath('data.1.id', $later->id);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/bookings?sort_by=schedule&sort_direction=desc')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $later->id)
+            ->assertJsonPath('data.1.id', $earlier->id);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/bookings?sort_by=amount&sort_direction=asc')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $earlier->id)
+            ->assertJsonPath('data.1.id', $later->id);
     }
 
     public function test_admin_cannot_cancel_closed_or_cancelled_bookings(): void

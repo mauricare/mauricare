@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
+use App\Models\CareOption;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -38,7 +39,7 @@ class AdminUpdateUserRequest extends FormRequest
             'care_giver_type' => [
                 Rule::requiredIf($isCareGiver),
                 'nullable',
-                Rule::in(['doctor', 'nurse', 'carers', 'physiotherapist', 'other']),
+                Rule::in(CareOption::values('carer_type', false)),
             ],
             'care_for' => [Rule::requiredIf($isCareSeeker), 'nullable', 'string', 'max:255'],
             'care_needs' => [Rule::requiredIf($isCareSeeker), 'nullable', 'string', 'max:1000'],

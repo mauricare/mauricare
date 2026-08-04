@@ -3,6 +3,7 @@
 namespace App\Rest\Controllers;
 
 use App\Models\User;
+use App\Models\CareOption;
 use App\Rest\Resources\UserResource;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
@@ -46,7 +47,7 @@ class UsersController extends Controller
                 Rule::requiredIf($role === 'care_giver'),
                 'nullable',
                 'string',
-                Rule::in(['doctor', 'nurse', 'carers', 'physiotherapist', 'other']),
+                Rule::in(CareOption::values('carer_type')),
             ],
             'mutate.0.attributes.cv' => [
                 'nullable',

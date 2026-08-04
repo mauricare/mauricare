@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\CareOption;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,7 +46,7 @@ class RegisteredUserController extends Controller
             'phone' => 'required|string|max:40',
             'address' => 'nullable|string|max:255',
             'city' => 'required_unless:role,agency|nullable|string|max:255',
-            'care_giver_type' => 'required_if:role,care_giver|nullable|string|in:doctor,nurse,carers,physiotherapist,other',
+            'care_giver_type' => ['required_if:role,care_giver', 'nullable', 'string', Rule::in(CareOption::values('carer_type'))],
             'cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'care_for' => 'required_if:role,care_seeker|nullable|string|max:255',
             'care_needs' => 'nullable|string|max:1000',
