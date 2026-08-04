@@ -5,12 +5,18 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 const page = usePage();
 const root = ref(null);
 const searchInput = ref(null);
+const reasonInput = ref(null);
 const isOpen = ref(false);
+const isConfirming = ref(false);
 const isLoading = ref(false);
 const isStarting = ref(false);
 const search = ref('');
 const users = ref([]);
 const error = ref('');
+const modalError = ref('');
+const selectedUser = ref(null);
+const reason = ref('');
+const password = ref('');
 let searchTimer = null;
 let requestNumber = 0;
 
@@ -57,19 +63,43 @@ const close = () => {
     isOpen.value = false;
 };
 
-const startImpersonation = (user) => {
-    const reason = window.prompt('Enter the support or care reason for accessing this account:');
-    if (!reason) return;
-    const password = window.prompt('Confirm your administrator password:');
-    if (!password) return;
+const openConfirmation = async (user) => {
+    selectedUser.value = user;
+    reason.value = '';
+    password.value = '';
+    modalError.value = '';
+    isOpen.value = false;
+    isConfirming.value = true;
+    await nextTick();
+    reasonInput.value?.focus();
+};
+
+const closeConfirmation = () => {
+    if (isStarting.value) return;
+
+    isConfirming.value = false;
+    selectedUser.value = null;
+    reason.value = '';
+    password.value = '';
+    modalError.value = '';
+};
+
+const startImpersonation = () => {
+    if (!reason.value.trim() || !password.value) {
+        modalError.value = 'Enter a reason and your administrator password.';
+        return;
+    }
 
     isStarting.value = true;
-    error.value = '';
+    modalError.value = '';
 
-    router.post(route('impersonation.start', user.id), { reason, password }, {
+    router.post(route('impersonation.start', selectedUser.value.id), {
+        reason: reason.value.trim(),
+        password: password.value,
+    }, {
         preserveScroll: false,
-        onError: () => {
-            error.value = 'Unable to impersonate this user.';
+        onError: (errors) => {
+            modalError.value = errors.reason || errors.password || 'Unable to impersonate this user.';
         },
         onFinish: () => {
             isStarting.value = false;
@@ -95,7 +125,11 @@ const handleDocumentClick = (event) => {
 
 const handleKeydown = (event) => {
     if (event.key === 'Escape') {
-        close();
+        if (isConfirming.value) {
+            closeConfirmation();
+        } else {
+            close();
+        }
     }
 };
 
@@ -173,7 +207,7 @@ onUnmounted(() => {
                     type="button"
                     class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
                     :disabled="isStarting"
-                    @click="startImpersonation(user)"
+                    @click="openConfirmation(user)"
                 >
                     <img
                         v-if="user.avatar_url"
@@ -197,5 +231,95 @@ onUnmounted(() => {
                 </button>
             </div>
         </div>
+
+        <Teleport to="body">
+            <div
+                v-if="isConfirming"
+                class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-[2px]"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="impersonation-modal-title"
+                @click.self="closeConfirmation"
+            >
+                <form
+                    class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+                    @submit.prevent="startImpersonation"
+                >
+                    <div class="flex items-start gap-4 border-b border-slate-100 px-6 py-5">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e8f7f4] text-[#117d73]">
+                            <i class="fa-solid fa-user-secret text-lg"></i>
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <h2 id="impersonation-modal-title" class="text-lg font-bold text-slate-950">
+                                Impersonate {{ selectedUser?.name }}
+                            </h2>
+                            <p class="mt-1 text-sm leading-5 text-slate-500">
+                                This access is audited. Provide a support or care reason before continuing.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+                            aria-label="Close"
+                            :disabled="isStarting"
+                            @click="closeConfirmation"
+                        >
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 px-6 py-5">
+                        <label class="block">
+                            <span class="mb-1.5 block text-sm font-semibold text-slate-700">Reason for access</span>
+                            <textarea
+                                ref="reasonInput"
+                                v-model="reason"
+                                rows="3"
+                                required
+                                maxlength="500"
+                                placeholder="Describe the support or care task..."
+                                class="block w-full resize-none rounded-xl border-slate-300 text-sm focus:border-[#117d73] focus:ring-[#117d73]"
+                            ></textarea>
+                        </label>
+
+                        <label class="block">
+                            <span class="mb-1.5 block text-sm font-semibold text-slate-700">Administrator password</span>
+                            <input
+                                v-model="password"
+                                type="password"
+                                required
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
+                                class="block w-full rounded-xl border-slate-300 text-sm focus:border-[#117d73] focus:ring-[#117d73]"
+                            />
+                        </label>
+
+                        <p v-if="modalError" class="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700" role="alert">
+                            {{ modalError }}
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col-reverse gap-3 bg-slate-50 px-6 py-4 sm:flex-row sm:justify-end">
+                        <button
+                            type="button"
+                            class="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+                            :disabled="isStarting"
+                            @click="closeConfirmation"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#117d73] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0d665e] disabled:cursor-wait disabled:opacity-60"
+                            :disabled="isStarting"
+                        >
+                            <i v-if="isStarting" class="fa-solid fa-spinner fa-spin"></i>
+                            <i v-else class="fa-solid fa-user-secret"></i>
+                            {{ isStarting ? 'Starting...' : 'Start impersonation' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Teleport>
     </div>
 </template>

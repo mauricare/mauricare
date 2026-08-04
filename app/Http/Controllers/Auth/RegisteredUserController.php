@@ -24,6 +24,7 @@ class RegisteredUserController extends Controller
     {
         return Inertia::render('Auth/Register', [
             'privacyNoticeVersion' => config('privacy.notice_version'),
+            'termsVersion' => config('terms.version'),
         ]);
     }
 
@@ -46,7 +47,7 @@ class RegisteredUserController extends Controller
             'care_giver_type' => 'required_if:role,care_giver|nullable|string|in:doctor,nurse,carers,physiotherapist,other',
             'cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'care_for' => 'required_if:role,care_seeker|nullable|string|max:255',
-            'care_needs' => 'required_if:role,care_seeker|nullable|string|max:1000',
+            'care_needs' => 'nullable|string|max:1000',
             'preferred_contact_method' => 'nullable|string|in:phone,email',
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_contact_phone' => 'nullable|string|max:40',
@@ -60,6 +61,8 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'privacy_notice_version' => ['required', 'string', 'in:'.config('privacy.notice_version')],
             'privacy_notice_accepted' => ['accepted'],
+            'terms_version' => ['required', 'string', 'in:'.config('terms.version')],
+            'terms_accepted' => ['accepted'],
             'health_data_consent' => ['required_if:role,care_seeker', 'accepted'],
             'data_subject_authority_confirmed' => ['required_if:role,care_seeker', 'accepted'],
         ]);
@@ -147,6 +150,8 @@ class RegisteredUserController extends Controller
         $user->privacyAcceptances()->create([
             'notice_version' => $request->privacy_notice_version,
             'notice_accepted_at' => now(),
+            'terms_version' => $request->terms_version,
+            'terms_accepted_at' => now(),
             'health_data_consent_at' => $request->role === 'care_seeker' ? now() : null,
             'data_subject_authority_confirmed_at' => $request->role === 'care_seeker' ? now() : null,
             'ip_address' => $request->ip(),

@@ -1,5 +1,6 @@
 <script setup>
 import AdminUserModal from '@/Components/Admin/AdminUserModal.vue';
+import Modal from '@/Components/Modal.vue';
 import { confirmAdminAction, showAdminError, showAdminSuccess } from '@/utils/adminAlerts';
 import { computed, onMounted, ref, watch } from 'vue';
 
@@ -17,6 +18,10 @@ const loading = ref(false);
 const error = ref('');
 const selectedUserId = ref(null);
 const modalMode = ref('view');
+const messageUser = ref(null);
+const messageBody = ref('');
+const messageError = ref('');
+const sendingMessage = ref(false);
 let searchTimer;
 
 const endpoint = computed(() => props.type === 'care_giver' ? '/api/admin/care-givers' : '/api/admin/care-seekers');
@@ -51,6 +56,46 @@ onMounted(() => loadUsers());
 const openModal = (user, mode) => {
     selectedUserId.value = user.id;
     modalMode.value = mode;
+};
+
+const openMessageModal = (user) => {
+    messageUser.value = user;
+    messageBody.value = '';
+    messageError.value = '';
+};
+
+const closeMessageModal = () => {
+    if (sendingMessage.value) return;
+
+    messageUser.value = null;
+    messageBody.value = '';
+    messageError.value = '';
+};
+
+const sendMessage = async () => {
+    const body = messageBody.value.trim();
+    if (!body) {
+        messageError.value = 'Enter a message before sending.';
+        return;
+    }
+
+    sendingMessage.value = true;
+    messageError.value = '';
+
+    try {
+        await window.axios.post(`/api/messages/${messageUser.value.id}`, { body });
+        const recipientName = messageUser.value.name;
+        closeMessageModal();
+        messageUser.value = null;
+        messageBody.value = '';
+        showAdminSuccess(`Message sent to ${recipientName}.`);
+    } catch (exception) {
+        messageError.value = exception.response?.data?.errors?.body?.[0]
+            || exception.response?.data?.message
+            || 'Unable to send this message.';
+    } finally {
+        sendingMessage.value = false;
+    }
 };
 
 const toggleStatus = async (user) => {
@@ -150,6 +195,7 @@ const formatDate = (date) => date ? new Intl.DateTimeFormat('en-GB', { dateStyle
                         <td class="px-5 py-4">
                             <div class="flex justify-end gap-1">
                                 <button type="button" title="View profile" class="rounded-lg p-2 text-slate-500 hover:bg-sky-50 hover:text-sky-700" @click="openModal(user, 'view')"><i class="fa-solid fa-eye"></i></button>
+                                <button type="button" title="Send message" :aria-label="`Send message to ${user.name}`" class="rounded-lg p-2 text-slate-500 hover:bg-teal-50 hover:text-[#117d73]" @click="openMessageModal(user)"><i class="fa-solid fa-envelope"></i></button>
                                 <button type="button" title="Edit" class="rounded-lg p-2 text-slate-500 hover:bg-amber-50 hover:text-amber-700" @click="openModal(user, 'edit')"><i class="fa-solid fa-pen"></i></button>
                                 <button type="button" :title="user.is_active ? 'Deactivate' : 'Activate'" class="rounded-lg p-2" :class="user.is_active ? 'text-emerald-600 hover:bg-slate-100 hover:text-slate-600' : 'text-slate-400 hover:bg-emerald-50 hover:text-emerald-700'" @click="toggleStatus(user)"><i class="fa-solid fa-power-off"></i></button>
                                 <button type="button" title="Delete" class="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-700" @click="deleteUser(user)"><i class="fa-solid fa-trash"></i></button>
@@ -176,4 +222,47 @@ const formatDate = (date) => date ? new Intl.DateTimeFormat('en-GB', { dateStyle
         @close="selectedUserId = null"
         @saved="loadUsers(meta.current_page)"
     />
+
+    <Modal :show="messageUser !== null" max-width="lg" @close="closeMessageModal">
+        <form v-if="messageUser" @submit.prevent="sendMessage">
+            <div class="flex items-start gap-4 border-b border-slate-100 px-6 py-5">
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal-50 text-[#117d73]">
+                    <i class="fa-solid fa-envelope"></i>
+                </span>
+                <div class="min-w-0 flex-1">
+                    <h2 class="text-lg font-bold text-slate-950">Send message</h2>
+                    <p class="mt-1 truncate text-sm text-slate-500">To {{ messageUser.name }} · {{ messageUser.email }}</p>
+                </div>
+                <button type="button" :disabled="sendingMessage" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50" aria-label="Close" @click="closeMessageModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="px-6 py-5">
+                <label for="admin-message-body" class="mb-2 block text-sm font-semibold text-slate-700">Message</label>
+                <textarea
+                    id="admin-message-body"
+                    v-model="messageBody"
+                    rows="6"
+                    maxlength="2000"
+                    required
+                    autofocus
+                    placeholder="Write your message..."
+                    class="block w-full resize-y rounded-xl border-slate-300 text-sm focus:border-[#117d73] focus:ring-[#117d73]"
+                ></textarea>
+                <div class="mt-2 flex items-start justify-between gap-3">
+                    <p v-if="messageError" class="text-sm font-medium text-red-600" role="alert">{{ messageError }}</p>
+                    <span class="ml-auto text-xs text-slate-400">{{ messageBody.length }}/2000</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col-reverse gap-3 bg-slate-50 px-6 py-4 sm:flex-row sm:justify-end">
+                <button type="button" :disabled="sendingMessage" class="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50" @click="closeMessageModal">Cancel</button>
+                <button type="submit" :disabled="sendingMessage || !messageBody.trim()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#117d73] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0d665e] disabled:cursor-not-allowed disabled:opacity-50">
+                    <i :class="sendingMessage ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-paper-plane'"></i>
+                    {{ sendingMessage ? 'Sending...' : 'Send message' }}
+                </button>
+            </div>
+        </form>
+    </Modal>
 </template>

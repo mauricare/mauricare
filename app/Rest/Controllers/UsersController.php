@@ -55,7 +55,7 @@ class UsersController extends Controller
                 'max:5120',
             ],
             'mutate.0.attributes.care_for' => [Rule::requiredIf($role === 'care_seeker'), 'nullable', 'string', 'max:255'],
-            'mutate.0.attributes.care_needs' => [Rule::requiredIf($role === 'care_seeker'), 'nullable', 'string', 'max:1000'],
+            'mutate.0.attributes.care_needs' => ['nullable', 'string', 'max:1000'],
             'mutate.0.attributes.preferred_contact_method' => ['nullable', 'string', Rule::in(['phone', 'email'])],
             'mutate.0.attributes.emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'mutate.0.attributes.emergency_contact_phone' => ['nullable', 'string', 'max:40'],
@@ -74,6 +74,8 @@ class UsersController extends Controller
             'mutate.0.attributes.password' => ['required', 'confirmed', Rules\Password::defaults()],
             'mutate.0.attributes.privacy_notice_version' => ['required', 'string', Rule::in([config('privacy.notice_version')])],
             'mutate.0.attributes.privacy_notice_accepted' => ['accepted'],
+            'mutate.0.attributes.terms_version' => ['required', 'string', Rule::in([config('terms.version')])],
+            'mutate.0.attributes.terms_accepted' => ['accepted'],
             'mutate.0.attributes.health_data_consent' => [Rule::requiredIf($role === 'care_seeker'), 'accepted'],
             'mutate.0.attributes.data_subject_authority_confirmed' => [Rule::requiredIf($role === 'care_seeker'), 'accepted'],
         ], [], [
@@ -101,6 +103,7 @@ class UsersController extends Controller
             'mutate.0.attributes.agency_license' => 'agency license',
             'mutate.0.attributes.password' => 'password',
             'mutate.0.attributes.privacy_notice_accepted' => 'privacy notice acknowledgement',
+            'mutate.0.attributes.terms_accepted' => 'Terms of Use acceptance',
             'mutate.0.attributes.health_data_consent' => 'health data consent',
             'mutate.0.attributes.data_subject_authority_confirmed' => 'authority to provide care information',
         ]);
@@ -152,7 +155,7 @@ class UsersController extends Controller
             if ($role === 'care_seeker') {
                 $user->careSeekerProfile()->create([
                     'care_for' => $attributes['care_for'],
-                    'care_needs' => $attributes['care_needs'],
+                    'care_needs' => $attributes['care_needs'] ?? null,
                     'preferred_contact_method' => $attributes['preferred_contact_method'] ?? null,
                     'emergency_contact_name' => $attributes['emergency_contact_name'] ?? null,
                     'emergency_contact_phone' => $attributes['emergency_contact_phone'] ?? null,
@@ -186,6 +189,8 @@ class UsersController extends Controller
             $user->privacyAcceptances()->create([
                 'notice_version' => $attributes['privacy_notice_version'],
                 'notice_accepted_at' => now(),
+                'terms_version' => $attributes['terms_version'],
+                'terms_accepted_at' => now(),
                 'health_data_consent_at' => $role === 'care_seeker' ? now() : null,
                 'data_subject_authority_confirmed_at' => $role === 'care_seeker' ? now() : null,
                 'ip_address' => $request->ip(),

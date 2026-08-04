@@ -59,6 +59,11 @@ Route::get('/privacy', fn () => Inertia::render('PrivacyPolicy', [
     'dpoEmail' => config('privacy.dpo_email'),
 ]))->name('privacy-policy');
 
+Route::get('/terms', fn () => Inertia::render('TermsOfUse', [
+    'version' => config('terms.version'),
+    'contactEmail' => config('terms.contact_email'),
+]))->name('terms-of-use');
+
 Route::get('/dashboard', function (Request $request) {
     if ($request->user()->hasRole('admin')) {
         return Inertia::render('AdminDashboard');

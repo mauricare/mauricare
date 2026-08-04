@@ -6,7 +6,10 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, ref } from 'vue';
 
-const props = defineProps({ privacyNoticeVersion: { type: String, required: true } });
+const props = defineProps({
+    privacyNoticeVersion: { type: String, required: true },
+    termsVersion: { type: String, required: true },
+});
 
 const processing = ref(false);
 const showSuccessModal = ref(false);
@@ -44,6 +47,8 @@ const form = useForm({
     password_confirmation: '',
     privacy_notice_version: props.privacyNoticeVersion,
     privacy_notice_accepted: false,
+    terms_version: props.termsVersion,
+    terms_accepted: false,
     health_data_consent: false,
     data_subject_authority_confirmed: false,
 });
@@ -86,6 +91,8 @@ const submit = async () => {
     appendAttribute(payload, 'password_confirmation', form.password_confirmation);
     appendAttribute(payload, 'privacy_notice_version', form.privacy_notice_version);
     appendAttribute(payload, 'privacy_notice_accepted', form.privacy_notice_accepted ? '1' : '0');
+    appendAttribute(payload, 'terms_version', form.terms_version);
+    appendAttribute(payload, 'terms_accepted', form.terms_accepted ? '1' : '0');
 
     if (form.role === 'care_giver') {
         appendAttribute(payload, 'care_giver_type', form.care_giver_type);
@@ -162,6 +169,8 @@ const submit = async () => {
             </button>
         </div>
         <InputError class="mt-2" :message="form.errors.role" />
+
+        <p class="required-field-note"><span aria-hidden="true">*</span> Required field</p>
 
         <form class="auth-form" @submit.prevent="submit">
             <div v-if="form.role !== 'agency'" class="form-grid">
@@ -280,7 +289,6 @@ const submit = async () => {
                         id="care_needs"
                         v-model="form.care_needs"
                         rows="4"
-                        required
                         placeholder="Tell us about the support needed at home."
                     ></textarea>
                     <InputError :message="form.errors.care_needs" />
@@ -384,7 +392,8 @@ const submit = async () => {
             <div class="form-grid">
                 <div class="form-field">
                     <label for="password">Password</label>
-                    <input id="password" v-model="form.password" type="password" required autocomplete="new-password" />
+                    <input id="password" v-model="form.password" type="password" required minlength="12" autocomplete="new-password" />
+                    <p class="password-help">Use at least 12 characters with uppercase, lowercase, a number, and a symbol.</p>
                     <InputError :message="form.errors.password" />
                 </div>
 
@@ -395,6 +404,7 @@ const submit = async () => {
                         v-model="form.password_confirmation"
                         type="password"
                         required
+                        minlength="12"
                         autocomplete="new-password"
                     />
                     <InputError :message="form.errors.password_confirmation" />
@@ -402,6 +412,12 @@ const submit = async () => {
             </div>
 
             <div class="consent-panel">
+                <label class="consent-row">
+                    <input v-model="form.terms_accepted" type="checkbox" required />
+                    <span>I have read and agree to the <Link :href="route('terms-of-use')" target="_blank">Terms of Use</Link> (version {{ termsVersion }}), including the direct-payment process and the 10–15% caregiver platform fee on completed Platform earnings.</span>
+                </label>
+                <InputError :message="form.errors.terms_accepted" />
+
                 <label class="consent-row">
                     <input v-model="form.privacy_notice_accepted" type="checkbox" required />
                     <span>I have read the <Link :href="route('privacy-policy')" target="_blank">Privacy Notice</Link> (version {{ privacyNoticeVersion }}) and understand how Mauricare uses my personal data.</span>
@@ -503,6 +519,24 @@ const submit = async () => {
     margin-top: 1.4rem;
 }
 
+.required-field-note {
+    margin: .75rem 0 0;
+    color: #64748b;
+    font-size: .78rem;
+    font-weight: 700;
+    text-align: right;
+}
+
+.required-field-note span,
+.form-field:has(input[required], select[required], textarea[required]) > label::after {
+    color: #dc2626;
+}
+
+.form-field:has(input[required], select[required], textarea[required]) > label::after {
+    content: ' *';
+    font-weight: 900;
+}
+
 .status-message {
     border-radius: 6px;
     padding: 0.75rem 0.9rem;
@@ -515,6 +549,7 @@ const submit = async () => {
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
     gap: 1rem;
 }
 
@@ -582,6 +617,13 @@ const submit = async () => {
 
 .form-field input.file-input::file-selector-button:hover {
     background: #0e7faf;
+}
+
+.password-help {
+    margin: 0;
+    color: #64748b;
+    font-size: .78rem;
+    line-height: 1.45;
 }
 
 .auth-button {

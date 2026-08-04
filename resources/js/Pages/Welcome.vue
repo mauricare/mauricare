@@ -439,6 +439,10 @@ onBeforeUnmount(() => {
                             <div class="col-lg-8">
                                 <span class="caregiver-kicker">Caregiver Opportunities</span>
                                 <h2>Join Mauricare as a Healthcare Provider</h2>
+                                <div class="caregiver-free-banner">
+                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                    <span><strong>100% free to join</strong> — no signup fee, subscription, or fixed monthly cost</span>
+                                </div>
                                 <p class="caregiver-lead">
                                     Mauricare connects independent healthcare providers with individuals and families looking for
                                     trusted home care services across Mauritius — you stay independent, we simply bring the patients
@@ -495,13 +499,14 @@ onBeforeUnmount(() => {
                             <div class="col-lg-4">
                                 <div class="caregiver-cta">
                                     <span class="caregiver-cta-icon"><i class="fa-solid fa-hand-holding-medical" aria-hidden="true"></i></span>
+                                    <span class="caregiver-cta-free">100% FREE TO JOIN</span>
                                     <h3>Ready to grow your practice?</h3>
                                     <p>Start offering your healthcare services to more families across Mauritius with Mauricare.</p>
                                     <a href="/register?role=care_giver" class="btn caregiver-button fw-semibold">
                                         <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
                                         <span>Become a Provider</span>
                                     </a>
-                                    <span class="caregiver-cta-note">Free to join · No fixed monthly costs - Pay as your earn</span>
+                                    <span class="caregiver-cta-note">No signup fee · No subscription · Commission only after you earn from completed bookings</span>
                                 </div>
                             </div>
                         </div>
@@ -968,20 +973,87 @@ onBeforeUnmount(() => {
 }
 
 :deep(.mauricare-nav .nav-link) {
+    position: relative;
     color: #071f48;
     font-size: 0.9rem;
     font-weight: 600;
+    border-radius: 0.55rem;
     padding-right: 1rem;
     padding-left: 1rem;
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+:deep(.mauricare-nav .nav-link::after) {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.25rem;
+    left: 1rem;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #0aa6bd, #e81b78);
+    content: '';
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.25s ease;
+}
+
+:deep(.mauricare-nav .nav-link:hover),
+:deep(.mauricare-nav .nav-link:focus-visible) {
+    color: #087f95;
+    background: rgba(10, 166, 189, 0.09);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+:deep(.mauricare-nav .nav-link:hover::after),
+:deep(.mauricare-nav .nav-link:focus-visible::after) {
+    transform: scaleX(1);
 }
 
 :deep(.mauricare-nav.is-scrolled .nav-link) {
     color: rgba(255, 255, 255, 0.86);
 }
 
+:deep(.mauricare-nav.is-scrolled .nav-link:hover),
+:deep(.mauricare-nav.is-scrolled .nav-link:focus-visible) {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
 :deep(.mauricare-nav .btn-outline-light) {
+    position: relative;
+    overflow: hidden;
     color: #071f48;
     border-color: rgba(7, 31, 72, 0.5);
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+:deep(.mauricare-nav .btn-outline-light::after) {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0aa6bd, #e81b78);
+    content: '';
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.25s ease;
+}
+
+:deep(.mauricare-nav .btn-outline-light:hover),
+:deep(.mauricare-nav .btn-outline-light:focus-visible) {
+    color: #087f95;
+    border-color: #0aa6bd;
+    background: rgba(10, 166, 189, 0.1);
+    box-shadow: 0 8px 20px rgba(10, 166, 189, 0.18);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+:deep(.mauricare-nav .btn-outline-light:hover::after),
+:deep(.mauricare-nav .btn-outline-light:focus-visible::after) {
+    transform: scaleX(1);
 }
 
 :deep(.mauricare-nav.is-scrolled .btn-outline-light) {
@@ -989,12 +1061,21 @@ onBeforeUnmount(() => {
     border-color: rgba(255, 255, 255, 0.8);
 }
 
+:deep(.mauricare-nav.is-scrolled .btn-outline-light:hover),
+:deep(.mauricare-nav.is-scrolled .btn-outline-light:focus-visible) {
+    color: #fff;
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
 :deep(.mauricare-nav .navbar-collapse) {
     visibility: visible;
 }
 
 :deep(.mauricare-nav .navbar-brand) {
-    max-width: 290px;
+    justify-content: center;
+    width: 230px;
+    max-width: 230px;
 }
 
 :deep(.navbar-logo) {
@@ -1004,7 +1085,7 @@ onBeforeUnmount(() => {
     height: 78px;
     object-fit: contain;
     transform: scale(1.50);
-    transform-origin: left center;
+    transform-origin: center;
     transition: height 0.2s ease, transform 0.2s ease;
 }
 
@@ -1679,6 +1760,24 @@ onBeforeUnmount(() => {
     font-size: 1.06rem;
 }
 
+.caregiver-free-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: -0.25rem 0 1rem;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid rgba(223, 246, 192, 0.7);
+    border-radius: 10px;
+    background: rgba(223, 246, 192, 0.18);
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.caregiver-free-banner i,
+.caregiver-free-banner strong {
+    color: #dff6c0;
+}
+
 .caregiver-steps {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1787,6 +1886,16 @@ onBeforeUnmount(() => {
     font-weight: 800;
 }
 
+.caregiver-cta-free {
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    color: #17404a;
+    background: #dff6c0;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+}
+
 .caregiver-cta p {
     max-width: none;
     font-size: 0.92rem;
@@ -1820,7 +1929,8 @@ onBeforeUnmount(() => {
 .caregiver-cta-note {
     color: rgba(255, 255, 255, 0.85);
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 700;
+    line-height: 1.45;
 }
 
 @media (max-width: 768px) {
@@ -2195,8 +2305,22 @@ a.contact-method:focus-visible {
     .care-service-card,
     .caregiver-step,
     .caregiver-cta,
-    .contact-method {
+    .contact-method,
+    :deep(.mauricare-nav .nav-link),
+    :deep(.mauricare-nav .nav-link::after),
+    :deep(.mauricare-nav .btn-outline-light),
+    :deep(.mauricare-nav .btn-outline-light::after) {
         transition: none;
+    }
+
+    :deep(.mauricare-nav .nav-link:hover),
+    :deep(.mauricare-nav .nav-link:focus-visible) {
+        transform: none;
+    }
+
+    :deep(.mauricare-nav .btn-outline-light:hover),
+    :deep(.mauricare-nav .btn-outline-light:focus-visible) {
+        transform: none;
     }
 }
 
@@ -2226,7 +2350,8 @@ a.contact-method:focus-visible {
     }
 
     :deep(.mauricare-nav .navbar-brand) {
-        max-width: 220px;
+        width: 230px;
+        max-width: 230px;
     }
 
     :deep(.navbar-logo) {
